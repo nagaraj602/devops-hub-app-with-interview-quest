@@ -1,0 +1,267 @@
+/* ==========================================================================
+   GCP Instance Scheduler Maintenance & Shutdown Countdown Banner
+   Active from 10:30 PM IST (30:00 min countdown) to 11:00 PM IST (Shutdown)
+   ========================================================================== */
+
+.gcp-maintenance-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-bottom: 2px solid #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  color: #92400e;
+  font-family: inherit;
+  position: relative;
+  z-index: 9999;
+  transition: all 0.3s ease-in-out;
+  animation: slideDownMaintenance 0.4s ease-out;
+}
+
+@keyframes slideDownMaintenance {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.maintenance-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.maintenance-icon-wrap {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid #f59e0b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+  font-size: 1.25rem;
+}
+
+.maintenance-pulse-icon {
+  animation: pulseIcon 2s infinite ease-in-out;
+}
+
+@keyframes pulseIcon {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+.maintenance-message {
+  flex: 1 1 500px;
+  min-width: 260px;
+}
+
+.maintenance-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #78350f;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+
+.badge-gcp {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge-gcp::before {
+  content: "☁";
+  margin-right: 4px;
+}
+
+.maintenance-desc {
+  font-size: 0.85rem;
+  color: #92400e;
+  line-height: 1.4;
+}
+
+.maintenance-desc strong {
+  color: #78350f;
+}
+
+.maintenance-timer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 2px solid #f59e0b;
+  border-radius: 10px;
+  padding: 6px 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.timer-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #b45309;
+}
+
+.timer-clock {
+  font-family: 'Courier New', Courier, monospace, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #b45309;
+  letter-spacing: 2px;
+  line-height: 1.1;
+}
+
+/* Imminent shutdown highlight (last 5 minutes) */
+.gcp-maintenance-banner.imminent-shutdown {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-bottom: 2px solid #ef4444;
+}
+
+.gcp-maintenance-banner.imminent-shutdown .maintenance-icon-wrap {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.gcp-maintenance-banner.imminent-shutdown .maintenance-title {
+  color: #991b1b;
+}
+
+.gcp-maintenance-banner.imminent-shutdown .maintenance-desc {
+  color: #b91c1c;
+}
+
+.gcp-maintenance-banner.imminent-shutdown .maintenance-timer-card {
+  border-color: #ef4444;
+  background: #ffffff;
+  animation: pulseCard 1s infinite alternate;
+}
+
+.gcp-maintenance-banner.imminent-shutdown .timer-clock {
+  color: #dc2626;
+}
+
+@keyframes pulseCard {
+  from {
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+  }
+  to {
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
+  }
+}
+
+/* Active Maintenance Window (11 PM to 6 AM) */
+.gcp-maintenance-banner.maintenance-offline {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-bottom: 2px solid #3b82f6;
+  color: #1e40af;
+}
+
+.gcp-maintenance-banner.maintenance-offline .maintenance-icon-wrap {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.gcp-maintenance-banner.maintenance-offline .maintenance-title {
+  color: #1e3a8a;
+}
+
+.gcp-maintenance-banner.maintenance-offline .maintenance-desc {
+  color: #1e40af;
+}
+
+.gcp-maintenance-banner.maintenance-offline .maintenance-timer-card {
+  border-color: #3b82f6;
+}
+
+.gcp-maintenance-banner.maintenance-offline .timer-label {
+  color: #1d4ed8;
+}
+
+.gcp-maintenance-banner.maintenance-offline .timer-clock {
+  font-size: 1.1rem;
+  color: #1d4ed8;
+  letter-spacing: 0.5px;
+}
+
+.maintenance-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #92400e;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.maintenance-dismiss-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #78350f;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .maintenance-container {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+  .maintenance-message {
+    flex: 1 1 100%;
+    order: 2;
+  }
+  .maintenance-icon-wrap {
+    order: 1;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  .maintenance-timer-card {
+    order: 3;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 6px 14px;
+  }
+  .timer-clock {
+    font-size: 1.25rem;
+  }
+  .maintenance-dismiss-btn {
+    order: 1;
+    margin-left: auto;
+  }
+}

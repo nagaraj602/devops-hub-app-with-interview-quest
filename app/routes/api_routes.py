@@ -22,6 +22,36 @@ async def health_check():
         "database": "git-native (https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git)"
     }
 
+@router.get("/maintenance-status")
+async def get_maintenance_status():
+    """Returns real-time GCP instance scheduler shutdown status in Indian Standard Time (IST)."""
+    from datetime import datetime, timezone, timedelta
+    
+    IST = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(IST)
+    
+    hours = now_ist.hour
+    minutes = now_ist.minute
+    seconds = now_ist.second
+    
+    is_countdown = (hours == 22 and minutes >= 30)
+    is_offline = (hours >= 23 or hours < 6)
+    
+    seconds_remaining = 0
+    if is_countdown:
+        seconds_remaining = ((59 - minutes) * 60) + (60 - seconds)
+        
+    return {
+        "timezone": "IST (UTC+05:30)",
+        "current_ist_time": now_ist.strftime("%Y-%m-%d %H:%M:%S"),
+        "is_countdown_active": is_countdown,
+        "is_maintenance_window": is_offline,
+        "seconds_until_shutdown": seconds_remaining,
+        "shutdown_time": "23:00:00 IST (11:00 PM)",
+        "startup_time": "06:00:00 IST (06:00 AM)",
+        "gcp_scheduler_policy": "Daily auto-shutdown at 23:00 IST, auto-startup at 06:00 IST to optimize cloud costs"
+    }
+
 @router.get("/questions")
 async def get_questions(
     category: Optional[str] = "All",
@@ -130,6 +160,10 @@ async def get_raw_file(repo_id: str, file_path: str):
 @router.get("/training/custom-repo")
 async def fetch_custom_repo(repo_url: str, branch: Optional[str] = "main", file_path: Optional[str] = "README.md"):
     return training_service.fetch_live_github_content(repo_url, branch, file_path)
+
+@router.get("/training/custom-tree")
+async def fetch_custom_tree(repo_url: str, branch: Optional[str] = None):
+    return training_service.fetch_github_repo_tree(repo_url, branch)
 
 @router.get("/cheatsheet")
 async def get_cheatsheet(category: Optional[str] = "all", search: Optional[str] = ""):

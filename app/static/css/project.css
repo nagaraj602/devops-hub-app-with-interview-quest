@@ -2,7 +2,31 @@
    Project Page Specific Styles: Matches User Screenshot Exactly
    ============================================================================== */
 
-/* Main White Card Container */
+/* Main White Card Containers (Distinct Segregated Boxes) */
+.project-box {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 2.25rem 2.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  margin-bottom: 2rem;
+}
+
+.project-title-box {
+  padding: 2rem 2.5rem;
+  text-align: center;
+}
+
+.project-title-box .project-guide-header {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .project-box {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
 .project-main-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
@@ -455,7 +479,14 @@
 
 /* Custom Highlighted Q&A Cards */
 .highlight-qa-section {
-  margin: 2.5rem 0;
+  margin: 2.5rem 0 1rem;
+}
+
+.highlight-qa-main-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1.25rem;
 }
 
 .highlight-qa-card {
@@ -468,14 +499,41 @@
   box-shadow: var(--shadow-sm);
 }
 
+.highlight-qa-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.highlight-qa-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .highlight-qa-q {
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.75rem;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 1;
+}
+
+.highlight-qa-exec-summary {
+  background-color: #eef2ff;
+  border-left: 3px solid var(--primary);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #312e81;
+  font-size: 0.92rem;
 }
 
 .highlight-qa-badge {

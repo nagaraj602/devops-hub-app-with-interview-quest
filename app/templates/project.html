@@ -2,9 +2,10 @@
 
 {% block content %}
 
-<!-- Main Project Architecture & Guide Container (Matches Screenshot) -->
-<section class="project-main-card">
-  <!-- Header Title & Badge -->
+<!-- ==============================================================================
+     BOX 1: Title Card (Centered pill and bold project title)
+     ============================================================================== -->
+<section class="project-box project-title-box">
   <div class="project-guide-header">
     <div class="project-guide-badge">
       <i class="fa-solid fa-book-open"></i>
@@ -12,7 +13,12 @@
     </div>
     <h1 class="project-main-title">{{ project.title }}</h1>
   </div>
+</section>
 
+<!-- ==============================================================================
+     BOX 2: Project Overview & Architecture Card
+     ============================================================================== -->
+<section class="project-box project-overview-box">
   <!-- Section: Project Overview -->
   <div class="project-section-block">
     <div class="project-section-label label-purple">
@@ -33,10 +39,10 @@
       <span>MICROSERVICES ARCHITECTURE</span>
     </div>
     <div class="project-section-text">
-      <p>The platform consisted of approximately 22-25 microservices. Key microservices include:</p>
+      <p>The platform consisted of approximately 25 microservices. Key microservices include:</p>
       <ul class="project-bullet-list">
         {% for ms in project.microservices %}
-        <li><strong>{{ ms.name }}:</strong> {{ ms.desc }}</li>
+        <li><strong>{{ ms.name }}:</strong> {{ ms.detail|default(ms.desc) }}</li>
         {% endfor %}
       </ul>
     </div>
@@ -51,7 +57,7 @@
     <div class="project-section-text">
       <ul class="project-bullet-list">
         {% for tool in project.tools_and_tech %}
-        <li><strong>{{ tool.name }}:</strong> {{ tool.desc }}</li>
+        <li>{{ tool }}</li>
         {% endfor %}
       </ul>
     </div>
@@ -92,182 +98,178 @@
       {% endfor %}
     </div>
   </div>
+</section>
 
-  <!-- Section: Preparation Questions & Answers (Collapsible Accordions) -->
-  <div class="prep-qa-container">
-    <div class="prep-qa-heading-area">
-      <h2 class="prep-qa-main-title">Preparation Questions & Answers</h2>
-      <p class="prep-qa-subtitle">Key responses tailored to this architecture and role.</p>
-    </div>
+<!-- ==============================================================================
+     BOX 3: Preparation Questions & Answers (Collapsible Accordions)
+     ============================================================================== -->
+<section class="project-box project-prep-box">
+  <div class="prep-qa-heading-area">
+    <h2 class="prep-qa-main-title">Preparation Questions & Answers</h2>
+    <p class="prep-qa-subtitle">Key responses tailored to this architecture and role.</p>
+  </div>
 
-    <div class="prep-accordion-list">
-      {% for prep in project.prep_questions %}
-      <div class="prep-accordion-item" id="{{ prep.id }}">
-        <div class="prep-accordion-header" onclick="togglePrepAccordion('{{ prep.id }}')">
-          <span class="prep-accordion-title">{{ prep.title }}</span>
-          <span class="prep-accordion-icon">
-            <i class="fa-solid fa-chevron-down"></i>
-          </span>
-        </div>
-        <div class="prep-accordion-body">
-          <div class="prep-markdown-content markdown-pane">
-            {{ prep.content_html|safe }}
-          </div>
+  <div class="prep-accordion-list">
+    {% for prep in project.preparation_checklist %}
+    <div class="prep-accordion-item" id="{{ prep.id }}">
+      <div class="prep-accordion-header" onclick="togglePrepAccordion('{{ prep.id }}')">
+        <span class="prep-accordion-title">{{ prep.title }}</span>
+        <span class="prep-accordion-icon">
+          <i class="fa-solid fa-chevron-down"></i>
+        </span>
+      </div>
+      <div class="prep-accordion-body">
+        <div class="prep-markdown-content markdown-pane">
+          {{ prep.content_html|safe }}
         </div>
       </div>
-      {% endfor %}
     </div>
+    {% endfor %}
   </div>
 </section>
 
 <!-- ==============================================================================
-     BOTTOM SECTION (Added at bottom as requested)
+     BOX 4: Metrics, Calculator & Collapsed Deep-Dive Q&As
      ============================================================================== -->
-
-<!-- Impact Metrics Strip -->
-<div class="project-metrics-strip" style="margin-top:2.5rem;">
-  <div class="metric-box">
-    <div class="metric-val">&lt; 10 Mins</div>
-    <div class="metric-lbl">Detection Latency (Down from multiple days)</div>
-  </div>
-  <div class="metric-box">
-    <div class="metric-val">60% Reduction</div>
-    <div class="metric-lbl">Manual Review Workload for Trust & Safety</div>
-  </div>
-  <div class="metric-box">
-    <div class="metric-val">25 Microservices</div>
-    <div class="metric-lbl">Decoupled Ingestion, Detection & Enforcement</div>
-  </div>
-  <div class="metric-box">
-    <div class="metric-val">18 Worker Nodes</div>
-    <div class="metric-lbl">Multi-AZ EKS Topology (288 vCPUs, 1.15 TB RAM)</div>
-  </div>
-</div>
-
-<!-- Interactive EKS Cluster Sizing & Capacity Calculator -->
-<section class="cluster-calc-panel">
-  <div class="calc-header">
-    <div class="calc-title">
-      <i class="fa-solid fa-calculator" style="color:var(--primary);"></i>
-      <span>Interactive EKS Cluster Sizing & Capacity Calculator</span>
+<section class="project-box project-deepdives-box">
+  <!-- Impact Metrics Strip -->
+  <div class="project-metrics-strip">
+    {% for m in project.metrics %}
+    <div class="metric-box">
+      <div class="metric-val" style="color:{{ m.color }};">{{ m.value }}</div>
+      <div class="metric-lbl">{{ m.label }} ({{ m.detail }})</div>
     </div>
-    <span class="badge badge-purple">Production Mathematical Model</span>
+    {% endfor %}
   </div>
 
-  <div class="calc-grid">
-    <!-- Sliders / Inputs Column -->
-    <div class="calc-inputs-col">
-      <div class="calc-field">
-        <label>
-          <span>Target Microservices CPU Demand</span>
-          <strong id="calcCpuVal" style="color:var(--primary);">200 vCPUs</strong>
-        </label>
-        <input type="range" id="calcCpuSlider" min="50" max="500" step="10" value="200">
-        <span style="font-size:0.75rem; color:var(--text-muted);">Baseline + peak flash sale workload demand across services</span>
+  <!-- Interactive EKS Cluster Sizing & Capacity Calculator -->
+  <div class="cluster-calc-panel">
+    <div class="calc-header">
+      <div class="calc-title">
+        <i class="fa-solid fa-calculator" style="color:var(--primary);"></i>
+        <span>Interactive EKS Cluster Sizing & Capacity Calculator</span>
       </div>
-
-      <div class="calc-field">
-        <label>
-          <span>Memory to CPU Ratio</span>
-          <strong id="calcRamRatioVal" style="color:var(--primary);">3.5 GB / core</strong>
-        </label>
-        <input type="range" id="calcRamRatioSlider" min="1.5" max="6.0" step="0.5" value="3.5">
-        <span style="font-size:0.75rem; color:var(--text-muted);" id="resTargetRam">~700 GB RAM required (Java JVM heaps + Kafka streaming)</span>
-      </div>
-
-      <div class="calc-field">
-        <label>
-          <span>Microservices Count</span>
-          <strong id="calcMsVal" style="color:var(--primary);">25 Services</strong>
-        </label>
-        <input type="range" id="calcMsSlider" min="5" max="60" step="1" value="25">
-      </div>
-
-      <div class="calc-field">
-        <label>Worker Node EC2 Instance Type</label>
-        <select id="calcInstanceSelect">
-          <option value="m6i.4xlarge" selected>m6i.4xlarge (16 vCPU, 64 GB RAM - Recommended)</option>
-          <option value="c6i.4xlarge">c6i.4xlarge (16 vCPU, 32 GB RAM - Compute Intensive)</option>
-          <option value="m6i.8xlarge">m6i.8xlarge (32 vCPU, 128 GB RAM - Large Sizing)</option>
-          <option value="r6i.4xlarge">r6i.4xlarge (16 vCPU, 128 GB RAM - Memory Intensive)</option>
-        </select>
-      </div>
-
-      <div class="calc-field">
-        <label>Availability Zones (Multi-AZ Deployment)</label>
-        <select id="calcAzSelect">
-          <option value="3" selected>3 AZs (us-east-1a, us-east-1b, us-east-1c)</option>
-          <option value="2">2 AZs</option>
-        </select>
-      </div>
+      <span class="badge badge-purple">Production Mathematical Model</span>
     </div>
 
-    <!-- Results Display Column -->
-    <div class="calc-results-col">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-weight:700; color:var(--text-primary);">Recommended Cluster Capacity</span>
-        <span class="badge badge-green" id="resHeadroom">31% Headroom</span>
-      </div>
-
-      <div class="results-summary-row">
-        <div class="res-box">
-          <div class="res-val" id="resTotalNodes">18</div>
-          <div class="res-lbl">Total Worker Nodes</div>
+    <div class="calc-grid">
+      <!-- Sliders / Inputs Column -->
+      <div class="calc-inputs-col">
+        <div class="calc-field">
+          <label>
+            <span>Target Microservices CPU Demand</span>
+            <strong id="calcCpuVal" style="color:var(--primary);">200 vCPUs</strong>
+          </label>
+          <input type="range" id="calcCpuSlider" min="50" max="500" step="10" value="200">
+          <span style="font-size:0.75rem; color:var(--text-muted);">Baseline + peak flash sale workload demand across services</span>
         </div>
-        <div class="res-box">
-          <div class="res-val" id="resNodesPerAz">6 / AZ</div>
-          <div class="res-lbl">Balanced Per AZ</div>
+
+        <div class="calc-field">
+          <label>
+            <span>Memory to CPU Ratio</span>
+            <strong id="calcRamRatioVal" style="color:var(--primary);">3.5 GB / core</strong>
+          </label>
+          <input type="range" id="calcRamRatioSlider" min="1.5" max="6.0" step="0.5" value="3.5">
+          <span style="font-size:0.75rem; color:var(--text-muted);" id="resTargetRam">~700 GB RAM required (Java JVM heaps + Kafka streaming)</span>
+        </div>
+
+        <div class="calc-field">
+          <label>
+            <span>Microservices Count</span>
+            <strong id="calcMsVal" style="color:var(--primary);">25 Services</strong>
+          </label>
+          <input type="range" id="calcMsSlider" min="5" max="60" step="1" value="25">
+        </div>
+
+        <div class="calc-field">
+          <label>Worker Node EC2 Instance Type</label>
+          <select id="calcInstanceSelect">
+            <option value="m6i.4xlarge" selected>m6i.4xlarge (16 vCPU, 64 GB RAM - Recommended)</option>
+            <option value="c6i.4xlarge">c6i.4xlarge (16 vCPU, 32 GB RAM - Compute Intensive)</option>
+            <option value="m6i.8xlarge">m6i.8xlarge (32 vCPU, 128 GB RAM - Large Sizing)</option>
+            <option value="r6i.4xlarge">r6i.4xlarge (16 vCPU, 128 GB RAM - Memory Intensive)</option>
+          </select>
+        </div>
+
+        <div class="calc-field">
+          <label>Availability Zones (Multi-AZ Deployment)</label>
+          <select id="calcAzSelect">
+            <option value="3" selected>3 AZs (us-east-1a, us-east-1b, us-east-1c)</option>
+            <option value="2">2 AZs</option>
+          </select>
         </div>
       </div>
 
-      <div class="results-summary-row">
-        <div class="res-box">
-          <div class="res-val" id="resTotalVcpu">288 vCPUs</div>
-          <div class="res-lbl">Provisioned CPU</div>
+      <!-- Results Display Column -->
+      <div class="calc-results-col">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:700; color:var(--text-primary);">Recommended Cluster Capacity</span>
+          <span class="badge badge-green" id="resHeadroom">31% Headroom</span>
         </div>
-        <div class="res-box">
-          <div class="res-val" id="resTotalRam">1,152 GB</div>
-          <div class="res-lbl">Provisioned RAM</div>
-        </div>
-      </div>
 
-      <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5; background:#ffffff; padding:0.85rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-        <i class="fa-solid fa-shield-halved" style="color:var(--success); margin-right:0.35rem;"></i>
-        <strong>Resiliency Guarantee:</strong> Includes N+2 node buffer (1 node per AZ) guaranteeing that draining a node for rolling updates or unexpected host hardware failure never causes unschedulable pod eviction delays.
+        <div class="results-summary-row">
+          <div class="res-box">
+            <div class="res-val" id="resTotalNodes">18</div>
+            <div class="res-lbl">Total Worker Nodes</div>
+          </div>
+          <div class="res-box">
+            <div class="res-val" id="resNodesPerAz">6 / AZ</div>
+            <div class="res-lbl">Balanced Per AZ</div>
+          </div>
+        </div>
+
+        <div class="results-summary-row">
+          <div class="res-box">
+            <div class="res-val" id="resTotalVcpu">288 vCPUs</div>
+            <div class="res-lbl">Provisioned CPU</div>
+          </div>
+          <div class="res-box">
+            <div class="res-val" id="resTotalRam">1,152 GB</div>
+            <div class="res-lbl">Provisioned RAM</div>
+          </div>
+        </div>
+
+        <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5; background:#ffffff; padding:0.85rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+          <i class="fa-solid fa-shield-halved" style="color:var(--success); margin-right:0.35rem;"></i>
+          <strong>Resiliency Guarantee:</strong> Includes N+2 node buffer (1 node per AZ) guaranteeing that draining a node for rolling updates or unexpected host hardware failure never causes unschedulable pod eviction delays.
+        </div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- Dedicated High-Priority Interview Q&A Deep Dives -->
-<section class="highlight-qa-section" style="margin-top:2.5rem; margin-bottom:2rem;">
-  <h2 style="font-size:1.45rem; font-weight:800; color:var(--text-primary); margin-bottom:1.25rem;">
-    <i class="fa-solid fa-star" style="color:#f59e0b; margin-right:0.4rem;"></i>
-    Crucial Architectural Interview Deep-Dives
-  </h2>
+  <!-- Dedicated High-Priority Interview Q&A Deep Dives -->
+  <div class="highlight-qa-section">
+    <h2 class="highlight-qa-main-title">
+      <i class="fa-solid fa-star" style="color:#f59e0b; margin-right:0.4rem;"></i>
+      Crucial Architectural Interview Deep-Dives
+    </h2>
 
-  {% for q in project.additional_questions %}
-  <article class="highlight-qa-card">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:0.75rem;">
-      <h3 class="highlight-qa-q">{{ q.question }}</h3>
-      <div style="display:flex; gap:0.5rem; align-items:center;">
-        <span class="highlight-qa-badge">Core Interview Question</span>
-        <button type="button" class="copy-btn copy-q-btn" data-copy-text="{{ q.detailed_answer }}">
-          <i class="fa-regular fa-copy"></i> Copy Answer
-        </button>
+    {% for q in project.additional_questions %}
+    <article class="highlight-qa-card" id="{{ q.id }}">
+      <div class="highlight-qa-top-row">
+        <h3 class="highlight-qa-q">{{ q.question }}</h3>
+        <div class="highlight-qa-actions">
+          <button type="button" class="btn btn-sm btn-secondary toggle-ans-btn" onclick="toggleDeepDiveAnswer('{{ q.id }}')">
+            <i class="fa-solid fa-eye"></i> Show Answer
+          </button>
+          <button type="button" class="btn btn-sm btn-outline copy-ans-btn" onclick="copyDeepDiveAnswer('{{ q.id }}', event)">
+            <i class="fa-regular fa-copy"></i> Copy
+          </button>
+        </div>
       </div>
-    </div>
-    
-    <div style="background-color:#eef2ff; border-left:3px solid var(--primary); padding:0.75rem 1rem; border-radius:var(--radius-sm); margin-bottom:1rem; font-weight:600; color:#312e81; font-size:0.92rem;">
-      <i class="fa-solid fa-lightbulb" style="color:var(--primary); margin-right:0.35rem;"></i>
-      <strong>Executive Summary:</strong> {{ q.short_answer }}
-    </div>
+      
+      <div class="highlight-qa-exec-summary">
+        <i class="fa-solid fa-lightbulb" style="color:var(--primary); margin-right:0.35rem;"></i>
+        <strong>Executive Summary:</strong> {{ q.executive_summary }}
+      </div>
 
-    <div class="highlight-qa-answer markdown-pane">
-      {{ q.detailed_answer_html|safe }}
-    </div>
-  </article>
-  {% endfor %}
+      <!-- Collapsed by default -->
+      <div class="highlight-qa-answer markdown-pane" style="display:none;">
+        {{ q.detailed_answer_html|safe }}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
 </section>
 
 {% endblock %}

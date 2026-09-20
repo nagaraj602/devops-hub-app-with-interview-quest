@@ -85,3 +85,36 @@ function togglePrepAccordion(accordionId) {
 
   item.classList.toggle("expanded");
 }
+
+function toggleDeepDiveAnswer(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const answerEl = card.querySelector(".highlight-qa-answer");
+  const toggleBtn = card.querySelector(".toggle-ans-btn");
+  if (!answerEl) return;
+
+  const isHidden = answerEl.style.display === "none" || window.getComputedStyle(answerEl).display === "none";
+  if (isHidden) {
+    answerEl.style.display = "block";
+    if (toggleBtn) {
+      toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hide Answer';
+    }
+  } else {
+    answerEl.style.display = "none";
+    if (toggleBtn) {
+      toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Show Answer';
+    }
+  }
+}
+
+function copyDeepDiveAnswer(cardId, event) {
+  if (event) event.stopPropagation();
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const answerEl = card.querySelector(".highlight-qa-answer");
+  const text = answerEl ? answerEl.innerText : "";
+  if (text) {
+    copyText(text, event);
+  }
+}
+

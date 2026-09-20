@@ -513,3 +513,97 @@ mark.search-highlight.active-match {
   background: #fee2e2;
   color: var(--danger);
 }
+
+/* ==============================================================================
+   Markdown Tables (Clean Borders, Outlines & Zebra Striping)
+   ============================================================================== */
+.markdown-pane table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 0.92rem;
+}
+
+.markdown-pane th,
+.markdown-pane td {
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.markdown-pane th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 2px solid #94a3b8;
+}
+
+.markdown-pane tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.markdown-pane tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* ==============================================================================
+   Code Snippets, Syntax Highlighting & Copy Button
+   ============================================================================== */
+.markdown-pane pre {
+  position: relative;
+  background-color: #0f172a;
+  color: #f8fafc;
+  padding: 1.1rem 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.markdown-pane pre code {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  z-index: 5;
+}
+
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+/* Inter-connecting Markdown Links */
+.markdown-pane a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.markdown-pane a:hover {
+  color: #4338ca;
+}
+

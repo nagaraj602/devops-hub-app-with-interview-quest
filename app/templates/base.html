@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/static/css/theme.css">
   <link rel="stylesheet" href="/static/css/layout.css">
   <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/maintenance_banner.css">
   {% if active_page == 'question_bank' %}
   <link rel="stylesheet" href="/static/css/question_bank.css">
   {% elif active_page == 'project' %}
@@ -30,8 +31,36 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <!-- Mermaid.js for Flowcharts & Diagrams (v11) -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <!-- Highlight.js for Code Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
+
+  <!-- Scheduled GCP Maintenance & Shutdown Countdown Banner -->
+  <aside id="gcp-maintenance-banner" class="gcp-maintenance-banner" style="display: none;" role="alert" aria-live="assertive">
+    <div class="maintenance-container">
+      <div class="maintenance-icon-wrap">
+        <i class="fa-solid fa-clock-rotate-left maintenance-pulse-icon" id="maintenance-icon"></i>
+      </div>
+      <div class="maintenance-message">
+        <div class="maintenance-title" id="maintenance-title">
+          <span class="badge-gcp">GCP Scheduler</span>
+          <strong>Scheduled Cloud Instance Shutdown Warning</strong>
+        </div>
+        <div class="maintenance-desc" id="maintenance-desc">
+          To optimize cloud infrastructure costs on GCP, this server is scheduled to shut down automatically at <strong>11:00 PM IST</strong> (resuming at <strong>6:00 AM IST</strong>). Please ensure any in-progress work is saved.
+        </div>
+      </div>
+      <div class="maintenance-timer-card">
+        <span class="timer-label">SHUTDOWN IN</span>
+        <span class="timer-clock" id="maintenance-countdown-clock">30:00</span>
+      </div>
+      <button type="button" class="maintenance-dismiss-btn" id="maintenance-dismiss-btn" title="Dismiss banner" aria-label="Dismiss banner">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </aside>
 
   <!-- Site Header -->
   <header class="site-header">
@@ -237,6 +266,7 @@
 
   <!-- Common Script -->
   <script src="/static/js/common.js"></script>
+  <script src="/static/js/maintenance_timer.js"></script>
   {% if active_page == 'question_bank' %}
   <script src="/static/js/question_bank.js"></script>
   {% elif active_page == 'project' %}

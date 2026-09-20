@@ -122,6 +122,7 @@ function applyFilters() {
 
   companyCards.forEach(companyCard => {
     const cName = (companyCard.getAttribute("data-company-name") || "").toLowerCase();
+    const isNagarajComp = companyCard.getAttribute("data-is-nagaraj") === "true";
     const roundBlocks = companyCard.querySelectorAll(".round-block");
     let companyHasMatches = false;
 
@@ -137,7 +138,10 @@ function applyFilters() {
         const aText = (qItem.querySelector(".answer-markdown")?.textContent || "").toLowerCase();
 
         // 1. Category Check
-        const matchCategory = !isFilteringCategory || qCat === currentCategory.toLowerCase();
+        const matchCategory = !isFilteringCategory || 
+          (currentCategory.toLowerCase() === "nagaraj's interview" 
+            ? (isNagarajComp || qCat === "nagaraj's interview")
+            : qCat === currentCategory.toLowerCase());
 
         // 2. Favorites Check
         const matchFav = !showFavoritesOnly || userFavorites.includes(qId);

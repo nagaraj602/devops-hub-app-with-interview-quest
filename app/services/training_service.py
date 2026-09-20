@@ -216,6 +216,94 @@ class TrainingService:
         results.sort(key=lambda x: x["match_count"], reverse=True)
         return results[:60]
 
+    def fetch_github_repo_tree(self, repo_url: str, branch: Optional[str] = None) -> Dict[str, Any]:
+        """Fetches full recursive folder/file tree from GitHub Git Trees API."""
+        m = re.match(r'https?://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$', repo_url.strip())
+        if not m:
+            return {"error": "Invalid GitHub repository URL", "tree": []}
+
+        owner, repo = m.group(1), m.group(2)
+        headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "DevOps-Hub-Portal"}
+
+        try:
+            target_branch = branch
+            if not target_branch:
+                repo_resp = requests.get(f"https://api.github.com/repos/{owner}/{repo}", headers=headers, timeout=10)
+                if repo_resp.status_code == 200:
+                    target_branch = repo_resp.json().get("default_branch", "main")
+                else:
+                    target_branch = "main"
+
+            tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{target_branch}?recursive=1"
+            tree_resp = requests.get(tree_url, headers=headers, timeout=15)
+            if tree_resp.status_code != 200 and target_branch == "main":
+                target_branch = "master"
+                tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{target_branch}?recursive=1"
+                tree_resp = requests.get(tree_url, headers=headers, timeout=15)
+
+            if tree_resp.status_code != 200:
+                return {
+                    "error": f"Failed to fetch GitHub tree (HTTP {tree_resp.status_code})",
+                    "tree": []
+                }
+
+            tree_data = tree_resp.json()
+            raw_tree = tree_data.get("tree", [])
+
+            repo_id = f"custom_{owner}_{repo}"
+            root_dict: Dict[str, Any] = {}
+
+            for item in raw_tree:
+                item_path = item.get("path", "")
+                if not item_path or item_path.startswith("."):
+                    continue
+                parts = item_path.split("/")
+                curr = root_dict
+                for i, part in enumerate(parts):
+                    is_file = (i == len(parts) - 1 and item.get("type") == "blob")
+                    if part not in curr:
+                        curr[part] = {
+                            "__is_file__": is_file,
+                            "__path__": item_path if is_file else "/".join(parts[:i+1]),
+                            "__children__": {}
+                        }
+                    curr = curr[part]["__children__"]
+
+            def build_nodes(d: Dict[str, Any]) -> List[Dict[str, Any]]:
+                nodes = []
+                for name, info in sorted(d.items(), key=lambda x: (x[1]["__is_file__"], x[0].lower())):
+                    if info["__is_file__"]:
+                        ext = name.split(".")[-1].lower() if "." in name else ""
+                        nodes.append({
+                            "repo_id": repo_id,
+                            "name": name,
+                            "type": "file",
+                            "path": info["__path__"],
+                            "extension": ext
+                        })
+                    else:
+                        children = build_nodes(info["__children__"])
+                        nodes.append({
+                            "repo_id": repo_id,
+                            "name": name,
+                            "type": "directory",
+                            "path": info["__path__"],
+                            "children": children
+                        })
+                return nodes
+
+            children = build_nodes(root_dict)
+            return {
+                "repo_id": repo_id,
+                "owner": owner,
+                "repo": repo,
+                "branch": target_branch,
+                "name": f"{owner}/{repo}",
+                "tree": children
+            }
+        except Exception as e:
+            return {"error": f"Error fetching GitHub tree: {str(e)}", "tree": []}
+
     def fetch_live_github_content(self, repo_url: str, branch: str = "main", file_path: str = "README.md") -> Dict[str, Any]:
         """Fetches live content directly from GitHub repository."""
         m = re.match(r'https?://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$', repo_url.strip())
@@ -223,15 +311,16 @@ class TrainingService:
             return {"error": "Invalid GitHub repository URL"}
 
         owner, repo = m.group(1), m.group(2)
-        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{file_path}"
+        clean_fp = file_path.lstrip("./")
+        raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{clean_fp}"
         try:
             resp = requests.get(raw_url, timeout=10)
             if resp.status_code == 200:
-                formatted = self._format_markdown_qa_and_mermaid(resp.text, "custom", file_path)
+                formatted = self._format_markdown_qa_and_mermaid(resp.text, f"custom_{owner}_{repo}", clean_fp)
                 return {
                     "owner": owner,
                     "repo": repo,
-                    "file_path": file_path,
+                    "file_path": clean_fp,
                     "raw_content": resp.text,
                     "formatted_content": formatted
                 }
@@ -330,6 +419,22 @@ class TrainingService:
             return f'![{alt}]({src})'
 
         text = re.sub(r'!\[(.*?)\]\((.*?)\)', replace_img, text)
+
+        # 5. Detect relative HTML <img> tags and point to app proxy
+        def replace_html_img(match):
+            full_tag = match.group(0)
+            src = match.group(1)
+            if not src.startswith("http://") and not src.startswith("https://") and not src.startswith("/"):
+                parent_dir = str(Path(current_path).parent).replace("\\", "/")
+                if parent_dir == ".":
+                    full_img_rel = src.lstrip("./")
+                else:
+                    full_img_rel = f"{parent_dir}/{src.lstrip('./')}"
+                new_src = f"/api/training/raw/{repo_id}/{full_img_rel}"
+                return full_tag.replace(src, new_src)
+            return full_tag
+
+        text = re.sub(r'<img\b[^>]*?\bsrc=["\']([^"\']+)["\']', replace_html_img, text, flags=re.IGNORECASE)
 
         return text
 

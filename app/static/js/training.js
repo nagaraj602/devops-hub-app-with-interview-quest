@@ -51,6 +51,15 @@ function initTreeNodeClicks() {
       document.querySelectorAll(".tree-node-row").forEach(r => r.classList.remove("active"));
       fileRow.classList.add("active");
 
+      if (fileRow.getAttribute("data-is-custom") === "true") {
+        const url = fileRow.getAttribute("data-custom-url");
+        const branch = fileRow.getAttribute("data-custom-branch") || "main";
+        const name = fileRow.getAttribute("data-custom-name");
+        const filePath = fileRow.getAttribute("data-file-path") || "README.md";
+        loadLiveCustomRepo(url, branch, name, filePath);
+        return;
+      }
+
       // Detect repo_id from node attribute, or walk up to parent repo root
       let repoId = fileRow.getAttribute("data-repo-id");
       if (!repoId) {
@@ -134,17 +143,80 @@ function loadFileContent(repoId, filePath, searchQuery = null) {
         } else {
           hideSearchNavigator();
         }
-      }
 
-      // Render mermaid flowcharts
-      renderMermaidDiagrams();
-      // Bind click handlers to images
-      bindContentImagesForLightbox();
+        postProcessMarkdownContent(contentBody, repoId, filePath);
+      }
     })
     .catch(err => {
       contentBody.innerHTML = `<p style="color:var(--danger); padding:2rem;">Failed to load file: ${err.message}</p>`;
       hideSearchNavigator();
     });
+}
+
+function postProcessMarkdownContent(contentBody, repoId, filePath) {
+  if (!contentBody) return;
+
+  // 1. Highlight code blocks and attach copy buttons
+  contentBody.querySelectorAll("pre code").forEach(block => {
+    if (window.hljs) {
+      hljs.highlightElement(block);
+    }
+    const pre = block.parentElement;
+    if (pre && !pre.querySelector(".code-copy-btn")) {
+      pre.style.position = "relative";
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "code-copy-btn";
+      copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+      copyBtn.title = "Copy Code";
+      copyBtn.onclick = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(block.innerText).then(() => {
+          copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+          setTimeout(() => { copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>'; }, 2000);
+        });
+      };
+      pre.appendChild(copyBtn);
+    }
+  });
+
+  // 2. Intercept relative .md links
+  contentBody.querySelectorAll(".markdown-pane a").forEach(link => {
+    const href = link.getAttribute("href");
+    if (!href) return;
+    if (!href.startsWith("http://") && !href.startsWith("https://") && !href.startsWith("#") && (href.endsWith(".md") || href.includes(".md#"))) {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        let targetPath = href.split("#")[0].replace(/^\.\//, "");
+        let baseFolder = filePath.includes("/") ? filePath.substring(0, filePath.lastIndexOf("/")) : "";
+        let resolvedPath = baseFolder ? `${baseFolder}/${targetPath}` : targetPath;
+        
+        const parts = resolvedPath.split("/");
+        const cleanParts = [];
+        for (const p of parts) {
+          if (p === "..") cleanParts.pop();
+          else if (p && p !== ".") cleanParts.push(p);
+        }
+        resolvedPath = cleanParts.join("/");
+
+        if (repoId.startsWith("custom_")) {
+          const customRepos = getStoredCustomRepos();
+          const cr = customRepos.find(r => `custom_${r.id}` === repoId || `custom_${r.name}` === repoId);
+          if (cr) {
+            loadLiveCustomRepo(cr.url, cr.branch, cr.name, resolvedPath);
+            return;
+          }
+        }
+        loadFileContent(repoId, resolvedPath);
+      });
+    }
+  });
+
+  // 3. Render mermaid flowcharts
+  renderMermaidDiagrams();
+
+  // 4. Bind click handlers to images
+  bindContentImagesForLightbox();
 }
 
 // ------------------------------------------------------------------------------
@@ -604,18 +676,49 @@ function getStoredCustomRepos() {
   }
 }
 
+function renderRecursiveCustomNodes(nodes, repoId, repoUrl, repoBranch, repoName) {
+  let html = '';
+  nodes.forEach(node => {
+    if (node.type === "directory") {
+      html += `
+        <div class="tree-node folder">
+          <div class="tree-node-row">
+            <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+            <i class="fa-solid fa-folder tree-icon folder-icon"></i>
+            <span class="tree-label">${escapeHtml(node.name)}</span>
+          </div>
+          <div class="tree-children">
+            ${renderRecursiveCustomNodes(node.children || [], repoId, repoUrl, repoBranch, repoName)}
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="tree-node file">
+          <div class="tree-node-row" data-repo-id="${repoId}" data-file-path="${escapeHtml(node.path)}" data-is-custom="true" data-custom-url="${escapeHtml(repoUrl)}" data-custom-branch="${escapeHtml(repoBranch)}" data-custom-name="${escapeHtml(repoName)}">
+            <span class="tree-arrow"></span>
+            <i class="fa-regular fa-file-lines tree-icon"></i>
+            <span class="tree-label">${escapeHtml(node.name)}</span>
+          </div>
+        </div>
+      `;
+    }
+  });
+  return html;
+}
+
 function loadCustomReposIntoTree() {
   const treeContainer = document.getElementById("treeNodesContainer");
   if (!treeContainer) return;
 
   const customRepos = getStoredCustomRepos();
   customRepos.forEach(repo => {
-    // Check if already in tree
-    if (document.querySelector(`.repo-root-folder[data-repo-id="custom_${repo.id}"]`)) return;
+    const repoId = `custom_${repo.id}`;
+    if (document.querySelector(`.repo-root-folder[data-repo-id="${repoId}"]`)) return;
 
     const rootNode = document.createElement("div");
     rootNode.className = "tree-node folder repo-root-folder expanded";
-    rootNode.setAttribute("data-repo-id", `custom_${repo.id}`);
+    rootNode.setAttribute("data-repo-id", repoId);
     rootNode.innerHTML = `
       <div class="tree-node-row repo-root-row">
         <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
@@ -623,22 +726,48 @@ function loadCustomReposIntoTree() {
         <span class="tree-label" style="font-weight:700;">${escapeHtml(repo.name)}</span>
         <span class="badge badge-outline" style="font-size:0.68rem; margin-left:auto;">CUSTOM</span>
       </div>
-      <div class="tree-children">
-        <div class="tree-node file">
-          <div class="tree-node-row" data-repo-id="custom_${repo.id}" data-file-path="README.md">
-            <span class="tree-arrow"></span>
-            <i class="fa-regular fa-file-lines tree-icon"></i>
-            <span class="tree-label">README.md (Live)</span>
-          </div>
+      <div class="tree-children" id="customTreeChildren_${repo.id}">
+        <div style="padding:0.5rem 1rem; color:var(--text-muted); font-size:0.8rem;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Fetching repository tree...
         </div>
       </div>
     `;
-
-    rootNode.querySelector(".tree-node.file .tree-node-row")?.addEventListener("click", () => {
-      loadLiveCustomRepo(repo.url, repo.branch, repo.name);
-    });
-
     treeContainer.appendChild(rootNode);
+
+    // Fetch recursive tree via API
+    fetch(`/api/training/custom-tree?repo_url=${encodeURIComponent(repo.url)}&branch=${encodeURIComponent(repo.branch)}`)
+      .then(r => r.json())
+      .then(data => {
+        const childrenContainer = document.getElementById(`customTreeChildren_${repo.id}`);
+        if (!childrenContainer) return;
+        if (data.error || !data.tree || data.tree.length === 0) {
+          childrenContainer.innerHTML = `
+            <div class="tree-node file">
+              <div class="tree-node-row" data-repo-id="${repoId}" data-file-path="README.md" data-is-custom="true" data-custom-url="${escapeHtml(repo.url)}" data-custom-branch="${escapeHtml(repo.branch)}" data-custom-name="${escapeHtml(repo.name)}">
+                <span class="tree-arrow"></span>
+                <i class="fa-regular fa-file-lines tree-icon"></i>
+                <span class="tree-label">README.md (Live)</span>
+              </div>
+            </div>
+          `;
+        } else {
+          childrenContainer.innerHTML = renderRecursiveCustomNodes(data.tree, repoId, repo.url, data.branch || repo.branch, repo.name);
+        }
+      })
+      .catch(() => {
+        const childrenContainer = document.getElementById(`customTreeChildren_${repo.id}`);
+        if (childrenContainer) {
+          childrenContainer.innerHTML = `
+            <div class="tree-node file">
+              <div class="tree-node-row" data-repo-id="${repoId}" data-file-path="README.md" data-is-custom="true" data-custom-url="${escapeHtml(repo.url)}" data-custom-branch="${escapeHtml(repo.branch)}" data-custom-name="${escapeHtml(repo.name)}">
+                <span class="tree-arrow"></span>
+                <i class="fa-regular fa-file-lines tree-icon"></i>
+                <span class="tree-label">README.md (Live)</span>
+              </div>
+            </div>
+          `;
+        }
+      });
   });
 }
 
@@ -673,27 +802,31 @@ function saveCustomRepo() {
   if (nameInput) nameInput.value = "";
 
   loadCustomReposIntoTree();
-  loadLiveCustomRepo(url, branch, name);
+  loadLiveCustomRepo(url, branch, name, "README.md");
 }
 
-function loadLiveCustomRepo(url, branch, name) {
+function loadLiveCustomRepo(url, branch, name, filePath = "README.md") {
   const contentBody = document.getElementById("trainingContentBody");
   const fileNameElem = document.getElementById("contentFileName");
   const filePathElem = document.getElementById("contentFilePath");
+
+  currentRepoId = `custom_${name}`;
+  currentFilePath = filePath;
 
   if (contentBody) {
     contentBody.innerHTML = `
       <div style="text-align:center; padding:3rem;">
         <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:var(--primary); margin-bottom:1rem;"></i>
-        <p>Fetching live files from GitHub: <strong>${escapeHtml(url)}</strong>...</p>
+        <p>Fetching live file: <strong>${escapeHtml(filePath)}</strong> from <strong>${escapeHtml(name)}</strong>...</p>
       </div>
     `;
   }
 
-  if (fileNameElem) fileNameElem.textContent = "README.md (Live)";
-  if (filePathElem) filePathElem.textContent = `${name} / README.md`;
+  const baseFileName = filePath.split("/").pop();
+  if (fileNameElem) fileNameElem.textContent = `${baseFileName} (Live)`;
+  if (filePathElem) filePathElem.textContent = `${name} / ${filePath}`;
 
-  fetch(`/api/training/custom-repo?repo_url=${encodeURIComponent(url)}&branch=${encodeURIComponent(branch)}`)
+  fetch(`/api/training/custom-repo?repo_url=${encodeURIComponent(url)}&branch=${encodeURIComponent(branch)}&file_path=${encodeURIComponent(filePath)}`)
     .then(res => res.json())
     .then(data => {
       if (data.error) {
@@ -704,8 +837,7 @@ function loadLiveCustomRepo(url, branch, name) {
       if (contentBody) {
         let html = marked.parse(data.formatted_content || data.raw_content);
         contentBody.innerHTML = `<div class="markdown-pane">${html}</div>`;
-        renderMermaidDiagrams();
-        bindContentImagesForLightbox();
+        postProcessMarkdownContent(contentBody, `custom_${name}`, filePath);
       }
     })
     .catch(err => {
