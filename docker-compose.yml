@@ -1,0 +1,20 @@
+services:
+  devops-hub:
+    image: nagarajkamath602/devops-hub-app-with-interview-quest:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devops-hub
+    restart: unless-stopped
+    ports:
+      - "8926:8926"
+    environment:
+      - PORT=8926
+      - HOST=0.0.0.0
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8926/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

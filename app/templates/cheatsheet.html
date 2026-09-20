@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Hero / Introduction -->
+<div style="margin-bottom:1.5rem;">
+  <h1 style="font-size:1.65rem; font-weight:800; color:var(--text-primary); margin-bottom:0.35rem;">
+    DevOps Command & Infrastructure Cheatsheet
+  </h1>
+  <p style="font-size:0.95rem; color:var(--text-secondary);">
+    Production CLI commands, shell automation scripts, Kubernetes YAML manifests, Terraform HCL, and Ansible playbooks with syntax explanations.
+  </p>
+</div>
+
+<!-- 16 Categories Filter Bar -->
+<div class="cheatsheet-categories-bar">
+  <button type="button" class="cs-tab-pill {% if selected_category == 'all' %}active{% endif %}" data-category="all">
+    <i class="fa-solid fa-layer-group"></i>
+    <span>All Categories</span>
+    <span class="cs-count">{{ total_commands }}</span>
+  </button>
+
+  {% for cat in category_details %}
+  <button type="button" class="cs-tab-pill {% if selected_category == cat.id %}active{% endif %}" data-category="{{ cat.id }}">
+    <i class="fa-solid {{ cat.icon }}"></i>
+    <span>{{ cat.name }}</span>
+    <span class="cs-count">{{ cat.count }}</span>
+  </button>
+  {% endfor %}
+</div>
+
+<!-- Search Controls -->
+<div class="controls-bar" style="margin-bottom:1.5rem;">
+  <div class="search-input-group" style="max-width:500px;">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="csSearchInput" class="search-input" placeholder="Search command, flag, manifest or explanation...">
+  </div>
+  <div style="font-size:0.86rem; color:var(--text-muted); font-weight:500;">
+    Click any command or snippet to copy instantly
+  </div>
+</div>
+
+<!-- Empty State Filter Warning -->
+<div id="csEmptyState" style="display:none; text-align:center; padding:3rem; background:#ffffff; border:1px dashed var(--border-light); border-radius:var(--radius-lg); margin-bottom:1.5rem;">
+  <i class="fa-solid fa-terminal fa-2x" style="color:var(--text-light); margin-bottom:0.75rem;"></i>
+  <h3 style="font-size:1.1rem; color:var(--text-primary); margin-bottom:0.35rem;">No Commands Match Your Filter</h3>
+  <p style="font-size:0.86rem; color:var(--text-secondary);">Try clearing your search terms or picking another category.</p>
+</div>
+
+<!-- Commands & Code Examples Grid -->
+<div class="commands-grid" id="cheatsheetGrid">
+  {% for item in all_items %}
+    {% if item.type == 'code' %}
+    <!-- Multiline Code Example Card (Manifests, Terraform, Dockerfiles) -->
+    <article class="code-example-card cs-item-card" data-category="{{ item.category_id }}">
+      <div class="code-example-header">
+        <div>
+          <span class="badge badge-purple" style="font-size:0.72rem; margin-right:0.4rem;">{{ item.category_name }}</span>
+          <strong class="code-example-title">{{ item.title }}</strong>
+        </div>
+        <button type="button" class="copy-btn copy-btn" data-copy-text="{{ item.command }}">
+          <i class="fa-regular fa-copy"></i> Copy Snippet
+        </button>
+      </div>
+      <div style="padding:0.75rem 1.25rem; font-size:0.88rem; color:var(--text-secondary); background:#ffffff; border-bottom:1px solid var(--border-light);">
+        {{ item.explanation }}
+      </div>
+      <pre class="code-example-pre"><code>{{ item.command }}</code></pre>
+    </article>
+    {% else %}
+    <!-- Standard Single/Two-Line Command Card -->
+    <article class="command-card cs-item-card" data-category="{{ item.category_id }}">
+      <div class="cmd-top-row">
+        <span class="cmd-section-label">{{ item.section }}</span>
+        <div class="cmd-tags">
+          <span class="badge badge-blue">{{ item.category_name }}</span>
+          {% for tag in item.tags[:2] %}
+          <span class="cmd-tag-badge">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Terminal Command Display Box -->
+      <div class="cmd-terminal-box">
+        <span class="cmd-code-text">{{ item.command }}</span>
+        <button type="button" class="copy-btn" data-copy-text="{{ item.command }}" title="Copy command">
+          <i class="fa-regular fa-copy"></i> Copy
+        </button>
+      </div>
+
+      <!-- Explanation & Flags -->
+      <div class="cmd-explanation-text">
+        {{ item.explanation }}
+      </div>
+
+      {% if item.flags %}
+      <div class="cmd-flags-text">
+        <i class="fa-solid fa-code" style="margin-right:0.35rem;"></i>
+        <strong>Key Flags / Syntax:</strong> {{ item.flags }}
+      </div>
+      {% endif %}
+    </article>
+    {% endif %}
+  {% endfor %}
+</div>
+
+{% endblock %}

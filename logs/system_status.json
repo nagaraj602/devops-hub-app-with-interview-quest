@@ -1,0 +1,15 @@
+{
+  "application": "DevOps Knowledge Portal & Interview Hub",
+  "port": 8926,
+  "base_os": "Ubuntu 24.04 LTS",
+  "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
+  "stats": {
+    "total_questions": 1269,
+    "total_companies": 52,
+    "total_rounds": 70,
+    "tech_categories": 18
+  },
+  "last_synced": "2026-09-20T20:40:00+05:30",
+  "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
+  "status": "Healthy"
+}

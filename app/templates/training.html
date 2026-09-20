@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Split Explorer Layout -->
+<div class="training-layout">
+  
+  <!-- Left Sidebar Tree Explorer -->
+  <aside class="tree-sidebar">
+    <div class="tree-sidebar-header">
+      <!-- Repo Selector & Add Custom Repo Button -->
+      <div class="repo-selector-row">
+        <select id="activeRepoSelect" class="repo-select-btn" title="Choose Active Repository">
+          <option value="training" {% if current_repo == 'training' %}selected{% endif %}>📚 ArtisanTek Training</option>
+          <option value="notes" {% if current_repo == 'notes' %}selected{% endif %}>📝 DevOps Notes Repo</option>
+        </select>
+        <button type="button" class="btn btn-outline btn-sm" id="openAddRepoModalBtn" title="Add Custom Public GitHub Repo (Saved in Browser Session)">
+          <i class="fa-solid fa-plus"></i> Add
+        </button>
+      </div>
+
+      <!-- Filter Search in Tree -->
+      <input type="text" id="treeSearchInput" class="tree-search-input" placeholder="Filter files & modules...">
+    </div>
+
+    <!-- Tree Nodes Hierarchy Container -->
+    <div class="tree-nodes-container" id="treeNodesContainer">
+      {% macro render_tree_nodes(nodes) %}
+        {% for node in nodes %}
+          {% if node.type == 'directory' %}
+          <div class="tree-node folder {% if loop.first %}expanded{% endif %}">
+            <div class="tree-node-row">
+              <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+              <i class="fa-solid fa-folder tree-icon"></i>
+              <span class="tree-label">{{ node.name }}</span>
+            </div>
+            <div class="tree-children">
+              {{ render_tree_nodes(node.children) }}
+            </div>
+          </div>
+          {% else %}
+          <div class="tree-node file">
+            <div class="tree-node-row {% if node.name == 'README.md' and loop.first %}active{% endif %}" data-file-path="{{ node.path }}">
+              <span class="tree-arrow"></span>
+              <i class="fa-regular fa-file-lines tree-icon"></i>
+              <span class="tree-label">{{ node.name }}</span>
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+      {% endmacro %}
+
+      {{ render_tree_nodes(tree.children) }}
+    </div>
+  </aside>
+
+  <!-- Right Main Content Viewer -->
+  <section class="content-viewer">
+    <!-- Header Bar -->
+    <div class="content-viewer-header">
+      <div class="content-file-info">
+        <i class="fa-solid fa-file-code content-file-icon"></i>
+        <div>
+          <h2 class="content-file-name" id="contentFileName">{{ initial_file.filename or "README.md" }}</h2>
+          <span class="content-file-path" id="contentFilePath">{{ current_repo }} / {{ initial_file.path or "README.md" }}</span>
+        </div>
+      </div>
+
+      <div class="action-buttons-group">
+        <button type="button" class="btn btn-outline btn-sm" onclick="copyCurrentDocumentText()" title="Copy entire document">
+          <i class="fa-regular fa-copy"></i> Copy Doc
+        </button>
+        <span class="badge badge-green">
+          <i class="fa-solid fa-check"></i> Live Synced
+        </span>
+      </div>
+    </div>
+
+    <!-- Content Body Pane (Markdown, Diagrams, Accordion Q&A, Lightbox-enabled Images) -->
+    <div class="content-body" id="trainingContentBody">
+      <div class="markdown-pane">
+        {{ initial_file.formatted_content or initial_file.raw_content }}
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Add Custom Repository Modal (Saved in Browser Session Storage) -->
+<div class="modal-overlay" id="addRepoModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-brands fa-github" style="color:var(--primary);"></i>
+        <span>Add Public GitHub Repository</span>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeModal('addRepoModal')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.86rem; color:var(--text-secondary); margin-bottom:1.25rem;">
+        Add any public GitHub repository to explore its curriculum and notes live in this portal. Custom repos are saved in your browser storage.
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <div>
+          <label style="display:block; font-size:0.84rem; font-weight:700; margin-bottom:0.4rem;">
+            GitHub Repository URL <span style="color:var(--danger);">*</span>
+          </label>
+          <input type="text" id="customRepoUrlInput" class="search-input" style="padding-left:0.85rem;" placeholder="https://github.com/username/repository">
+        </div>
+
+        <div>
+          <label style="display:block; font-size:0.84rem; font-weight:700; margin-bottom:0.4rem;">
+            Display Name (Optional)
+          </label>
+          <input type="text" id="customRepoNameInput" class="search-input" style="padding-left:0.85rem;" placeholder="e.g. My Kubernetes Labs">
+        </div>
+
+        <div>
+          <label style="display:block; font-size:0.84rem; font-weight:700; margin-bottom:0.4rem;">
+            Branch
+          </label>
+          <input type="text" id="customRepoBranchInput" class="search-input" style="padding-left:0.85rem;" value="main">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('addRepoModal')">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" id="saveCustomRepoBtn">
+        <i class="fa-solid fa-plus"></i> Add to Session
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyCurrentDocumentText() {
+  const content = document.getElementById("trainingContentBody")?.innerText;
+  if (content) {
+    copyTextToClipboard(content, "Document text copied!");
+  }
+}
+</script>
+
+{% endblock %}

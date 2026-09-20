@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ page_title }} - DevOps Knowledge Portal & Interview Hub</title>
+  
+  <!-- FontAwesome 6 Free CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Modular Feature CSS -->
+  <link rel="stylesheet" href="/static/css/theme.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  {% if active_page == 'question_bank' %}
+  <link rel="stylesheet" href="/static/css/question_bank.css">
+  {% elif active_page == 'project' %}
+  <link rel="stylesheet" href="/static/css/project.css">
+  {% elif active_page == 'training' %}
+  <link rel="stylesheet" href="/static/css/training.css">
+  {% elif active_page == 'cheatsheet' %}
+  <link rel="stylesheet" href="/static/css/cheatsheet.css">
+  {% elif active_page == 'sync' %}
+  <link rel="stylesheet" href="/static/css/sync.css">
+  {% endif %}
+
+  <!-- Marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Mermaid.js for Flowcharts & Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="app-container header-inner">
+      <!-- Brand / Logo -->
+      <a href="/question-bank" class="brand-group">
+        <div class="brand-icon">
+          <i class="fa-solid fa-cloud-bolt"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">DevOps Hub</span>
+          <span class="brand-subtitle">Interview & Knowledge Portal</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Bar -->
+      <nav class="main-nav">
+        <a href="/question-bank" class="nav-link {% if active_page == 'question_bank' %}active{% endif %}">
+          <i class="fa-solid fa-circle-question"></i>
+          <span>Question Bank</span>
+        </a>
+        <a href="/project" class="nav-link {% if active_page == 'project' %}active{% endif %}">
+          <i class="fa-solid fa-diagram-project"></i>
+          <span>Project</span>
+        </a>
+        <a href="/training-materials" class="nav-link {% if active_page == 'training' %}active{% endif %}">
+          <i class="fa-solid fa-book-open-reader"></i>
+          <span>Training Materials</span>
+        </a>
+        <a href="/command-cheatsheet" class="nav-link {% if active_page == 'cheatsheet' %}active{% endif %}">
+          <i class="fa-solid fa-terminal"></i>
+          <span>Command Cheatsheet</span>
+        </a>
+        <a href="/sync-all" class="nav-link {% if active_page == 'sync' %}active{% endif %}">
+          <i class="fa-solid fa-rotate"></i>
+          <span>Sync all</span>
+        </a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="header-actions">
+        <!-- Font Settings Trigger -->
+        <button type="button" class="header-btn" onclick="openModal('fontSettingsModal')" title="Adjust Font & Reading Settings">
+          <i class="fa-solid fa-font"></i>
+          <span class="btn-text-label">Font Settings</span>
+        </button>
+
+        <!-- GitHub Repo Link -->
+        <a href="https://github.com/nagaraj602/devops-hub-app-with-interview-quest" target="_blank" class="header-btn" title="View GitHub Database Repo">
+          <i class="fa-brands fa-github"></i>
+          <span class="btn-text-label">Git DB</span>
+        </a>
+
+        <!-- Mobile Menu Hamburger -->
+        <button type="button" class="mobile-toggle" id="mobileToggleBtn" aria-label="Toggle Navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Navigation -->
+    <div class="mobile-drawer" id="mobileNavDrawer">
+      <a href="/question-bank" class="nav-link {% if active_page == 'question_bank' %}active{% endif %}">
+        <i class="fa-solid fa-circle-question"></i>
+        <span>Question Bank</span>
+      </a>
+      <a href="/project" class="nav-link {% if active_page == 'project' %}active{% endif %}">
+        <i class="fa-solid fa-diagram-project"></i>
+        <span>Project</span>
+      </a>
+      <a href="/training-materials" class="nav-link {% if active_page == 'training' %}active{% endif %}">
+        <i class="fa-solid fa-book-open-reader"></i>
+        <span>Training Materials</span>
+      </a>
+      <a href="/command-cheatsheet" class="nav-link {% if active_page == 'cheatsheet' %}active{% endif %}">
+        <i class="fa-solid fa-terminal"></i>
+        <span>Command Cheatsheet</span>
+      </a>
+      <a href="/sync-all" class="nav-link {% if active_page == 'sync' %}active{% endif %}">
+        <i class="fa-solid fa-rotate"></i>
+        <span>Sync all</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    <div class="app-container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="app-container footer-inner">
+      <div>
+        <span>DevOps Knowledge Portal & Interview Hub &copy; 2026. Powered by Git Database Architecture.</span>
+      </div>
+      <div class="footer-links">
+        <a href="/question-bank">Questions</a>
+        <a href="/project">Project Architecture</a>
+        <a href="/training-materials">Curriculum</a>
+        <a href="/command-cheatsheet">Cheatsheet</a>
+        <a href="/sync-all">Continuous Logs</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Font Settings Modal -->
+  <div class="modal-overlay" id="fontSettingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-sliders" style="color:var(--primary);"></i>
+          <span>Typography & Font Settings</span>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('fontSettingsModal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.86rem; color:var(--text-secondary); margin-bottom:1.25rem;">
+          Customize reading preferences to fit your device screen perfectly without text congestion or awkward two-line overflows.
+        </p>
+
+        <!-- Font Family -->
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block; font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:0.6rem;">
+            <i class="fa-solid fa-font" style="margin-right:0.35rem;"></i> Font Family
+          </label>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
+            <label style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.65rem; text-align:center; cursor:pointer; font-size:0.86rem; font-weight:600;">
+              <input type="radio" name="font-family" value="sans" style="margin-right:0.3rem;"> Clean Sans
+            </label>
+            <label style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.65rem; text-align:center; cursor:pointer; font-size:0.86rem; font-family:var(--font-family-code); font-weight:600;">
+              <input type="radio" name="font-family" value="mono" style="margin-right:0.3rem;"> Monospace
+            </label>
+            <label style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.65rem; text-align:center; cursor:pointer; font-size:0.86rem; font-family:Georgia, serif; font-weight:600;">
+              <input type="radio" name="font-family" value="serif" style="margin-right:0.3rem;"> Serif
+            </label>
+          </div>
+        </div>
+
+        <!-- Font Size -->
+        <div>
+          <label style="display:block; font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:0.6rem;">
+            <i class="fa-solid fa-text-height" style="margin-right:0.35rem;"></i> Font Size
+          </label>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.5rem;">
+            <label style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.55rem; text-align:center; cursor:pointer; font-size:0.8rem;">
+              <input type="radio" name="font-size" value="sm"> Small
+            </label>
+            <label style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.55rem; text-align:center; cursor:pointer; font-size:0.85rem;">
+              <input type="radio" name="font-size" value="md"> Normal
+            </label>
+            <label style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.55rem; text-align:center; cursor:pointer; font-size:0.9rem;">
+              <input type="radio" name="font-size" value="lg"> Large
+            </label>
+            <label style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.55rem; text-align:center; cursor:pointer; font-size:0.95rem;">
+              <input type="radio" name="font-size" value="xl"> XL
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary btn-sm" onclick="closeModal('fontSettingsModal')">
+          Save & Apply
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Image Lightbox Modal -->
+  <div class="lightbox-modal" id="imageLightboxModal">
+    <div class="lightbox-header">
+      <span class="lightbox-title" id="lightboxTitle">Image Preview</span>
+      <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" title="Close Lightbox (Esc)">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="lightbox-viewport" id="lightboxViewport">
+      <img src="" alt="Zoomable Image" class="lightbox-img" id="lightboxImage">
+    </div>
+    <div class="lightbox-toolbar">
+      <button type="button" class="lightbox-tool-btn" id="btnZoomOut" title="Zoom Out (Scroll Down)">
+        <i class="fa-solid fa-magnifying-glass-minus"></i>
+      </button>
+      <button type="button" class="lightbox-tool-btn" id="btnZoomReset" title="Reset Zoom (1:1 / Double Click)">
+        <i class="fa-solid fa-arrows-rotate"></i> Reset
+      </button>
+      <button type="button" class="lightbox-tool-btn" id="btnZoomIn" title="Zoom In (Scroll Up)">
+        <i class="fa-solid fa-magnifying-glass-plus"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Common Script -->
+  <script src="/static/js/common.js"></script>
+  {% if active_page == 'question_bank' %}
+  <script src="/static/js/question_bank.js"></script>
+  {% elif active_page == 'project' %}
+  <script src="/static/js/project.js"></script>
+  {% elif active_page == 'training' %}
+  <script src="/static/js/training.js"></script>
+  {% elif active_page == 'cheatsheet' %}
+  <script src="/static/js/cheatsheet.js"></script>
+  {% elif active_page == 'sync' %}
+  <script src="/static/js/sync.js"></script>
+  {% endif %}
+
+</body>
+</html>

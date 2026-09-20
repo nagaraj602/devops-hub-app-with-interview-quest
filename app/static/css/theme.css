@@ -1,0 +1,154 @@
+/* ==============================================================================
+   Smooth White Theme & Global Typography Variables
+   ============================================================================== */
+
+:root {
+  /* Smooth White Color Palette */
+  --bg-main: #ffffff;
+  --bg-subtle: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-alt: #f1f5f9;
+  --border-light: #e2e8f0;
+  --border-subtle: #cbd5e1;
+  --border-focus: #6366f1;
+
+  /* Text Colors (High Contrast, Crisp & Easy on the eyes) */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  /* Brand & Accent Colors */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --primary-border: #c7d2fe;
+
+  --success: #10b981;
+  --success-light: #ecfdf5;
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --info: #0284c7;
+  --info-light: #f0f9ff;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  /* Font Settings (Customizable by user in real-time) */
+  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-family-code: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  --base-font-size: 15px;
+  --line-height-base: 1.6;
+}
+
+/* User font setting classes */
+body.font-sans {
+  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+body.font-mono {
+  --font-family-base: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+body.font-serif {
+  --font-family-base: "Georgia", Cambria, "Times New Roman", Times, serif;
+}
+
+body.size-sm {
+  --base-font-size: 13.5px;
+  --line-height-base: 1.5;
+}
+body.size-md {
+  --base-font-size: 15px;
+  --line-height-base: 1.6;
+}
+body.size-lg {
+  --base-font-size: 16.5px;
+  --line-height-base: 1.65;
+}
+body.size-xl {
+  --base-font-size: 18px;
+  --line-height-base: 1.7;
+}
+
+/* Base Reset & Smooth White Styling */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: var(--base-font-size);
+  scroll-behavior: smooth;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: 1rem;
+  line-height: var(--line-height-base);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Ensure text selection & copying is 100% unrestricted */
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+}
+
+/* Text Selection styling */
+::selection {
+  background-color: #c7d2fe;
+  color: #1e1b4b;
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Code & Pre */
+code, kbd, samp, pre {
+  font-family: var(--font-family-code);
+  font-size: 0.9em;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* Custom Scrollbar for smooth look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

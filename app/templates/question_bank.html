@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Top Stats Cards Grid -->
+<section class="stats-grid">
+  <!-- Total Companies -->
+  <div class="stat-card">
+    <div class="stat-icon blue">
+      <i class="fa-solid fa-building"></i>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Total Companies</span>
+      <span class="stat-value">{{ stats.total_companies }}</span>
+      <span class="stat-desc">Curated Orgs</span>
+    </div>
+  </div>
+
+  <!-- Interview Rounds -->
+  <div class="stat-card">
+    <div class="stat-icon purple">
+      <i class="fa-solid fa-layer-group"></i>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Interview Rounds</span>
+      <span class="stat-value">{{ stats.total_rounds }}</span>
+      <span class="stat-desc">L1, L2, Manager</span>
+    </div>
+  </div>
+
+  <!-- Total Questions -->
+  <div class="stat-card">
+    <div class="stat-icon emerald">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Total Questions</span>
+      <span class="stat-value">{{ stats.total_questions }}</span>
+      <span class="stat-desc">All Questions</span>
+    </div>
+  </div>
+
+  <!-- Tech Categories -->
+  <div class="stat-card">
+    <div class="stat-icon amber">
+      <i class="fa-solid fa-tags"></i>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Tech Categories</span>
+      <span class="stat-value">{{ stats.tech_categories_count }}</span>
+      <span class="stat-desc">CI/CD, K8s, etc.</span>
+    </div>
+  </div>
+
+  <!-- My Favorites (Interactive Bookmark Counter) -->
+  <div class="stat-card" id="statCardFavorites" title="Click to filter bookmarked questions">
+    <div class="stat-icon rose">
+      <i class="fa-solid fa-star"></i>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">My Favorites</span>
+      <span class="stat-value" id="statFavoritesCount">0</span>
+      <span class="stat-desc">Bookmarked</span>
+    </div>
+  </div>
+</section>
+
+<!-- Category Filter Pills Bar -->
+<section class="category-filter-wrap">
+  <!-- All Category Pill -->
+  <button type="button" class="category-pill active" data-category="All">
+    <span>All</span>
+    <span class="pill-count">{{ stats.total_questions }}</span>
+  </button>
+
+  {% for cat in category_pills %}
+  <button type="button" class="category-pill" data-category="{{ cat.name }}">
+    <span>{{ cat.name }}</span>
+    <span class="pill-count">{{ cat.count }}</span>
+  </button>
+  {% endfor %}
+</section>
+
+<!-- Controls Bar: Search, Sort, Expand/Collapse Buttons & Calendar Trigger -->
+<section class="controls-bar">
+  <!-- Live Search Box -->
+  <div class="search-input-group">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="qbSearchInput" class="search-input" placeholder="Search company, round, topic, question or answer..." value="{{ search_query }}">
+  </div>
+
+  <!-- Sort Dropdown -->
+  <select id="qbSortSelect" class="sort-select" title="Sort listing">
+    <option value="recent">Sort: Most Recent (Default)</option>
+    <option value="name_asc">Company Name (A - Z)</option>
+    <option value="name_desc">Company Name (Z - A)</option>
+    <option value="most_questions">Most Questions</option>
+    <option value="date">Interview Date</option>
+  </select>
+
+  <!-- Action Controls -->
+  <div class="action-buttons-group">
+    <!-- Calendar Popup Button -->
+    <button type="button" class="btn btn-outline" id="calendarTriggerBtn" title="View Interview Dates by Month">
+      <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
+      <span>Calendar</span>
+    </button>
+
+    <!-- Expand / Collapse All Companies -->
+    <button type="button" class="btn btn-secondary" id="expandAllCompaniesBtn" title="Expand all company & round containers">
+      <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+      <span>Expand All</span>
+    </button>
+
+    <button type="button" class="btn btn-secondary" id="collapseAllCompaniesBtn" title="Collapse all companies & rounds">
+      <i class="fa-solid fa-down-left-and-up-right-to-center"></i>
+      <span>Collapse All</span>
+    </button>
+
+    <!-- Separate Button: Expand / Collapse All Answers -->
+    <button type="button" class="btn btn-primary" id="expandAllAnswersBtn" title="Expand answers for all questions">
+      <i class="fa-solid fa-eye"></i>
+      <span>Expand Answers</span>
+    </button>
+
+    <button type="button" class="btn btn-secondary" id="collapseAllAnswersBtn" title="Collapse all answers">
+      <i class="fa-solid fa-eye-slash"></i>
+      <span>Hide Answers</span>
+    </button>
+  </div>
+</section>
+
+<!-- Empty State Filter Warning (Hidden by default) -->
+<div id="qbEmptyState" style="display:none; text-align:center; padding:3rem; background:#ffffff; border:1px dashed var(--border-light); border-radius:var(--radius-lg); margin-bottom:1.5rem;">
+  <i class="fa-solid fa-filter-circle-xmark fa-2x" style="color:var(--text-light); margin-bottom:0.75rem;"></i>
+  <h3 style="font-size:1.1rem; color:var(--text-primary); margin-bottom:0.35rem;">No Questions Match Your Filters</h3>
+  <p style="font-size:0.86rem; color:var(--text-secondary);">Try selecting a different category or clearing your search keywords.</p>
+</div>
+
+<!-- Companies Accordion List Container -->
+<div class="company-list" id="companyListContainer">
+  {% for company in companies %}
+  <article class="company-card" 
+           id="comp_{{ loop.index }}"
+           data-company-name="{{ company.company_name }}"
+           data-total-questions="{{ company.total_questions }}"
+           data-timestamp="{{ company.timestamp }}"
+           data-file-order="{{ company.file_order }}">
+    
+    <!-- Company Card Header (Collapsed by Default) -->
+    <div class="company-header">
+      <div class="company-title-area">
+        <div class="company-avatar">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <div class="company-details">
+          <h2 class="company-name">{{ company.company_name }}</h2>
+          <div class="company-meta-tags">
+            <!-- Total Questions -->
+            <span class="badge badge-blue">
+              <i class="fa-solid fa-circle-question"></i>
+              {{ company.total_questions }} Questions
+            </span>
+            <!-- Total Rounds -->
+            <span class="badge badge-purple">
+              <i class="fa-solid fa-layer-group"></i>
+              {{ company.rounds|length }} Rounds
+            </span>
+            <!-- Date -->
+            <span class="badge badge-gray">
+              <i class="fa-regular fa-clock"></i>
+              {{ company.latest_date }}
+            </span>
+            <!-- Top Categories -->
+            {% for cat in company.categories[:3] %}
+            <span class="badge badge-green">{{ cat }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="company-header-actions">
+        <span class="toggle-icon">
+          <i class="fa-solid fa-chevron-down"></i>
+        </span>
+      </div>
+    </div>
+
+    <!-- Company Body: Rounds & Questions -->
+    <div class="company-body">
+      {% for round in company.rounds %}
+      <div class="round-block" data-round-name="{{ round.round_name }}">
+        <!-- Round Header -->
+        <div class="round-header">
+          <div class="round-title-group">
+            <i class="fa-solid fa-code-branch" style="color:var(--primary); font-size:0.85rem;"></i>
+            <span class="round-name">{{ round.round_name }}</span>
+            <span class="round-date">• {{ round.date }}</span>
+            <span class="badge badge-blue" style="font-size:0.7rem;">{{ round.questions|length }} Qs</span>
+          </div>
+          <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
+            <i class="fa-solid fa-chevron-down"></i>
+          </span>
+        </div>
+
+        <!-- Questions in this Round -->
+        <div class="round-body">
+          {% for q in round.questions %}
+          <div class="question-item" id="{{ q.id }}" data-category="{{ q.category }}">
+            <!-- Question Title Header -->
+            <div class="question-header">
+              <div class="question-title-wrap">
+                <div class="question-meta-row">
+                  <span class="question-cat-pill">{{ q.category }}</span>
+                  {% if q.is_sub_q %}
+                  <span class="badge badge-amber" style="font-size:0.68rem;">Follow-up</span>
+                  {% endif %}
+                </div>
+                <div class="question-text">{{ q.question }}</div>
+              </div>
+
+              <div class="question-actions">
+                <!-- Bookmark Button -->
+                <button type="button" class="action-icon-btn fav-btn" data-qid="{{ q.id }}" onclick="toggleFavorite('{{ q.id }}', event)" title="Bookmark Question">
+                  <i class="fa-regular fa-star"></i>
+                </button>
+                <!-- Copy Question Text -->
+                <button type="button" class="action-icon-btn copy-q-btn" title="Copy Question text">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Answer Drawer (Collapsed by default, expand answers button expands) -->
+            <div class="answer-body">
+              <div class="answer-header-bar">
+                <span><i class="fa-solid fa-circle-check" style="color:var(--success); margin-right:0.35rem;"></i> Verified Production Answer</span>
+                <button type="button" class="copy-btn copy-ans-btn">
+                  <i class="fa-regular fa-copy"></i> Copy Answer
+                </button>
+              </div>
+              <div class="answer-markdown">
+                {{ q.answer|safe }}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<!-- Calendar Pop-Up Modal (Month-wise Data) -->
+<div class="modal-overlay" id="calendarModal">
+  <div class="modal-content" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
+        <span>Interview Schedule Calendar</span>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeModal('calendarModal')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body calendar-modal-body">
+      <!-- Month Navigation Bar -->
+      <div class="calendar-nav-bar">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">
+          <i class="fa-solid fa-chevron-left"></i> Prev
+        </button>
+        <span class="calendar-month-title" id="calendarMonthTitle">September 2026</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">
+          Next <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Calendar Days Header -->
+      <div class="calendar-grid-header">
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+        <div>Sun</div>
+      </div>
+
+      <!-- Calendar Days Grid -->
+      <div class="calendar-grid-days" id="calendarGridDays"></div>
+
+      <!-- Selected Date Events View -->
+      <div class="selected-day-events-panel" id="selectedDayEventsPanel" style="display:none;">
+        <h4 class="selected-day-events-title" id="selectedDayTitle">Interviews on this Date:</h4>
+        <div id="selectedDayEventsList"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('calendarModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

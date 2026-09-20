@@ -1,0 +1,31 @@
+# Terraform working directory (Providers and modules)
+.terraform/
+
+# Terraform state files (Local state)
+*.tfstate
+*.tfstate.*
+
+# Terraform lock file (Auto-generated dependency tracker)
+.terraform.lock.hcl
+
+# Variable files containing secrets
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform plan files
+*.tfplan
+*.plan
+
+# CLI configuration files
+.terraformrc
+terraform.rc

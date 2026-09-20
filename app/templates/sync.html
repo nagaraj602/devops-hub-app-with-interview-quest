@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Hero Card with Sync All Action -->
+<section class="sync-hero-card">
+  <div class="sync-hero-info">
+    <h2>Repository Synchronization & Continuous Audit Logs</h2>
+    <p>Live state tracking for connected repositories. All events, deployments, and sync operations are permanently persisted to GitHub in human-readable Markdown format without any external database.</p>
+  </div>
+  <button type="button" class="btn btn-primary" id="triggerSyncAllBtn" style="padding:0.75rem 1.4rem; font-size:0.95rem;">
+    <i class="fa-solid fa-arrows-rotate"></i>
+    <span>Sync All Repositories Now</span>
+  </button>
+</section>
+
+<!-- Active Repositories Status Cards -->
+<section class="repos-status-grid">
+  {% for repo in sync_status.repositories %}
+  <div class="repo-card {% if repo.is_git_database %}highlight{% endif %}">
+    <div>
+      <div class="repo-card-top">
+        <h3 class="repo-name">{{ repo.name }}</h3>
+        {% if repo.is_git_database %}
+        <span class="badge badge-purple">Git Native DB</span>
+        {% else %}
+        <span class="badge badge-green">Connected</span>
+        {% endif %}
+      </div>
+      <a href="{{ repo.url }}" target="_blank" class="repo-url-link">
+        <i class="fa-brands fa-github" style="margin-right:0.25rem;"></i> {{ repo.url }}
+      </a>
+      <p class="repo-desc">{{ repo.description }}</p>
+    </div>
+
+    <div>
+      <div class="repo-meta-row">
+        <span><strong>Branch:</strong> {{ repo.branch }}</span>
+        <span><strong>Commit:</strong> <code>{{ repo.latest_commit }}</code></span>
+      </div>
+      <div style="margin-top:0.85rem; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.78rem; color:var(--text-muted);">
+          <i class="fa-regular fa-clock" style="margin-right:0.25rem;"></i> Last Synced: {{ repo.last_synced }}
+        </span>
+        <button type="button" class="btn btn-secondary btn-sm repo-sync-trigger-btn" data-repo-id="{{ repo.id }}">
+          <i class="fa-solid fa-rotate"></i> Sync
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+
+<!-- Continuous Activity Logs Table -->
+<section class="audit-log-section">
+  <div class="audit-log-header">
+    <div class="audit-log-title">
+      <i class="fa-solid fa-clipboard-list" style="color:var(--primary);"></i>
+      <span>Continuous Activity & Audit Log (logs/audit_log.md)</span>
+    </div>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <span class="badge badge-blue">Persistent on GitHub</span>
+      <button type="button" class="btn btn-outline btn-sm" onclick="refreshAuditLogsTable()">
+        <i class="fa-solid fa-arrows-rotate"></i> Refresh Log
+      </button>
+    </div>
+  </div>
+
+  <div class="audit-table-wrap">
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>Timestamp (IST)</th>
+          <th>Event</th>
+          <th>Target</th>
+          <th>Details / Status</th>
+          <th>Triggered By</th>
+        </tr>
+      </thead>
+      <tbody id="auditLogsTableBody">
+        {% for log in audit_logs %}
+        <tr>
+          <td><code>{{ log.timestamp }}</code></td>
+          <td><span class="badge badge-blue">{{ log.event }}</span></td>
+          <td><strong>{{ log.target }}</strong></td>
+          <td>{{ log.details }}</td>
+          <td><span class="badge badge-gray">{{ log.triggered_by }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_DEFAULT_REGION    = 'us-east-1'
+    }
+
+    stages {
+
+        stage('Terraform Init') {
+            steps {
+                dir('Jenkins-Assignment/simple-terraform-integration-with-jenkins') {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('Jenkins-Assignment/simple-terraform-integration-with-jenkins') {
+                    // Output the plan to a file so the exact same plan is applied later
+                    sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Manual Approval') {
+            steps {
+                input message: 'Review the Terraform Plan output above. Do you want to provision this infrastructure?',
+                      ok: 'Yes, Apply'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('Jenkins-Assignment/simple-terraform-integration-with-jenkins') {
+                    // Apply the exact plan generated in the previous stage
+                    sh 'terraform apply --auto-approve tfplan'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

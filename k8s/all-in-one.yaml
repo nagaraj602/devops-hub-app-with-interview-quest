@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devops-hub
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-hub-deployment
+  namespace: devops-hub
+  labels:
+    app: devops-hub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devops-hub
+  template:
+    metadata:
+      labels:
+        app: devops-hub
+    spec:
+      containers:
+        - name: devops-hub
+          image: nagarajkamath602/devops-hub-app-with-interview-quest:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8926
+              name: http
+          env:
+            - name: PORT
+              value: "8926"
+            - name: HOST
+              value: "0.0.0.0"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8926
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8926
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-hub-service
+  namespace: devops-hub
+spec:
+  type: LoadBalancer # Docker Desktop routes LoadBalancer directly to localhost:8926
+  selector:
+    app: devops-hub
+  ports:
+    - name: http
+      port: 8926
+      targetPort: 8926
+      nodePort: 30926
