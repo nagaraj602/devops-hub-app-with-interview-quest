@@ -4,6 +4,20 @@
 
 <!-- Top Stats Cards Grid -->
 <section class="stats-grid">
+  <!-- Interview Schedule Calendar Pop-up Trigger Card (Placed BEFORE Total Companies) -->
+  <div class="stat-card stat-card-interactive" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
+    <div class="stat-icon indigo" style="background:#eef2ff; color:var(--primary);">
+      <i class="fa-regular fa-calendar-days"></i>
+    </div>
+    <div class="stat-info">
+      <span class="stat-label">Interview Calendar</span>
+      <span class="stat-value" style="font-size:1.15rem; display:flex; align-items:center; gap:0.35rem;">
+        Calendar <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; color:var(--primary);"></i>
+      </span>
+      <span class="stat-desc">Month-wise Dates</span>
+    </div>
+  </div>
+
   <!-- Total Companies -->
   <div class="stat-card">
     <div class="stat-icon blue">
@@ -81,7 +95,7 @@
   {% endfor %}
 </section>
 
-<!-- Controls Bar: Search, Sort, Expand/Collapse Buttons & Calendar Trigger -->
+<!-- Controls Bar: Search, Sort, Expand/Collapse Buttons -->
 <section class="controls-bar">
   <!-- Live Search Box -->
   <div class="search-input-group">
@@ -100,12 +114,6 @@
 
   <!-- Action Controls -->
   <div class="action-buttons-group">
-    <!-- Calendar Popup Button -->
-    <button type="button" class="btn btn-outline" id="calendarTriggerBtn" title="View Interview Dates by Month">
-      <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
-      <span>Calendar</span>
-    </button>
-
     <!-- Expand / Collapse All Companies -->
     <button type="button" class="btn btn-secondary" id="expandAllCompaniesBtn" title="Expand all company & round containers">
       <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
@@ -154,7 +162,12 @@
           <i class="fa-solid fa-building"></i>
         </div>
         <div class="company-details">
-          <h2 class="company-name">{{ company.company_name }}</h2>
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <h2 class="company-name">{{ company.company_name }}</h2>
+            <button type="button" class="action-icon-btn copy-name-btn" title="Copy Company Name" onclick="copyText('{{ company.company_name }}', event)" style="width:24px; height:24px; font-size:0.75rem;">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
           <div class="company-meta-tags">
             <!-- Total Questions -->
             <span class="badge badge-blue">
@@ -197,6 +210,9 @@
             <span class="round-name">{{ round.round_name }}</span>
             <span class="round-date">• {{ round.date }}</span>
             <span class="badge badge-blue" style="font-size:0.7rem;">{{ round.questions|length }} Qs</span>
+            <button type="button" class="action-icon-btn copy-name-btn" title="Copy Round Name" onclick="copyText('{{ round.round_name }}', event)" style="width:22px; height:22px; font-size:0.7rem;">
+              <i class="fa-regular fa-copy"></i>
+            </button>
           </div>
           <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
             <i class="fa-solid fa-chevron-down"></i>
@@ -240,7 +256,7 @@
                 </button>
               </div>
               <div class="answer-markdown">
-                {{ q.answer|safe }}
+                {{ q.answer_html|default(q.answer)|safe }}
               </div>
             </div>
           </div>

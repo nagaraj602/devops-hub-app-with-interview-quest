@@ -11,6 +11,12 @@ This document serves as the continuous, human-readable system log persisted dire
 | 2026-09-20 20:40:00 | Data Seed | Commands Cheatsheet | Loaded 16 Categories (Linux, K8s, Docker, Terraform, etc.) | Cheatsheet Loader |
 | 2026-09-20 20:40:00 | Repo Linked | Training Materials | Configured live sync from https://github.com/artisantek/training-materials.git | System |
 | 2026-09-20 20:40:00 | Repo Linked | Notes Repo | Configured live sync from https://github.com/nagaraj602/Notes.git | System |
+| 2026-09-20 22:30:00 | Content Rewrite | Question Bank Answers | Rewrote 42 questions in Basic IQ and 7 in Part 2 with multi-method answers, scenarios, and pushed to Notes repo | Content Upgrade |
+| 2026-09-20 22:35:00 | UI Overhaul | Project Architecture | Redesigned project page with top guide card, impact metrics, interactive sizing calculator, and prep accordions | UI Upgrade |
+| 2026-09-20 22:40:00 | UI Polish | Navigation & App Logs | Added App Logs page with live Kubernetes vs Compose runtime detection and component health check; added SVG favicon | Feature Addition |
+| 2026-09-20 22:50:00 | Feature Upgrade | Training Materials | Enabled combined multi-repo tree (ArtisanTek + Notes), debounced full-text search with match highlighting & floating navigator | Feature Addition |
+| 2026-09-20 22:55:00 | Bugfix | Mermaid & Image Proxy | Sanitized Mermaid flowchart syntax, converted raw GitHub URLs to local /api/training/raw/ proxy endpoints | Bugfix |
+| 2026-09-20 23:00:00 | Docker & K8s Rollout | Kubernetes Deployment | Built and pushed nagarajkamath602/devops-hub-app-with-interview-quest:latest, updated imagePullPolicy to Always, and verified rollout | Deployment |
 
 ## Active Repositories Monitored
 

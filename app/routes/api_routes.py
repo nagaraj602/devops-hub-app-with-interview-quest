@@ -103,6 +103,14 @@ async def get_calendar_events():
     data = question_bank_service.get_data()
     return data["calendar_events"]
 
+@router.get("/training/trees")
+async def get_combined_training_trees():
+    return training_service.get_combined_trees()
+
+@router.get("/training/search")
+async def search_training_files(q: str = Query(..., min_length=2), repo: Optional[str] = None):
+    return training_service.search_files(q, repo)
+
 @router.get("/training/tree/{repo_id}")
 async def get_training_tree(repo_id: str):
     return training_service.get_repo_tree(repo_id)

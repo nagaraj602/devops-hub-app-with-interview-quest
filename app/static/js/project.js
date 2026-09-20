@@ -72,3 +72,16 @@ function initClusterCalculator() {
 
   updateCalculations();
 }
+
+function togglePrepAccordion(accordionId) {
+  const item = document.getElementById(accordionId);
+  if (!item) return;
+
+  // Check if text is currently selected by user
+  const selectedText = window.getSelection().toString();
+  if (selectedText && selectedText.length > 0) {
+    return;
+  }
+
+  item.classList.toggle("expanded");
+}

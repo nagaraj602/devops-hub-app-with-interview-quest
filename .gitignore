@@ -9,3 +9,7 @@ tmp/
 .vscode/
 .idea/
 *.swp
+Screenshot*
+*.jpg
+*.jpeg
+*.png

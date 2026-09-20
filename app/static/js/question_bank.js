@@ -236,8 +236,19 @@ function initGlobalAccordions() {
 
 // Individual Company, Round & Question Accordion Click Handlers
 function initQuestionToggles() {
-  // Company click
   document.addEventListener("click", (e) => {
+    // If clicking on copy button or fav button, do not toggle accordions
+    if (e.target.closest(".action-icon-btn") || e.target.closest(".copy-btn") || e.target.closest(".copy-name-btn")) {
+      return;
+    }
+
+    // Check if user currently has text selected with mouse drag
+    const selectedText = window.getSelection().toString();
+    if (selectedText && selectedText.trim().length > 0) {
+      return;
+    }
+
+    // Company header click
     const compHeader = e.target.closest(".company-header");
     if (compHeader) {
       const card = compHeader.closest(".company-card");
@@ -247,7 +258,7 @@ function initQuestionToggles() {
       return;
     }
 
-    // Round click
+    // Round header click
     const roundHeader = e.target.closest(".round-header");
     if (roundHeader) {
       const block = roundHeader.closest(".round-block");

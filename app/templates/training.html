@@ -8,19 +8,33 @@
   <!-- Left Sidebar Tree Explorer -->
   <aside class="tree-sidebar">
     <div class="tree-sidebar-header">
-      <!-- Repo Selector & Add Custom Repo Button -->
-      <div class="repo-selector-row">
-        <select id="activeRepoSelect" class="repo-select-btn" title="Choose Active Repository">
-          <option value="training" {% if current_repo == 'training' %}selected{% endif %}>📚 ArtisanTek Training</option>
-          <option value="notes" {% if current_repo == 'notes' %}selected{% endif %}>📝 DevOps Notes Repo</option>
-        </select>
+      <!-- Title & Add Custom Repo Button -->
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+        <span style="font-size:0.88rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+          <i class="fa-solid fa-folder-tree" style="color:var(--primary);"></i> Knowledge Repos
+        </span>
         <button type="button" class="btn btn-outline btn-sm" id="openAddRepoModalBtn" title="Add Custom Public GitHub Repo (Saved in Browser Session)">
           <i class="fa-solid fa-plus"></i> Add
         </button>
       </div>
 
-      <!-- Filter Search in Tree -->
-      <input type="text" id="treeSearchInput" class="tree-search-input" placeholder="Filter files & modules...">
+      <!-- Search Wrapper: Tree Filter & Full-Text Search -->
+      <div class="tree-search-wrapper">
+        <div class="search-input-group">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="treeSearchInput" class="tree-search-input" placeholder="Search files or full text..." autocomplete="off">
+          <button type="button" id="searchClearBtn" class="search-clear-btn" title="Clear search"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Full-Text Search Results Panel -->
+        <div id="searchResultsPanel" class="search-results-panel">
+          <div class="search-results-header">
+            <span id="searchResultsCount">0 results</span>
+            <button type="button" id="closeSearchResultsBtn" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div id="searchResultsList"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Tree Nodes Hierarchy Container -->
@@ -28,7 +42,7 @@
       {% macro render_tree_nodes(nodes) %}
         {% for node in nodes %}
           {% if node.type == 'directory' %}
-          <div class="tree-node folder {% if loop.first %}expanded{% endif %}">
+          <div class="tree-node folder">
             <div class="tree-node-row">
               <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
               <i class="fa-solid fa-folder tree-icon"></i>
@@ -40,7 +54,7 @@
           </div>
           {% else %}
           <div class="tree-node file">
-            <div class="tree-node-row {% if node.name == 'README.md' and loop.first %}active{% endif %}" data-file-path="{{ node.path }}">
+            <div class="tree-node-row {% if node.name == 'README.md' and loop.first and loop.depth == 1 %}active{% endif %}" data-repo-id="{{ node.repo_id }}" data-file-path="{{ node.path }}">
               <span class="tree-arrow"></span>
               <i class="fa-regular fa-file-lines tree-icon"></i>
               <span class="tree-label">{{ node.name }}</span>
@@ -50,7 +64,23 @@
         {% endfor %}
       {% endmacro %}
 
-      {{ render_tree_nodes(tree.children) }}
+      {% if trees %}
+        {% for root in trees %}
+        <div class="tree-node folder repo-root-folder expanded" data-repo-id="{{ root.repo_id }}">
+          <div class="tree-node-row repo-root-row">
+            <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+            <i class="fa-solid {{ root.icon }} tree-icon" style="color:var(--primary);"></i>
+            <span class="tree-label" style="font-weight:700;">{{ root.name }}</span>
+            <span class="badge badge-outline" style="font-size:0.68rem; margin-left:auto; text-transform:uppercase;">{{ root.repo_id }}</span>
+          </div>
+          <div class="tree-children">
+            {{ render_tree_nodes(root.children) }}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {{ render_tree_nodes(tree.children) }}
+      {% endif %}
     </div>
   </aside>
 
@@ -80,6 +110,20 @@
     <div class="content-body" id="trainingContentBody">
       <div class="markdown-pane">
         {{ initial_file.formatted_content or initial_file.raw_content }}
+      </div>
+    </div>
+
+    <!-- Floating Search Match Navigator -->
+    <div class="search-match-navigator" id="searchMatchNavigator" style="display:none;">
+      <div class="search-nav-info">
+        <i class="fa-solid fa-magnifying-glass" style="color:var(--primary);"></i>
+        <span>Match <strong id="currentMatchNumber">1</strong> of <strong id="totalMatchNumber">1</strong></span>
+        <span class="search-query-badge" id="searchNavQueryBadge"></span>
+      </div>
+      <div class="search-nav-actions">
+        <button type="button" class="btn-match-nav" id="prevMatchBtn" title="Previous match (Shift+Enter)"><i class="fa-solid fa-chevron-up"></i></button>
+        <button type="button" class="btn-match-nav" id="nextMatchBtn" title="Next match (Enter)"><i class="fa-solid fa-chevron-down"></i></button>
+        <button type="button" class="btn-match-close" id="closeSearchNavBtn" title="Clear highlights"><i class="fa-solid fa-xmark"></i></button>
       </div>
     </div>
   </section>

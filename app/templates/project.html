@@ -2,17 +2,130 @@
 
 {% block content %}
 
-<!-- Hero Banner -->
-<section class="project-hero">
-  <span class="project-tag">Production Case Study</span>
-  <h1 class="project-hero-title">{{ project.title }}</h1>
-  <p class="project-hero-desc">
-    Near real-time fraud, account takeover, and seller abuse mitigation platform powering an e-commerce ecosystem with tens of thousands of merchants and millions of active listings. Built on AWS EKS, Jenkins Shared Libraries, Apache Kafka, Terraform IaC, and distributed databases.
-  </p>
+<!-- Main Project Architecture & Guide Container (Matches Screenshot) -->
+<section class="project-main-card">
+  <!-- Header Title & Badge -->
+  <div class="project-guide-header">
+    <div class="project-guide-badge">
+      <i class="fa-solid fa-book-open"></i>
+      <span>{{ project.guide_badge }}</span>
+    </div>
+    <h1 class="project-main-title">{{ project.title }}</h1>
+  </div>
+
+  <!-- Section: Project Overview -->
+  <div class="project-section-block">
+    <div class="project-section-label label-purple">
+      <span class="label-dot"></span>
+      <span>PROJECT OVERVIEW</span>
+    </div>
+    <div class="project-section-text">
+      {% for p in project.overview_paragraphs %}
+      <p>{{ p }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Section: Microservices Architecture -->
+  <div class="project-section-block">
+    <div class="project-section-label label-purple">
+      <span class="label-dot"></span>
+      <span>MICROSERVICES ARCHITECTURE</span>
+    </div>
+    <div class="project-section-text">
+      <p>The platform consisted of approximately 22-25 microservices. Key microservices include:</p>
+      <ul class="project-bullet-list">
+        {% for ms in project.microservices %}
+        <li><strong>{{ ms.name }}:</strong> {{ ms.desc }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Section: Tools & Technologies -->
+  <div class="project-section-block">
+    <div class="project-section-label label-green">
+      <span class="label-dot"></span>
+      <span>TOOLS & TECHNOLOGIES</span>
+    </div>
+    <div class="project-section-text">
+      <ul class="project-bullet-list">
+        {% for tool in project.tools_and_tech %}
+        <li><strong>{{ tool.name }}:</strong> {{ tool.desc }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Section: Key Results & Impact -->
+  <div class="project-section-block">
+    <div class="project-section-label label-amber">
+      <span class="label-dot"></span>
+      <span>KEY RESULTS & IMPACT</span>
+    </div>
+    <div class="project-section-text">
+      <ul class="project-bullet-list">
+        {% for impact in project.key_results %}
+        <li>{{ impact }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Section: Anticipated Follow-Up Questions (Callout Box) -->
+  <div class="anticipated-qa-box">
+    <div class="anticipated-qa-header">
+      <div class="anticipated-qa-icon">
+        <i class="fa-regular fa-circle-question"></i>
+      </div>
+      <div>
+        <h3 class="anticipated-qa-title">Anticipated Follow-Up Questions</h3>
+        <span class="anticipated-qa-subtitle">Only if asked specifically during the interview</span>
+      </div>
+    </div>
+    <div class="anticipated-qa-list">
+      {% for qa in project.anticipated_follow_ups %}
+      <div class="anticipated-qa-item">
+        <h4 class="anticipated-q">&ldquo;{{ qa.question }}&rdquo;</h4>
+        <p class="anticipated-a">&ldquo;{{ qa.answer }}&rdquo;</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Section: Preparation Questions & Answers (Collapsible Accordions) -->
+  <div class="prep-qa-container">
+    <div class="prep-qa-heading-area">
+      <h2 class="prep-qa-main-title">Preparation Questions & Answers</h2>
+      <p class="prep-qa-subtitle">Key responses tailored to this architecture and role.</p>
+    </div>
+
+    <div class="prep-accordion-list">
+      {% for prep in project.prep_questions %}
+      <div class="prep-accordion-item" id="{{ prep.id }}">
+        <div class="prep-accordion-header" onclick="togglePrepAccordion('{{ prep.id }}')">
+          <span class="prep-accordion-title">{{ prep.title }}</span>
+          <span class="prep-accordion-icon">
+            <i class="fa-solid fa-chevron-down"></i>
+          </span>
+        </div>
+        <div class="prep-accordion-body">
+          <div class="prep-markdown-content markdown-pane">
+            {{ prep.content_html|safe }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </section>
 
+<!-- ==============================================================================
+     BOTTOM SECTION (Added at bottom as requested)
+     ============================================================================== -->
+
 <!-- Impact Metrics Strip -->
-<div class="project-metrics-strip">
+<div class="project-metrics-strip" style="margin-top:2.5rem;">
   <div class="metric-box">
     <div class="metric-val">&lt; 10 Mins</div>
     <div class="metric-lbl">Detection Latency (Down from multiple days)</div>
@@ -31,9 +144,7 @@
   </div>
 </div>
 
-<!-- ==============================================================================
-     Interactive Cluster Sizing & Node Capacity Calculator Widget
-     ============================================================================== -->
+<!-- Interactive EKS Cluster Sizing & Capacity Calculator -->
 <section class="cluster-calc-panel">
   <div class="calc-header">
     <div class="calc-title">
@@ -95,7 +206,7 @@
     <div class="calc-results-col">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span style="font-weight:700; color:var(--text-primary);">Recommended Cluster Capacity</span>
-        <span class="badge badge-green" id="resHeadroom">30% Headroom</span>
+        <span class="badge badge-green" id="resHeadroom">31% Headroom</span>
       </div>
 
       <div class="results-summary-row">
@@ -128,10 +239,8 @@
   </div>
 </section>
 
-<!-- ==============================================================================
-     Dedicated High-Priority Interview Q&A Additions
-     ============================================================================== -->
-<section class="highlight-qa-section">
+<!-- Dedicated High-Priority Interview Q&A Deep Dives -->
+<section class="highlight-qa-section" style="margin-top:2.5rem; margin-bottom:2rem;">
   <h2 style="font-size:1.45rem; font-weight:800; color:var(--text-primary); margin-bottom:1.25rem;">
     <i class="fa-solid fa-star" style="color:#f59e0b; margin-right:0.4rem;"></i>
     Crucial Architectural Interview Deep-Dives
@@ -155,36 +264,10 @@
     </div>
 
     <div class="highlight-qa-answer markdown-pane">
-      {{ q.detailed_answer|safe }}
+      {{ q.detailed_answer_html|safe }}
     </div>
   </article>
   {% endfor %}
-</section>
-
-<!-- ==============================================================================
-     Full Project Content & Architectural Guide
-     ============================================================================== -->
-<section style="margin-top:2.5rem;">
-  <h2 style="font-size:1.45rem; font-weight:800; color:var(--text-primary); margin-bottom:1.25rem;">
-    <i class="fa-solid fa-book-open" style="color:var(--primary); margin-right:0.4rem;"></i>
-    Complete Project Architecture & Response Guide
-  </h2>
-
-  <div style="display:flex; flex-direction:column; gap:1.25rem;">
-    {% for sec in project.sections %}
-    <div class="company-card" style="padding:1.5rem;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-light); padding-bottom:0.6rem;">
-        <h3 style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">{{ sec.title }}</h3>
-        <button type="button" class="copy-btn" data-copy-text="{{ sec.content }}">
-          <i class="fa-regular fa-copy"></i> Copy Section
-        </button>
-      </div>
-      <div style="font-size:0.94rem; line-height:1.7; color:var(--text-secondary); white-space:pre-line;">
-        {{ sec.content }}
-      </div>
-    </div>
-    {% endfor %}
-  </div>
 </section>
 
 {% endblock %}

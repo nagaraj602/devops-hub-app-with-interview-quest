@@ -10,29 +10,62 @@ class TrainingService:
         self.training_dir = Path(training_dir or TRAINING_MATERIALS_DIR)
         self.notes_dir = Path(notes_dir or NOTES_DIR)
 
+    def get_combined_trees(self) -> List[Dict[str, Any]]:
+        """Returns folder trees for both default repositories (ArtisanTek Training and DevOps Notes)."""
+        trees = []
+
+        # 1. ArtisanTek Training Materials
+        if self.training_dir.exists():
+            trees.append({
+                "repo_id": "training",
+                "name": "ArtisanTek Training Materials",
+                "icon": "fa-graduation-cap",
+                "type": "directory",
+                "path": "",
+                "children": self._scan_directory(self.training_dir, self.training_dir, "training")
+            })
+
+        # 2. DevOps Notes Repo
+        if self.notes_dir.exists():
+            trees.append({
+                "repo_id": "notes",
+                "name": "DevOps Notes Repo",
+                "icon": "fa-book-bookmark",
+                "type": "directory",
+                "path": "",
+                "children": self._scan_directory(self.notes_dir, self.notes_dir, "notes")
+            })
+
+        return trees
+
     def get_repo_tree(self, repo_id: str) -> Dict[str, Any]:
         """Builds hierarchical folder/file tree for a repository."""
         if repo_id == "training":
             root_dir = self.training_dir
             repo_name = "ArtisanTek Training Materials"
+            icon = "fa-graduation-cap"
         elif repo_id == "notes":
             root_dir = self.notes_dir
             repo_name = "DevOps Notes Repo"
+            icon = "fa-book-bookmark"
         else:
             root_dir = self.training_dir
             repo_name = "Training Materials"
+            icon = "fa-folder"
 
         if not root_dir.exists():
-            return {"name": repo_name, "type": "directory", "children": []}
+            return {"repo_id": repo_id, "name": repo_name, "icon": icon, "type": "directory", "children": []}
 
         return {
+            "repo_id": repo_id,
             "name": repo_name,
+            "icon": icon,
             "type": "directory",
             "path": "",
-            "children": self._scan_directory(root_dir, root_dir)
+            "children": self._scan_directory(root_dir, root_dir, repo_id)
         }
 
-    def _scan_directory(self, current_dir: Path, base_dir: Path) -> List[Dict[str, Any]]:
+    def _scan_directory(self, current_dir: Path, base_dir: Path, repo_id: str = "training") -> List[Dict[str, Any]]:
         nodes = []
         try:
             entries = sorted(list(current_dir.iterdir()), key=lambda e: (not e.is_dir(), e.name.lower()))
@@ -44,9 +77,10 @@ class TrainingService:
                 rel_path = str(entry.relative_to(base_dir)).replace("\\", "/")
 
                 if entry.is_dir():
-                    children = self._scan_directory(entry, base_dir)
+                    children = self._scan_directory(entry, base_dir, repo_id)
                     if children or not any(entry.iterdir()):
                         nodes.append({
+                            "repo_id": repo_id,
                             "name": entry.name,
                             "type": "directory",
                             "path": rel_path,
@@ -55,6 +89,7 @@ class TrainingService:
                 else:
                     if entry.suffix.lower() in [".md", ".txt", ".yaml", ".yml", ".json", ".sh", ".py", ".png", ".jpg", ".jpeg", ".svg"]:
                         nodes.append({
+                            "repo_id": repo_id,
                             "name": entry.name,
                             "type": "file",
                             "path": rel_path,
@@ -93,6 +128,7 @@ class TrainingService:
             if suffix in [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]:
                 return {
                     "is_image": True,
+                    "repo_id": repo_id,
                     "filename": full_path.name,
                     "path": file_path,
                     "raw_url": f"/api/training/raw/{repo_id}/{clean_rel}"
@@ -105,6 +141,7 @@ class TrainingService:
 
             return {
                 "is_image": False,
+                "repo_id": repo_id,
                 "filename": full_path.name,
                 "path": file_path,
                 "raw_content": content,
@@ -113,10 +150,74 @@ class TrainingService:
         except Exception as e:
             return {"error": f"Error reading file: {str(e)}", "content": ""}
 
+    def search_files(self, query: str, repo_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Performs full-text search across all markdown/text files in training materials and notes."""
+        query = query.strip()
+        if not query or len(query) < 2:
+            return []
+
+        q_lower = query.lower()
+        results = []
+
+        repos_to_search = []
+        if not repo_id or repo_id == "all":
+            repos_to_search = [
+                ("training", self.training_dir, "ArtisanTek Training Materials"),
+                ("notes", self.notes_dir, "DevOps Notes Repo")
+            ]
+        elif repo_id == "training":
+            repos_to_search = [("training", self.training_dir, "ArtisanTek Training Materials")]
+        elif repo_id == "notes":
+            repos_to_search = [("notes", self.notes_dir, "DevOps Notes Repo")]
+
+        for r_id, base_dir, r_name in repos_to_search:
+            if not base_dir.exists():
+                continue
+            for root, dirs, files in os.walk(base_dir):
+                # Skip hidden or vendor dirs
+                dirs[:] = [d for d in dirs if not d.startswith(".") and d != "devops-notes-portal-web-app"]
+                for file in sorted(files):
+                    if not file.lower().endswith((".md", ".txt", ".sh", ".yaml", ".yml", ".json")):
+                        continue
+                    file_full = Path(root) / file
+                    try:
+                        with open(file_full, "r", encoding="utf-8", errors="ignore") as f:
+                            content = f.read()
+
+                        if q_lower not in content.lower():
+                            continue
+
+                        rel_path = str(file_full.relative_to(base_dir)).replace("\\", "/")
+                        lines = content.splitlines()
+                        file_matches = 0
+                        snippets = []
+
+                        for idx, line in enumerate(lines, start=1):
+                            if q_lower in line.lower():
+                                file_matches += line.lower().count(q_lower)
+                                if len(snippets) < 4:
+                                    snippets.append({
+                                        "line": idx,
+                                        "text": line.strip()[:180]
+                                    })
+
+                        if file_matches > 0:
+                            results.append({
+                                "repo_id": r_id,
+                                "repo_name": r_name,
+                                "file_path": rel_path,
+                                "filename": file,
+                                "match_count": file_matches,
+                                "snippets": snippets
+                            })
+                    except Exception:
+                        continue
+
+        results.sort(key=lambda x: x["match_count"], reverse=True)
+        return results[:60]
+
     def fetch_live_github_content(self, repo_url: str, branch: str = "main", file_path: str = "README.md") -> Dict[str, Any]:
         """Fetches live content directly from GitHub repository."""
-        # Convert github url to raw githubusercontent url
-        # e.g. https://github.com/owner/repo -> https://raw.githubusercontent.com/owner/repo/branch/file_path
         m = re.match(r'https?://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$', repo_url.strip())
         if not m:
             return {"error": "Invalid GitHub repository URL"}
@@ -143,22 +244,78 @@ class TrainingService:
         """
         Enhances Markdown:
         1. Ensures all QA answers default to collapsed state.
-        2. Formats ```mermaid code blocks into <div class="mermaid">.
-        3. Normalizes image links to load through our image proxy or raw endpoint.
+        2. Formats and sanitizes ```mermaid code blocks into <div class="mermaid">.
+        3. Normalizes image links (relative & raw.githubusercontent.com) to load through local raw endpoint.
         """
-        # 1. Flowchart / Mermaid formatting
+        # 1. Flowchart / Mermaid formatting & syntax sanitation
         def replace_mermaid(match):
-            code = match.group(1).strip()
-            return f'\n<div class="mermaid">\n{code}\n</div>\n'
+            code = match.group(1)
+            extracted_images = []
+
+            # Extract @{ img: "..." } metadata
+            def extract_img(m):
+                node_id = m.group(1)
+                img_url = m.group(2)
+                extracted_images.append((node_id, img_url))
+                return ""
+
+            code = re.sub(r'([A-Za-z0-9_]+)@\{\s*img:\s*["\']([^"\']+)["\'][^}]*\}', extract_img, code)
+
+            # Convert 3 or more hyphens to standard -->
+            code = re.sub(r'-{3,}>', '-->', code)
+
+            # Sanitize node labels with special characters like **
+            def sanitize_labels(m):
+                nid = m.group(1)
+                content = m.group(2).strip()
+                if content.startswith('"') and content.endswith('"'):
+                    return f'{nid}[{content}]'
+                clean_content = content.replace('**', '').replace('"', "'")
+                return f'{nid}["{clean_content}"]'
+
+            code = re.sub(r'([A-Za-z0-9_]+)\[([^\]\n]+)\]', sanitize_labels, code)
+
+            # Strip empty lines
+            code_lines = [l for l in code.splitlines() if l.strip()]
+            clean_code = "\n".join(code_lines)
+
+            mermaid_html = f'\n<div class="mermaid">\n{clean_code}\n</div>\n'
+
+            # If images were attached to flowchart nodes, render a dedicated screenshot gallery below
+            if extracted_images:
+                mermaid_html += '\n<div class="flowchart-screenshots-gallery" style="margin: 1.5rem 0 2rem 0; padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);">\n'
+                mermaid_html += '<h4 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:1rem;"><i class="fa-solid fa-images" style="color:var(--primary); margin-right:0.5rem;"></i>Step-by-Step Screenshots</h4>\n'
+                mermaid_html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;">\n'
+                for node_id, url in extracted_images:
+                    local_url = url
+                    local_url = re.sub(r'https?://raw\.githubusercontent\.com/artisantek/training-materials/(?:master|main)/', '/api/training/raw/training/', local_url)
+                    local_url = re.sub(r'https?://raw\.githubusercontent\.com/nagaraj602/Notes/(?:master|main)/', '/api/training/raw/notes/', local_url)
+                    img_name = Path(url).stem.replace("-", " ").replace("_", " ").title()
+
+                    mermaid_html += f'''  <div class="step-image-card" style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:0.75rem;">
+    <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between;">
+      <span><i class="fa-regular fa-image" style="color:var(--primary); margin-right:0.4rem;"></i>{img_name}</span>
+      <span class="badge badge-outline" style="font-size:0.72rem;">Step {node_id}</span>
+    </div>
+    <div style="overflow:hidden; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;">
+      <img src="{local_url}" alt="{img_name}" class="lightbox-trigger-img" style="width:100%; height:auto; display:block;" loading="lazy">
+    </div>
+  </div>\n'''
+                mermaid_html += '</div>\n</div>\n'
+
+            return mermaid_html
 
         text = re.sub(r'```mermaid\s*([\s\S]*?)```', replace_mermaid, text, flags=re.IGNORECASE)
 
         # 2. Make question/answer blocks collapsed by default
-        # If open <details open>, remove open
         text = re.sub(r'<details\s+open\b[^>]*>', '<details class="notes-qa-accordion">', text, flags=re.IGNORECASE)
         text = re.sub(r'<details>', '<details class="notes-qa-accordion">', text, flags=re.IGNORECASE)
 
-        # 3. Detect relative images and point to app proxy
+        # 3. Rewrite raw.githubusercontent.com URLs for known repos to local raw API endpoints
+        text = re.sub(r'https?://raw\.githubusercontent\.com/artisantek/training-materials/(?:master|main)/', '/api/training/raw/training/', text)
+        text = re.sub(r'https?://raw\.githubusercontent\.com/nagaraj602/Notes/(?:master|main)/', '/api/training/raw/notes/', text)
+
+        # 4. Detect relative images and point to app proxy
         def replace_img(match):
             alt = match.group(1)
             src = match.group(2)

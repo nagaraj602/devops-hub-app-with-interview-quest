@@ -6,6 +6,7 @@ router = APIRouter()
 
 @router.get("/training-materials", response_class=HTMLResponse)
 async def training_materials_view(request: Request, repo: str = "training"):
+    trees = training_service.get_combined_trees()
     tree = training_service.get_repo_tree(repo)
     initial_file = training_service.get_file_content(repo, "README.md")
     return request.app.state.templates.TemplateResponse(
@@ -15,6 +16,7 @@ async def training_materials_view(request: Request, repo: str = "training"):
             "page_title": "Training Materials & Notes Explorer",
             "active_page": "training",
             "current_repo": repo,
+            "trees": trees,
             "tree": tree,
             "initial_file": initial_file
         }

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>{{ page_title }} - DevOps Knowledge Portal & Interview Hub</title>
   
+  <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+  
   <!-- FontAwesome 6 Free CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
@@ -20,14 +22,14 @@
   <link rel="stylesheet" href="/static/css/training.css">
   {% elif active_page == 'cheatsheet' %}
   <link rel="stylesheet" href="/static/css/cheatsheet.css">
-  {% elif active_page == 'sync' %}
+  {% elif active_page == 'sync' or active_page == 'app_logs' %}
   <link rel="stylesheet" href="/static/css/sync.css">
   {% endif %}
 
   <!-- Marked.js for Markdown parsing -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <!-- Mermaid.js for Flowcharts & Diagrams -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- Mermaid.js for Flowcharts & Diagrams (v11) -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 </head>
 <body>
 
@@ -63,9 +65,9 @@
           <i class="fa-solid fa-terminal"></i>
           <span>Command Cheatsheet</span>
         </a>
-        <a href="/sync-all" class="nav-link {% if active_page == 'sync' %}active{% endif %}">
-          <i class="fa-solid fa-rotate"></i>
-          <span>Sync all</span>
+        <a href="/app-logs" class="nav-link {% if active_page == 'app_logs' %}active{% endif %}">
+          <i class="fa-solid fa-server"></i>
+          <span>App Logs</span>
         </a>
       </nav>
 
@@ -77,10 +79,10 @@
           <span class="btn-text-label">Font Settings</span>
         </button>
 
-        <!-- GitHub Repo Link -->
-        <a href="https://github.com/nagaraj602/devops-hub-app-with-interview-quest" target="_blank" class="header-btn" title="View GitHub Database Repo">
-          <i class="fa-brands fa-github"></i>
-          <span class="btn-text-label">Git DB</span>
+        <!-- Sync All Button (Moved to Git DB position) -->
+        <a href="/sync-all" class="header-btn sync-btn-header" title="Sync All Repositories Now">
+          <i class="fa-solid fa-rotate"></i>
+          <span class="btn-text-label">Sync all</span>
         </a>
 
         <!-- Mobile Menu Hamburger -->
@@ -108,6 +110,10 @@
         <i class="fa-solid fa-terminal"></i>
         <span>Command Cheatsheet</span>
       </a>
+      <a href="/app-logs" class="nav-link {% if active_page == 'app_logs' %}active{% endif %}">
+        <i class="fa-solid fa-server"></i>
+        <span>App Logs</span>
+      </a>
       <a href="/sync-all" class="nav-link {% if active_page == 'sync' %}active{% endif %}">
         <i class="fa-solid fa-rotate"></i>
         <span>Sync all</span>
@@ -131,9 +137,9 @@
       <div class="footer-links">
         <a href="/question-bank">Questions</a>
         <a href="/project">Project Architecture</a>
-        <a href="/training-materials">Curriculum</a>
+        <a href="/training-materials">Training Materials</a>
         <a href="/command-cheatsheet">Cheatsheet</a>
-        <a href="/sync-all">Continuous Logs</a>
+        <a href="/app-logs">App Logs</a>
       </div>
     </div>
   </footer>

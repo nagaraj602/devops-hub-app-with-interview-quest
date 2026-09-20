@@ -1,9 +1,16 @@
 /* ==============================================================================
-   Training Materials & Notes Explorer JavaScript: File Tree, Lightbox & Custom Repos
+   Training Materials & Notes Explorer JavaScript: Multi-Repo Tree, Full-Text Search,
+   Match Navigation & Image Lightbox
    ============================================================================== */
 
 let currentRepoId = "training";
 let currentFilePath = "README.md";
+
+// Full-Text Search & Match Navigator State
+let currentMatchIndex = 0;
+let totalMatches = 0;
+let activeSearchQuery = "";
+let searchDebounceTimer = null;
 
 // Image Lightbox State
 let lightboxZoom = 1;
@@ -19,16 +26,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initTrainingExplorer() {
   initTreeNodeClicks();
-  initSidebarSearch();
-  initRepoSelector();
+  initSidebarSearchAndFilter();
+  initMatchNavigator();
   renderMermaidDiagrams();
   bindContentImagesForLightbox();
 }
 
-// Tree Node Expand / Collapse and File Loading
+// ------------------------------------------------------------------------------
+// Tree Node Expand / Collapse and Multi-Repo File Loading
+// ------------------------------------------------------------------------------
 function initTreeNodeClicks() {
   document.addEventListener("click", (e) => {
-    // Folder Click
+    // 1. Folder Click (Toggle Expand / Collapse)
     const folderRow = e.target.closest(".tree-node.folder > .tree-node-row");
     if (folderRow) {
       const node = folderRow.closest(".tree-node");
@@ -36,28 +45,57 @@ function initTreeNodeClicks() {
       return;
     }
 
-    // File Click
+    // 2. File Click (Load Document)
     const fileRow = e.target.closest(".tree-node.file > .tree-node-row");
     if (fileRow) {
       document.querySelectorAll(".tree-node-row").forEach(r => r.classList.remove("active"));
       fileRow.classList.add("active");
 
+      // Detect repo_id from node attribute, or walk up to parent repo root
+      let repoId = fileRow.getAttribute("data-repo-id");
+      if (!repoId) {
+        const repoRoot = fileRow.closest(".repo-root-folder");
+        repoId = repoRoot ? repoRoot.getAttribute("data-repo-id") : currentRepoId;
+      }
       const filePath = fileRow.getAttribute("data-file-path");
+
       if (filePath) {
-        loadFileContent(currentRepoId, filePath);
+        loadFileContent(repoId || "training", filePath);
       }
       return;
     }
   });
 }
 
-// Load File Content via API
-function loadFileContent(repoId, filePath) {
+// ------------------------------------------------------------------------------
+// Load File Content via API & Render Markdown
+// ------------------------------------------------------------------------------
+function loadFileContent(repoId, filePath, searchQuery = null) {
   const contentBody = document.getElementById("trainingContentBody");
   const fileNameElem = document.getElementById("contentFileName");
   const filePathElem = document.getElementById("contentFilePath");
 
   if (!contentBody) return;
+
+  currentRepoId = repoId;
+  currentFilePath = filePath;
+
+  // Highlight active tree file node
+  document.querySelectorAll(".tree-node.file > .tree-node-row").forEach(row => {
+    const rId = row.getAttribute("data-repo-id") || row.closest(".repo-root-folder")?.getAttribute("data-repo-id");
+    const fPath = row.getAttribute("data-file-path");
+    if (rId === repoId && fPath === filePath) {
+      row.classList.add("active");
+      // Expand parents
+      let parent = row.parentElement.closest(".tree-node.folder");
+      while (parent) {
+        parent.classList.add("expanded");
+        parent = parent.parentElement.closest(".tree-node.folder");
+      }
+    } else {
+      row.classList.remove("active");
+    }
+  });
 
   contentBody.innerHTML = `
     <div style="text-align:center; padding:3rem; color:var(--text-muted);">
@@ -74,7 +112,6 @@ function loadFileContent(repoId, filePath) {
         return;
       }
 
-      currentFilePath = filePath;
       if (fileNameElem) fileNameElem.textContent = data.filename;
       if (filePathElem) filePathElem.textContent = `${repoId} / ${data.path}`;
 
@@ -85,11 +122,18 @@ function loadFileContent(repoId, filePath) {
             <p style="margin-top:0.75rem; font-size:0.85rem; color:var(--text-muted);"><i class="fa-solid fa-magnifying-glass-plus"></i> Click image to open in interactive zoom lightbox</p>
           </div>
         `;
+        hideSearchNavigator();
       } else {
-        // Render Markdown
-        // Using simple markdown parser or HTML from backend
+        // Render Markdown via marked
         let html = marked.parse(data.formatted_content || data.raw_content);
         contentBody.innerHTML = `<div class="markdown-pane">${html}</div>`;
+
+        // If search query is active, apply in-page highlighting and navigation
+        if (searchQuery && searchQuery.trim().length >= 2) {
+          highlightSearchMatches(searchQuery);
+        } else {
+          hideSearchNavigator();
+        }
       }
 
       // Render mermaid flowcharts
@@ -98,11 +142,14 @@ function loadFileContent(repoId, filePath) {
       bindContentImagesForLightbox();
     })
     .catch(err => {
-      contentBody.innerHTML = `<p style="color:var(--danger);">Failed to load file: ${err.message}</p>`;
+      contentBody.innerHTML = `<p style="color:var(--danger); padding:2rem;">Failed to load file: ${err.message}</p>`;
+      hideSearchNavigator();
     });
 }
 
+// ------------------------------------------------------------------------------
 // Mermaid.js Flowchart Renderer
+// ------------------------------------------------------------------------------
 function renderMermaidDiagrams() {
   if (window.mermaid) {
     try {
@@ -120,108 +167,293 @@ function renderMermaidDiagrams() {
   }
 }
 
-// Sidebar File Search Filter
-function initSidebarSearch() {
+// ------------------------------------------------------------------------------
+// Sidebar File Filter & Full-Text Search Engine
+// ------------------------------------------------------------------------------
+function initSidebarSearchAndFilter() {
   const searchInput = document.getElementById("treeSearchInput");
+  const clearBtn = document.getElementById("searchClearBtn");
+  const resultsPanel = document.getElementById("searchResultsPanel");
+  const closeResultsBtn = document.getElementById("closeSearchResultsBtn");
+  const resultsList = document.getElementById("searchResultsList");
+  const resultsCount = document.getElementById("searchResultsCount");
+
   if (!searchInput) return;
 
+  // Real-time input handling
   searchInput.addEventListener("input", (e) => {
-    const q = e.target.value.toLowerCase().trim();
-    const allNodes = document.querySelectorAll(".tree-node.file");
+    const q = e.target.value.trim();
 
-    allNodes.forEach(node => {
-      const name = (node.querySelector(".tree-label")?.textContent || "").toLowerCase();
-      if (!q || name.includes(q)) {
-        node.style.display = "";
-        // Expand parent folders if matching
+    if (clearBtn) {
+      clearBtn.style.display = q ? "block" : "none";
+    }
+
+    // 1. Instant Tree Filename Filtering
+    filterTreeNodes(q);
+
+    // 2. Debounced Full-Text Search across files
+    clearTimeout(searchDebounceTimer);
+    if (q.length >= 2) {
+      searchDebounceTimer = setTimeout(() => {
+        performFullTextSearch(q);
+      }, 350);
+    } else {
+      if (resultsPanel) resultsPanel.style.display = "none";
+    }
+  });
+
+  // Clear button click
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      clearBtn.style.display = "none";
+      filterTreeNodes("");
+      if (resultsPanel) resultsPanel.style.display = "none";
+      hideSearchNavigator();
+      removeSearchHighlights();
+    });
+  }
+
+  // Close search results panel
+  if (closeResultsBtn) {
+    closeResultsBtn.addEventListener("click", () => {
+      if (resultsPanel) resultsPanel.style.display = "none";
+    });
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (resultsPanel && !resultsPanel.contains(e.target) && e.target !== searchInput) {
+      resultsPanel.style.display = "none";
+    }
+  });
+}
+
+function filterTreeNodes(query) {
+  const q = query.toLowerCase().trim();
+  const allFileNodes = document.querySelectorAll(".tree-node.file");
+
+  allFileNodes.forEach(node => {
+    const name = (node.querySelector(".tree-label")?.textContent || "").toLowerCase();
+    if (!q || name.includes(q)) {
+      node.style.display = "";
+      // Expand parent folders
+      if (q) {
         let parent = node.parentElement.closest(".tree-node.folder");
         while (parent) {
           parent.classList.add("expanded");
           parent = parent.parentElement.closest(".tree-node.folder");
         }
-      } else {
-        node.style.display = "none";
       }
-    });
+    } else {
+      node.style.display = "none";
+    }
   });
 }
 
-// Repo Selector Switcher
-function initRepoSelector() {
-  const selectElem = document.getElementById("activeRepoSelect");
-  if (!selectElem) return;
+function performFullTextSearch(query) {
+  const resultsPanel = document.getElementById("searchResultsPanel");
+  const resultsList = document.getElementById("searchResultsList");
+  const resultsCount = document.getElementById("searchResultsCount");
 
-  selectElem.addEventListener("change", (e) => {
-    currentRepoId = e.target.value;
-    switchRepository(currentRepoId);
-  });
-}
+  if (!resultsPanel || !resultsList) return;
 
-function switchRepository(repoId) {
-  currentRepoId = repoId;
-  const container = document.getElementById("treeNodesContainer");
-  if (!container) return;
-
-  container.innerHTML = `
-    <div style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.85rem;">
-      <i class="fa-solid fa-spinner fa-spin" style="margin-right:0.4rem;"></i> Loading folder tree...
+  resultsPanel.style.display = "block";
+  resultsList.innerHTML = `
+    <div style="padding:1rem; text-align:center; color:var(--text-muted); font-size:0.82rem;">
+      <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary); margin-right:0.4rem;"></i> Searching across curriculum and notes...
     </div>
   `;
 
-  fetch(`/api/training/tree/${encodeURIComponent(repoId)}`)
+  fetch(`/api/training/search?q=${encodeURIComponent(query)}`)
     .then(res => res.json())
-    .then(data => {
-      container.innerHTML = "";
-      if (data.children && data.children.length > 0) {
-        data.children.forEach(child => {
-          container.appendChild(createTreeNodeElement(child));
-        });
-      } else {
-        container.innerHTML = `<p style="padding:1rem; color:var(--text-muted); font-size:0.85rem;">No files found in repository.</p>`;
+    .then(results => {
+      if (!results || results.length === 0) {
+        resultsCount.textContent = "0 results found";
+        resultsList.innerHTML = `
+          <div style="padding:1rem; text-align:center; color:var(--text-muted); font-size:0.82rem;">
+            No occurrences found for "<strong>${escapeHtml(query)}</strong>"
+          </div>
+        `;
+        return;
       }
+
+      resultsCount.textContent = `${results.length} file${results.length === 1 ? '' : 's'} matched`;
+      resultsList.innerHTML = "";
+
+      results.forEach(res => {
+        const item = document.createElement("div");
+        item.className = "search-result-item";
+
+        let snippetText = "";
+        if (res.snippets && res.snippets.length > 0) {
+          snippetText = res.snippets[0].text;
+        }
+
+        item.innerHTML = `
+          <div class="search-result-title">
+            <span><i class="fa-regular fa-file-lines" style="color:var(--primary); margin-right:0.35rem;"></i>${escapeHtml(res.filename)}</span>
+            <span class="badge badge-outline" style="font-size:0.68rem;">${res.match_count} match${res.match_count === 1 ? '' : 'es'}</span>
+          </div>
+          <div class="search-result-path">${escapeHtml(res.repo_name)} &bull; ${escapeHtml(res.file_path)}</div>
+          ${snippetText ? `<div class="search-result-snippet">${highlightSubstr(escapeHtml(snippetText), query)}</div>` : ''}
+        `;
+
+        item.addEventListener("click", () => {
+          resultsPanel.style.display = "none";
+          loadFileContent(res.repo_id, res.file_path, query);
+        });
+
+        resultsList.appendChild(item);
+      });
     })
     .catch(err => {
-      container.innerHTML = `<p style="padding:1rem; color:var(--danger); font-size:0.85rem;">Error: ${err.message}</p>`;
+      resultsList.innerHTML = `<div style="padding:1rem; color:var(--danger); font-size:0.82rem;">Search error: ${err.message}</div>`;
     });
 }
 
-function createTreeNodeElement(node) {
-  const item = document.createElement("div");
+// ------------------------------------------------------------------------------
+// In-Document Text Highlighting & Floating Match Navigator
+// ------------------------------------------------------------------------------
+function initMatchNavigator() {
+  const prevBtn = document.getElementById("prevMatchBtn");
+  const nextBtn = document.getElementById("nextMatchBtn");
+  const closeBtn = document.getElementById("closeSearchNavBtn");
 
-  if (node.type === "directory") {
-    item.className = "tree-node folder";
-    item.innerHTML = `
-      <div class="tree-node-row">
-        <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
-        <i class="fa-solid fa-folder tree-icon"></i>
-        <span class="tree-label">${node.name}</span>
-      </div>
-      <div class="tree-children"></div>
-    `;
-
-    const childrenContainer = item.querySelector(".tree-children");
-    if (node.children) {
-      node.children.forEach(child => {
-        childrenContainer.appendChild(createTreeNodeElement(child));
-      });
-    }
-  } else {
-    item.className = "tree-node file";
-    let icon = "fa-file-lines";
-    if (["png", "jpg", "jpeg", "svg"].includes(node.extension)) icon = "fa-file-image";
-    if (["yaml", "yml"].includes(node.extension)) icon = "fa-file-code";
-    if (["sh", "bash"].includes(node.extension)) icon = "fa-terminal";
-
-    item.innerHTML = `
-      <div class="tree-node-row" data-file-path="${node.path}">
-        <span class="tree-arrow"></span>
-        <i class="fa-regular ${icon} tree-icon"></i>
-        <span class="tree-label">${node.name}</span>
-      </div>
-    `;
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => goToMatch(currentMatchIndex - 1));
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => goToMatch(currentMatchIndex + 1));
+  }
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      hideSearchNavigator();
+      removeSearchHighlights();
+    });
   }
 
-  return item;
+  // Keyboard navigation: Enter -> Next, Shift+Enter -> Prev, Esc -> Close
+  document.addEventListener("keydown", (e) => {
+    const nav = document.getElementById("searchMatchNavigator");
+    if (nav && nav.style.display !== "none") {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          goToMatch(currentMatchIndex - 1);
+        } else {
+          goToMatch(currentMatchIndex + 1);
+        }
+      } else if (e.key === "Escape") {
+        hideSearchNavigator();
+        removeSearchHighlights();
+      }
+    }
+  });
+}
+
+function highlightSearchMatches(query) {
+  removeSearchHighlights();
+  activeSearchQuery = query;
+
+  const pane = document.querySelector("#trainingContentBody .markdown-pane");
+  if (!pane || !query || query.trim().length < 2) {
+    hideSearchNavigator();
+    return;
+  }
+
+  const regex = new RegExp(`(${escapeRegExp(query)})`, "gi");
+  let matchCount = 0;
+
+  function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (node.parentNode) {
+        const parentTag = node.parentNode.tagName;
+        if (["SCRIPT", "STYLE"].includes(parentTag) || node.parentNode.closest(".mermaid")) {
+          return;
+        }
+      }
+      const val = node.nodeValue;
+      if (regex.test(val)) {
+        const span = document.createElement("span");
+        span.innerHTML = val.replace(regex, (m) => {
+          matchCount++;
+          return `<mark class="search-highlight" data-match-idx="${matchCount}">${m}</mark>`;
+        });
+        node.parentNode.replaceChild(span, node);
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.classList.contains("mermaid")) return;
+      Array.from(node.childNodes).forEach(walk);
+    }
+  }
+
+  walk(pane);
+
+  totalMatches = matchCount;
+
+  if (totalMatches > 0) {
+    showSearchNavigator(totalMatches, query);
+    goToMatch(1);
+  } else {
+    hideSearchNavigator();
+  }
+}
+
+function goToMatch(index) {
+  const marks = document.querySelectorAll("mark.search-highlight");
+  if (!marks.length) return;
+
+  if (index < 1) index = marks.length;
+  if (index > marks.length) index = 1;
+  currentMatchIndex = index;
+
+  marks.forEach(m => m.classList.remove("active-match"));
+  const target = marks[index - 1];
+  if (target) {
+    target.classList.add("active-match");
+
+    // Expand parent <details> accordion if match is collapsed inside a question answer
+    let parentDetails = target.closest("details");
+    while (parentDetails) {
+      parentDetails.open = true;
+      parentDetails = parentDetails.parentElement.closest("details");
+    }
+
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    const currNum = document.getElementById("currentMatchNumber");
+    if (currNum) currNum.textContent = index;
+  }
+}
+
+function showSearchNavigator(total, query) {
+  const nav = document.getElementById("searchMatchNavigator");
+  const currNum = document.getElementById("currentMatchNumber");
+  const totNum = document.getElementById("totalMatchNumber");
+  const badge = document.getElementById("searchNavQueryBadge");
+
+  if (!nav) return;
+  if (currNum) currNum.textContent = 1;
+  if (totNum) totNum.textContent = total;
+  if (badge) badge.textContent = `"${query}"`;
+
+  nav.style.display = "flex";
+}
+
+function hideSearchNavigator() {
+  const nav = document.getElementById("searchMatchNavigator");
+  if (nav) nav.style.display = "none";
+}
+
+function removeSearchHighlights() {
+  document.querySelectorAll("mark.search-highlight").forEach(mark => {
+    const parent = mark.parentNode;
+    parent.replaceChild(document.createTextNode(mark.textContent), mark);
+    parent.normalize();
+  });
+  currentMatchIndex = 0;
+  totalMatches = 0;
 }
 
 // ------------------------------------------------------------------------------
@@ -231,31 +463,26 @@ function initImageLightbox() {
   const modal = document.getElementById("imageLightboxModal");
   const closeBtn = document.getElementById("lightboxCloseBtn");
   const imgElem = document.getElementById("lightboxImage");
-  const titleElem = document.getElementById("lightboxTitle");
   const viewport = document.getElementById("lightboxViewport");
 
-  if (!modal || !imgElem) return;
+  if (!modal || !imgElem || !viewport) return;
 
-  // 1. Close when clicking 'X' button
   if (closeBtn) {
     closeBtn.addEventListener("click", () => closeLightbox());
   }
 
-  // 2. Close when clicking outside of the image area (on modal overlay or viewport)
   viewport.addEventListener("click", (e) => {
     if (e.target === viewport) {
       closeLightbox();
     }
   });
 
-  // 3. Zoom In & Zoom Out with Mouse Scroll
   viewport.addEventListener("wheel", (e) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
     applyLightboxZoom(lightboxZoom * zoomFactor);
   }, { passive: false });
 
-  // 4. Double Click to Zoom In / Zoom Out
   imgElem.addEventListener("dblclick", (e) => {
     e.preventDefault();
     if (lightboxZoom > 1.2) {
@@ -265,7 +492,6 @@ function initImageLightbox() {
     }
   });
 
-  // 5. Drag / Pan Image when zoomed
   viewport.addEventListener("mousedown", (e) => {
     if (e.target === imgElem && lightboxZoom > 1) {
       isPanning = true;
@@ -290,7 +516,6 @@ function initImageLightbox() {
     }
   });
 
-  // Magnifier Toolbar Buttons
   document.getElementById("btnZoomIn")?.addEventListener("click", () => applyLightboxZoom(lightboxZoom * 1.25));
   document.getElementById("btnZoomOut")?.addEventListener("click", () => applyLightboxZoom(lightboxZoom * 0.8));
   document.getElementById("btnZoomReset")?.addEventListener("click", () => resetLightboxTransform());
@@ -368,7 +593,7 @@ function initCustomReposManager() {
     });
   }
 
-  loadCustomReposIntoDropdown();
+  loadCustomReposIntoTree();
 }
 
 function getStoredCustomRepos() {
@@ -379,22 +604,41 @@ function getStoredCustomRepos() {
   }
 }
 
-function loadCustomReposIntoDropdown() {
-  const selectElem = document.getElementById("activeRepoSelect");
-  if (!selectElem) return;
+function loadCustomReposIntoTree() {
+  const treeContainer = document.getElementById("treeNodesContainer");
+  if (!treeContainer) return;
 
   const customRepos = getStoredCustomRepos();
-  // Remove previously appended custom options
-  const defaultOptionsCount = 2; // training & notes
-  while (selectElem.options.length > defaultOptionsCount) {
-    selectElem.remove(defaultOptionsCount);
-  }
-
   customRepos.forEach(repo => {
-    const opt = document.createElement("option");
-    opt.value = `custom_${repo.id}`;
-    opt.textContent = `⭐ ${repo.name}`;
-    selectElem.appendChild(opt);
+    // Check if already in tree
+    if (document.querySelector(`.repo-root-folder[data-repo-id="custom_${repo.id}"]`)) return;
+
+    const rootNode = document.createElement("div");
+    rootNode.className = "tree-node folder repo-root-folder expanded";
+    rootNode.setAttribute("data-repo-id", `custom_${repo.id}`);
+    rootNode.innerHTML = `
+      <div class="tree-node-row repo-root-row">
+        <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+        <i class="fa-brands fa-github tree-icon" style="color:var(--primary);"></i>
+        <span class="tree-label" style="font-weight:700;">${escapeHtml(repo.name)}</span>
+        <span class="badge badge-outline" style="font-size:0.68rem; margin-left:auto;">CUSTOM</span>
+      </div>
+      <div class="tree-children">
+        <div class="tree-node file">
+          <div class="tree-node-row" data-repo-id="custom_${repo.id}" data-file-path="README.md">
+            <span class="tree-arrow"></span>
+            <i class="fa-regular fa-file-lines tree-icon"></i>
+            <span class="tree-label">README.md (Live)</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    rootNode.querySelector(".tree-node.file .tree-node-row")?.addEventListener("click", () => {
+      loadLiveCustomRepo(repo.url, repo.branch, repo.name);
+    });
+
+    treeContainer.appendChild(rootNode);
   });
 }
 
@@ -428,28 +672,26 @@ function saveCustomRepo() {
   urlInput.value = "";
   if (nameInput) nameInput.value = "";
 
-  loadCustomReposIntoDropdown();
-
-  // Switch to newly added repo
-  const selectElem = document.getElementById("activeRepoSelect");
-  if (selectElem) {
-    selectElem.value = `custom_${repoId}`;
-    loadLiveCustomRepo(url, branch, name);
-  }
+  loadCustomReposIntoTree();
+  loadLiveCustomRepo(url, branch, name);
 }
 
 function loadLiveCustomRepo(url, branch, name) {
   const contentBody = document.getElementById("trainingContentBody");
-  const treeContainer = document.getElementById("treeNodesContainer");
+  const fileNameElem = document.getElementById("contentFileName");
+  const filePathElem = document.getElementById("contentFilePath");
 
   if (contentBody) {
     contentBody.innerHTML = `
       <div style="text-align:center; padding:3rem;">
         <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:var(--primary); margin-bottom:1rem;"></i>
-        <p>Fetching live files from GitHub: <strong>${url}</strong>...</p>
+        <p>Fetching live files from GitHub: <strong>${escapeHtml(url)}</strong>...</p>
       </div>
     `;
   }
+
+  if (fileNameElem) fileNameElem.textContent = "README.md (Live)";
+  if (filePathElem) filePathElem.textContent = `${name} / README.md`;
 
   fetch(`/api/training/custom-repo?repo_url=${encodeURIComponent(url)}&branch=${encodeURIComponent(branch)}`)
     .then(res => res.json())
@@ -457,17 +699,6 @@ function loadLiveCustomRepo(url, branch, name) {
       if (data.error) {
         if (contentBody) contentBody.innerHTML = `<div class="toast toast-danger">${data.error}</div>`;
         return;
-      }
-
-      if (treeContainer) {
-        treeContainer.innerHTML = `
-          <div class="tree-node file">
-            <div class="tree-node-row active">
-              <i class="fa-regular fa-file-lines tree-icon"></i>
-              <span class="tree-label">README.md (Live)</span>
-            </div>
-          </div>
-        `;
       }
 
       if (contentBody) {
@@ -480,4 +711,27 @@ function loadLiveCustomRepo(url, branch, name) {
     .catch(err => {
       if (contentBody) contentBody.innerHTML = `<p style="color:var(--danger);">Error: ${err.message}</p>`;
     });
+}
+
+// ------------------------------------------------------------------------------
+// Utility Helpers
+// ------------------------------------------------------------------------------
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function escapeHtml(text) {
+  if (!text) return "";
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function highlightSubstr(escapedText, query) {
+  if (!query) return escapedText;
+  const regex = new RegExp(`(${escapeRegExp(escapeHtml(query))})`, "gi");
+  return escapedText.replace(regex, '<mark style="background:#fef08a; font-weight:700;">$1</mark>');
 }

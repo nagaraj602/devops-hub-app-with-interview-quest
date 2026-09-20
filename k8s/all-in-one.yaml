@@ -23,7 +23,7 @@ spec:
       containers:
         - name: devops-hub
           image: nagarajkamath602/devops-hub-app-with-interview-quest:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8926
               name: http

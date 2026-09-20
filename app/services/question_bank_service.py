@@ -5,6 +5,23 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from app.config import INTERVIEW_QUESTIONS_DIR
 
+try:
+    import markdown
+except ImportError:
+    class _MockMarkdown:
+        @staticmethod
+        def markdown(text, **kwargs):
+            return text.replace("\n", "<br>")
+    markdown = _MockMarkdown()
+
+def render_md(text: str) -> str:
+    if not text:
+        return ""
+    try:
+        return markdown.markdown(text, extensions=['fenced_code', 'tables', 'nl2br'])
+    except Exception:
+        return markdown.markdown(text)
+
 CATEGORIES_LIST = [
     "Behavioral", "Jenkins", "Git / GitHub", "General", "Terraform / IaC",
     "Docker", "AWS / Cloud", "Kubernetes", "Monitoring", "Linux",
@@ -72,6 +89,31 @@ def normalize_category(cat: str) -> str:
 def detect_category_from_text(q_text: str, ans_text: str = "", section_cat: str = "") -> str:
     ql = q_text.lower().strip()
     tl = (q_text + " " + ans_text).lower()
+
+    # Explicit Overrides requested by user:
+    # 1. IP Blacklisting -> AWS / Cloud
+    if "blacklisting of an ip" in ql or "blacklisting an ip" in ql or "blacklist of an ip" in ql or "blacklisting" in ql:
+        return "AWS / Cloud"
+        
+    # 2. RBAC Item and Global roles -> Jenkins (Role-based Authorization Strategy plugin)
+    if "item and global roles" in ql or "global roles in rbac" in ql or "item roles" in ql:
+        return "Jenkins"
+        
+    # 3. Copy module and templates -> Ansible
+    if "copy module and templates" in ql or ("copy module" in ql and "template" in ql) or "copy module" in ql:
+        return "Ansible"
+        
+    # 4. Database SQL concepts (Primary Key vs Unique Key, DELETE vs DROP vs TRUNCATE, Indexing, Databases worked on) -> System Design
+    if (
+        "primary key and a unique key" in ql or
+        "primary key" in ql or
+        "delete, drop, and truncate" in ql or
+        "delete, drop and truncate" in ql or
+        ("delete" in ql and "drop" in ql and "truncate" in ql) or
+        "indexing in the context of databases" in ql or
+        "which databases have you worked on" in ql
+    ):
+        return "System Design"
 
     # 1. Behavioral
     if any(w in ql for w in [
@@ -397,6 +439,7 @@ class QuestionBankService:
                 "id": q_id,
                 "question": q_clean,
                 "answer": ans_clean,
+                "answer_html": render_md(ans_clean),
                 "has_answer": bool(ans_clean),
                 "is_sub_q": is_sub_q,
                 "category": norm_cat,
@@ -527,6 +570,7 @@ class QuestionBankService:
                 "id": q_id,
                 "question": q_clean,
                 "answer": ans_clean,
+                "answer_html": render_md(ans_clean),
                 "has_answer": bool(ans_clean),
                 "is_sub_q": False,
                 "category": norm_cat,
