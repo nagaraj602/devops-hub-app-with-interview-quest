@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: devops-hub
+    container_name: devops-hub-app-new
     restart: unless-stopped
     ports:
       - "8926:8926"
