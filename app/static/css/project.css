@@ -290,6 +290,67 @@
   margin-bottom: 0.5rem;
 }
 
+.prep-markdown-content strong,
+.project-section-text strong,
+.project-bullet-list li strong,
+.anticipated-qa-item strong {
+  color: #020617;
+  font-weight: 700;
+}
+
+/* Prompt Box Inside Preparation Accordions */
+.prep-prompt-box {
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  padding: 1.15rem 1.45rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.prep-prompt-header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.92rem;
+  font-weight: 750;
+  color: #0f172a;
+  margin-bottom: 0.65rem;
+}
+
+.prep-prompt-header i {
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.prep-prompt-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.prep-prompt-list li {
+  font-size: 0.9rem;
+  color: #334155;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0;
+}
+
+.prep-prompt-list li::before {
+  content: "•";
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
 /* Impact Metrics Strip */
 .project-metrics-strip {
   display: grid;

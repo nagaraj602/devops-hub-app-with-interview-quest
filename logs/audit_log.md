@@ -24,6 +24,7 @@ This document serves as the continuous, human-readable system log persisted dire
 | 2026-09-21 15:40:00 | Release v1.0.4 | Revert Calendar Button to Full-Size Stat Card & Restore Compact Split Calendar Modal | Reverted calendar button to original interactive stat card size/style at top of content, removed small calendar toolbar button, and restored compact split calendar layout with side-by-side day events panel | Antigravity Assistant |
 | 2026-09-21 15:50:00 | Release v1.0.5 | Calendar Round Event Listing & Direct Round Navigation | Fixed calendar round listing on date click (resolved escapeHtml definition), added exact date parsing, and enabled direct navigation to expand and highlight selected company round in Question Bank | Antigravity Assistant |
 | 2026-09-21 16:10:00 | Release v1.0.6 | Custom Repo Reordering & Deletion in Training Materials | Added move up/down controls, drag-and-drop reordering, repo management modal, and removal of custom repositories from session with confirmation | Antigravity Assistant |
+| 2026-09-21 16:38:00 | Release v1.0.7 | Project Page Callout Prompt Boxes & Verbatim Highlight Styling | Added dedicated callout box for interview question variations inside Introduction accordion, enabled safe HTML rendering for overview/results highlights, and bolded technical keywords | Antigravity Assistant |
 
 ## Active Repositories Monitored
 

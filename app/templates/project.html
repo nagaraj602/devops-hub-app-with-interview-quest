@@ -28,7 +28,7 @@
       </div>
       <div class="project-section-text">
         {% for p in project.overview_paragraphs %}
-        <p>{{ p }}</p>
+        <p>{{ p|safe }}</p>
         {% endfor %}
       </div>
     </div>
@@ -73,7 +73,7 @@
       <div class="project-section-text">
         <ul class="project-bullet-list">
           {% for impact in project.key_results %}
-          <li>{{ impact }}</li>
+          <li>{{ impact|safe }}</li>
           {% endfor %}
         </ul>
       </div>
@@ -120,6 +120,19 @@
           </span>
         </div>
         <div class="prep-accordion-body">
+          {% if prep.prompt_box %}
+          <div class="prep-prompt-box">
+            <div class="prep-prompt-header">
+              <i class="fa-solid fa-comments"></i>
+              <span>{{ prep.prompt_box.header }}</span>
+            </div>
+            <ul class="prep-prompt-list">
+              {% for q in prep.prompt_box.questions %}
+              <li>{{ q }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
           <div class="prep-markdown-content markdown-pane">
             {{ prep.content_html|safe }}
           </div>
