@@ -83,6 +83,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: -0.01em;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
 }
 
 .company-meta-tags {
@@ -206,6 +209,9 @@
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-primary);
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
 }
 
 .round-date {
@@ -682,3 +688,248 @@
   flex-direction: column;
   align-items: center;
 }
+
+/* ==============================================================================
+   Vertical Quick Stats Dock (Floating on Left Side with Horizontal Hover Flyout)
+   ============================================================================== */
+.qb-vertical-stat-dock {
+  position: fixed;
+  left: 18px;
+  top: 140px;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.6rem 0.45rem;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-light);
+  border-radius: 40px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.stat-dock-item {
+  position: relative;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-dock-item.stat-dock-interactive {
+  cursor: pointer;
+}
+
+.dock-icon-bubble {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+}
+
+.stat-dock-item:hover .dock-icon-bubble {
+  transform: scale(1.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.dock-icon-bubble.blue {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+.dock-icon-bubble.purple {
+  background-color: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+.dock-icon-bubble.emerald {
+  background-color: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.dock-icon-bubble.rose {
+  background-color: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+}
+
+/* Horizontal Flyout Card expanding to the right on hover */
+.stat-flyout {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-10px);
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12), 0 3px 8px rgba(0, 0, 0, 0.04);
+  padding: 0.85rem 1.15rem;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 100;
+  white-space: nowrap;
+}
+
+/* Small arrow on flyout */
+.stat-flyout::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 7px;
+  border-style: solid;
+  border-color: transparent #ffffff transparent transparent;
+  z-index: 2;
+}
+
+.stat-flyout::after {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent var(--border-light) transparent transparent;
+  z-index: 1;
+}
+
+.stat-dock-item:hover .stat-flyout {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+.flyout-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.flyout-icon.blue {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+.flyout-icon.purple {
+  background-color: #f5f3ff;
+  color: #7c3aed;
+}
+.flyout-icon.emerald {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+.flyout-icon.rose {
+  background-color: #fff1f2;
+  color: #e11d48;
+}
+
+.flyout-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.flyout-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.flyout-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.flyout-sub {
+  font-size: 0.74rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+/* Action Toolbar Calendar Button */
+.qb-calendar-btn {
+  background-color: #ffffff;
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all 0.15s ease;
+}
+
+.qb-calendar-btn:hover {
+  background-color: #eef2ff;
+  color: var(--primary-hover);
+  border-color: var(--primary);
+}
+
+/* Mobile & Tablet Responsiveness for Vertical Dock */
+@media (max-width: 1200px) {
+  .qb-vertical-stat-dock {
+    left: 8px;
+    top: 130px;
+    transform: scale(0.92);
+    transform-origin: left center;
+  }
+}
+
+@media (max-width: 900px) {
+  .qb-vertical-stat-dock {
+    position: static;
+    flex-direction: row;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+    padding: 0.5rem 0.85rem;
+    gap: 1.25rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-flyout {
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  .stat-flyout::before {
+    bottom: 100%;
+    top: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    border-color: transparent transparent #ffffff transparent;
+  }
+  .stat-flyout::after {
+    bottom: 100%;
+    top: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    border-color: transparent transparent var(--border-light) transparent;
+  }
+  .stat-dock-item:hover .stat-flyout {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+

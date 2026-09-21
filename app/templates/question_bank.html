@@ -2,82 +2,77 @@
 
 {% block content %}
 
-<!-- Top Stats Cards Grid -->
-<section class="stats-grid">
-  <!-- Interview Schedule Calendar Pop-up Trigger Card (Placed BEFORE Total Companies) -->
-  <div class="stat-card stat-card-interactive" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
-    <div class="stat-icon indigo" style="background:#eef2ff; color:var(--primary);">
-      <i class="fa-regular fa-calendar-days"></i>
-    </div>
-    <div class="stat-info">
-      <span class="stat-label">Interview Calendar</span>
-      <span class="stat-value" style="font-size:1.15rem; display:flex; align-items:center; gap:0.35rem;">
-        Calendar <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; color:var(--primary);"></i>
-      </span>
-      <span class="stat-desc">Month-wise Dates</span>
-    </div>
-  </div>
-
-  <!-- Total Companies -->
-  <div class="stat-card">
-    <div class="stat-icon blue">
+<!-- Vertical Quick Stats Dock (Floating on Left Side with hover flyouts) -->
+<aside class="qb-vertical-stat-dock" id="qbVerticalStatDock" aria-label="Quick statistics dock">
+  <!-- 1. Total Companies -->
+  <div class="stat-dock-item" data-stat="companies" title="Total Companies">
+    <div class="dock-icon-bubble blue">
       <i class="fa-solid fa-building"></i>
     </div>
-    <div class="stat-info">
-      <span class="stat-label">Total Companies</span>
-      <span class="stat-value">{{ stats.total_companies }}</span>
-      <span class="stat-desc">Curated Orgs</span>
+    <div class="stat-flyout">
+      <div class="flyout-icon blue">
+        <i class="fa-solid fa-building"></i>
+      </div>
+      <div class="flyout-details">
+        <span class="flyout-label">Total Companies</span>
+        <span class="flyout-val">{{ stats.total_companies }}</span>
+        <span class="flyout-sub">Curated Organizations</span>
+      </div>
     </div>
   </div>
 
-  <!-- Interview Rounds -->
-  <div class="stat-card">
-    <div class="stat-icon purple">
+  <!-- 2. Interview Rounds -->
+  <div class="stat-dock-item" data-stat="rounds" title="Interview Rounds">
+    <div class="dock-icon-bubble purple">
       <i class="fa-solid fa-layer-group"></i>
     </div>
-    <div class="stat-info">
-      <span class="stat-label">Interview Rounds</span>
-      <span class="stat-value">{{ stats.total_rounds }}</span>
-      <span class="stat-desc">L1, L2, Manager</span>
+    <div class="stat-flyout">
+      <div class="flyout-icon purple">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div class="flyout-details">
+        <span class="flyout-label">Interview Rounds</span>
+        <span class="flyout-val">{{ stats.total_rounds }}</span>
+        <span class="flyout-sub">L1, L2, Manager Rounds</span>
+      </div>
     </div>
   </div>
 
-  <!-- Total Questions -->
-  <div class="stat-card">
-    <div class="stat-icon emerald">
+  <!-- 3. Total Questions -->
+  <div class="stat-dock-item" data-stat="questions" title="Total Questions">
+    <div class="dock-icon-bubble emerald">
       <i class="fa-solid fa-circle-check"></i>
     </div>
-    <div class="stat-info">
-      <span class="stat-label">Total Questions</span>
-      <span class="stat-value">{{ stats.total_questions }}</span>
-      <span class="stat-desc">All Questions</span>
+    <div class="stat-flyout">
+      <div class="flyout-icon emerald">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="flyout-details">
+        <span class="flyout-label">Total Questions</span>
+        <span class="flyout-val">{{ stats.total_questions }}</span>
+        <span class="flyout-sub">All Curated Questions</span>
+      </div>
     </div>
   </div>
 
-  <!-- Tech Categories -->
-  <div class="stat-card">
-    <div class="stat-icon amber">
-      <i class="fa-solid fa-tags"></i>
-    </div>
-    <div class="stat-info">
-      <span class="stat-label">Tech Categories</span>
-      <span class="stat-value">{{ stats.tech_categories_count }}</span>
-      <span class="stat-desc">CI/CD, K8s, etc.</span>
-    </div>
-  </div>
-
-  <!-- My Favorites (Interactive Bookmark Counter) -->
-  <div class="stat-card" id="statCardFavorites" title="Click to filter bookmarked questions">
-    <div class="stat-icon rose">
+  <!-- 4. My Favorites (Interactive Bookmark Counter) -->
+  <div class="stat-dock-item stat-dock-interactive" id="statCardFavorites" data-stat="favorites" title="My Favorites (Click to filter bookmarks)">
+    <div class="dock-icon-bubble rose">
       <i class="fa-solid fa-star"></i>
     </div>
-    <div class="stat-info">
-      <span class="stat-label">My Favorites</span>
-      <span class="stat-value" id="statFavoritesCount">0</span>
-      <span class="stat-desc">Bookmarked</span>
+    <div class="stat-flyout">
+      <div class="flyout-icon rose">
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <div class="flyout-details">
+        <span class="flyout-label">My Favorites</span>
+        <span class="flyout-val" id="statFavoritesCount">0</span>
+        <span class="flyout-sub">Bookmarked • Click to Filter</span>
+      </div>
     </div>
   </div>
-</section>
+</aside>
+
 
 <!-- Category Filter Pills Bar -->
 <section class="category-filter-wrap">
@@ -114,6 +109,12 @@
 
   <!-- Action Controls -->
   <div class="action-buttons-group">
+    <!-- Interview Calendar Button (Prominently placed in Action Toolbar) -->
+    <button type="button" class="btn btn-secondary qb-calendar-btn" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
+      <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
+      <span>Interview Calendar</span>
+    </button>
+
     <!-- Expand / Collapse All Companies -->
     <button type="button" class="btn btn-secondary" id="expandAllCompaniesBtn" title="Expand all company & round containers">
       <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
@@ -165,9 +166,6 @@
         <div class="company-details">
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             <h2 class="company-name">{{ company.company_name }}</h2>
-            <button type="button" class="action-icon-btn copy-name-btn" title="Copy Company Name" onclick="copyText('{{ company.company_name }}', event)" style="width:24px; height:24px; font-size:0.75rem;">
-              <i class="fa-regular fa-copy"></i>
-            </button>
           </div>
           <div class="company-meta-tags">
             {% if company.is_nagaraj_interview %}
@@ -217,9 +215,6 @@
             <span class="round-name">{{ round.round_name }}</span>
             <span class="round-date">• {{ round.date }}</span>
             <span class="badge badge-blue" style="font-size:0.7rem;">{{ round.questions|length }} Qs</span>
-            <button type="button" class="action-icon-btn copy-name-btn" title="Copy Round Name" onclick="copyText('{{ round.round_name }}', event)" style="width:22px; height:22px; font-size:0.7rem;">
-              <i class="fa-regular fa-copy"></i>
-            </button>
           </div>
           <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
             <i class="fa-solid fa-chevron-down"></i>
@@ -248,7 +243,7 @@
                   <i class="fa-regular fa-star"></i>
                 </button>
                 <!-- Copy Question Text -->
-                <button type="button" class="action-icon-btn copy-q-btn" title="Copy Question text">
+                <button type="button" class="action-icon-btn copy-q-btn" onclick="copyQuestionText('{{ q.id }}', event)" title="Copy Question text">
                   <i class="fa-regular fa-copy"></i>
                 </button>
               </div>
@@ -258,7 +253,7 @@
             <div class="answer-body">
               <div class="answer-header-bar">
                 <span><i class="fa-solid fa-circle-check" style="color:var(--success); margin-right:0.35rem;"></i> Verified Production Answer</span>
-                <button type="button" class="copy-btn copy-ans-btn">
+                <button type="button" class="copy-btn copy-ans-btn" onclick="copyAnswerText('{{ q.id }}', event)">
                   <i class="fa-regular fa-copy"></i> Copy Answer
                 </button>
               </div>

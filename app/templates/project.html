@@ -40,10 +40,10 @@
         <span>MICROSERVICES ARCHITECTURE</span>
       </div>
       <div class="project-section-text">
-        <p>The platform consisted of approximately 25 microservices. Key microservices include:</p>
+        <p>{{ project.microservices_intro|default("The platform consisted of approximately 22-25 microservices. Key microservices include:") }}</p>
         <ul class="project-bullet-list">
           {% for ms in project.microservices %}
-          <li><strong>{{ ms.name }}:</strong> {{ ms.detail|default(ms.desc) }}</li>
+          <li><strong>{{ ms.name }}:</strong> {{ ms.desc|default(ms.detail) }}</li>
           {% endfor %}
         </ul>
       </div>
@@ -58,7 +58,7 @@
       <div class="project-section-text">
         <ul class="project-bullet-list">
           {% for tool in project.tools_and_tech %}
-          <li>{{ tool }}</li>
+          <li>{% if tool.name and tool.desc %}<strong>{{ tool.name }}:</strong> {{ tool.desc }}{% elif tool.name %}{{ tool.name }}{% else %}{{ tool }}{% endif %}</li>
           {% endfor %}
         </ul>
       </div>

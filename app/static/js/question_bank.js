@@ -238,17 +238,65 @@ function initGlobalAccordions() {
   }
 }
 
+// Dedicated Copy Handlers for Questions & Answers
+window.copyQuestionText = function(qId, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const qCard = document.getElementById(qId);
+  if (!qCard) return;
+  const qText = qCard.querySelector(".question-text")?.textContent?.trim() || "";
+  if (qText) {
+    copyTextToClipboard(qText, "Question copied to clipboard!");
+    const btn = event ? (event.currentTarget || event.target.closest("button")) : qCard.querySelector(".copy-q-btn");
+    if (btn) {
+      const icon = btn.querySelector("i");
+      if (icon) {
+        const oldClass = icon.className;
+        icon.className = "fa-solid fa-check";
+        setTimeout(() => { icon.className = oldClass; }, 1500);
+      }
+    }
+  }
+};
+
+window.copyAnswerText = function(qId, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const qCard = document.getElementById(qId);
+  if (!qCard) return;
+  const aElem = qCard.querySelector(".answer-markdown");
+  const aText = aElem?.innerText?.trim() || aElem?.textContent?.trim() || "";
+  if (aText) {
+    copyTextToClipboard(aText, "Answer copied to clipboard!");
+    const btn = event ? (event.currentTarget || event.target.closest("button")) : qCard.querySelector(".copy-ans-btn");
+    if (btn) {
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => { btn.innerHTML = originalHtml; }, 1500);
+    }
+  }
+};
+
 // Individual Company, Round & Question Accordion Click Handlers
 function initQuestionToggles() {
   document.addEventListener("click", (e) => {
-    // If clicking on copy button or fav button, do not toggle accordions
-    if (e.target.closest(".action-icon-btn") || e.target.closest(".copy-btn") || e.target.closest(".copy-name-btn")) {
+    // If clicking on copy button, fav button, or other action buttons, do not toggle accordions
+    if (e.target.closest(".action-icon-btn") || e.target.closest(".copy-btn") || e.target.closest(".copy-name-btn") || e.target.closest(".copy-q-btn") || e.target.closest(".copy-ans-btn") || e.target.closest(".fav-btn")) {
       return;
     }
 
     // Check if user currently has text selected with mouse drag
     const selectedText = window.getSelection().toString();
     if (selectedText && selectedText.trim().length > 0) {
+      return;
+    }
+
+    // Allow user to freely select company name or round name text without accordion toggle interference
+    if (e.target.closest(".company-name") || e.target.closest(".round-name")) {
       return;
     }
 
@@ -274,29 +322,11 @@ function initQuestionToggles() {
 
     // Question header click (toggles question answer)
     const qHeader = e.target.closest(".question-header");
-    if (qHeader && !e.target.closest(".action-icon-btn")) {
+    if (qHeader) {
       const qItem = qHeader.closest(".question-item");
       if (qItem) {
         qItem.classList.toggle("expanded");
       }
-      return;
-    }
-
-    // Copy Question Text
-    const copyQBtn = e.target.closest(".copy-q-btn");
-    if (copyQBtn) {
-      const qItem = copyQBtn.closest(".question-item");
-      const text = qItem.querySelector(".question-text")?.textContent.trim();
-      copyTextToClipboard(text, "Question copied!");
-      return;
-    }
-
-    // Copy Answer Text
-    const copyAnsBtn = e.target.closest(".copy-ans-btn");
-    if (copyAnsBtn) {
-      const qItem = copyAnsBtn.closest(".question-item");
-      const text = qItem.querySelector(".answer-markdown")?.textContent.trim();
-      copyTextToClipboard(text, "Answer copied!");
       return;
     }
   });
