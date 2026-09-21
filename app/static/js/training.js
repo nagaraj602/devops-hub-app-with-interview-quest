@@ -247,6 +247,10 @@ function renderMermaidDiagrams() {
       });
       mermaid.run({
         nodes: document.querySelectorAll(".mermaid")
+      }).then(() => {
+        bindContentImagesForLightbox();
+      }).catch(err => {
+        console.warn("Mermaid run error:", err);
       });
     } catch (e) {
       console.warn("Mermaid render error:", e);
@@ -609,11 +613,15 @@ function initImageLightbox() {
 }
 
 function bindContentImagesForLightbox() {
-  document.querySelectorAll(".markdown-pane img, .lightbox-trigger-img").forEach(img => {
+  document.querySelectorAll(".markdown-pane img, .markdown-pane image, .mermaid img, .mermaid image, .lightbox-trigger-img").forEach(img => {
     img.style.cursor = "zoom-in";
     img.addEventListener("click", (e) => {
       e.stopPropagation();
-      openLightbox(img.src, img.alt || "Image Preview");
+      const src = img.getAttribute("href") || img.getAttribute("xlink:href") || img.src;
+      const alt = img.getAttribute("alt") || img.getAttribute("title") || "Diagram Screenshot Preview";
+      if (src) {
+        openLightbox(src, alt);
+      }
     });
   });
 }

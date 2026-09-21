@@ -459,36 +459,25 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Calendar Modal Styles (Compact Split Layout) */
-.calendar-modal-split {
-  display: grid;
-  grid-template-columns: 1.15fr 0.95fr;
-  gap: 1.25rem;
-  align-items: start;
-}
-
-@media (max-width: 720px) {
-  .calendar-modal-split {
-    grid-template-columns: 1fr;
-  }
-}
-
-.calendar-left-col {
+/* ==============================================================================
+   Calendar Modal Styles (Reverted to Original Full-Size Layout)
+   ============================================================================== */
+.calendar-modal-body {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .calendar-nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.25rem 0;
+  padding: 0.5rem 0;
 }
 
 .calendar-month-title {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -496,33 +485,31 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  padding: 0.25rem 0;
+  padding: 0.4rem 0;
 }
 
 .calendar-grid-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .calendar-day-cell {
-  height: 42px;
-  min-height: 42px;
+  min-height: 62px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
-  padding: 0.25rem 0.35rem;
+  padding: 0.35rem 0.45rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: space-between;
   font-size: 0.82rem;
   background-color: #ffffff;
   cursor: pointer;
-  position: relative;
   transition: all 0.15s ease;
 }
 
@@ -538,106 +525,65 @@
 }
 
 .calendar-day-cell.has-interview {
-  border-color: #6366f1;
-  background-color: #eef2ff;
+  border-color: #818cf8;
+  background-color: #f5f3ff;
   font-weight: 700;
 }
 
-.calendar-day-cell.has-interview:hover {
-  background-color: #e0e7ff;
-  border-color: #4f46e5;
+.calendar-day-cell.is-today {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
 }
 
 .calendar-day-cell.active-day {
-  background-color: #4f46e5 !important;
-  color: #ffffff !important;
-  border-color: #4338ca !important;
+  border-color: var(--primary) !important;
+  background-color: #e0e7ff !important;
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4);
-}
-
-.calendar-day-cell.active-day .day-number,
-.calendar-day-cell.active-day .interview-dot-indicator {
-  color: #ffffff !important;
 }
 
 .day-number {
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1;
 }
 
-.interview-dot-indicator {
-  font-size: 0.62rem;
-  color: #4f46e5;
-  font-weight: 800;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-/* Right Column: Prominent Selected Date Events Panel */
-.calendar-right-col {
-  background: #f8fafc;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 1rem;
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
+.interview-dot-badge {
+  font-size: 0.68rem;
+  background-color: var(--primary);
+  color: #ffffff;
+  border-radius: var(--radius-full);
+  padding: 0.08rem 0.4rem;
+  font-weight: 700;
+  align-self: stretch;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .selected-day-events-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.selected-day-header {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 0.85rem;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.selected-day-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background-color: #e0e7ff;
-  color: #4f46e5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  flex-shrink: 0;
+  border-top: 1px solid var(--border-light);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .selected-day-events-title {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
   color: var(--text-primary);
-  margin: 0;
-}
-
-.selected-day-subtitle {
-  font-size: 0.76rem;
-  color: var(--text-muted);
 }
 
 .selected-day-events-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  max-height: 260px;
+  gap: 0.5rem;
+  max-height: 250px;
   overflow-y: auto;
 }
 
 .calendar-event-card {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-light);
   border-left: 4px solid var(--primary);
   border-radius: var(--radius-sm);
   padding: 0.65rem 0.85rem;
@@ -650,7 +596,7 @@
 }
 
 .calendar-event-card:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
   border-color: var(--primary);
   transform: translateY(-1px);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
@@ -886,13 +832,32 @@
   border-color: var(--primary);
 }
 
-/* Mobile & Tablet Responsiveness for Vertical Dock */
-@media (max-width: 1200px) {
+/* Layout Container with Left Margin Separation from Vertical Dock */
+.qb-page-layout {
+  position: relative;
+  width: 100%;
+}
+
+@media (min-width: 901px) {
   .qb-vertical-stat-dock {
-    left: 8px;
-    top: 130px;
+    position: fixed;
+    left: 22px;
+    top: 140px;
+    z-index: 95;
+  }
+  .qb-content-body {
+    margin-left: 80px; /* Generous margin ensures left floating dock and questions NEVER overlap */
+  }
+}
+
+@media (max-width: 1200px) and (min-width: 901px) {
+  .qb-vertical-stat-dock {
+    left: 10px;
     transform: scale(0.92);
     transform-origin: left center;
+  }
+  .qb-content-body {
+    margin-left: 70px;
   }
 }
 
@@ -906,6 +871,9 @@
     padding: 0.5rem 0.85rem;
     gap: 1.25rem;
     box-shadow: var(--shadow-sm);
+  }
+  .qb-content-body {
+    margin-left: 0;
   }
   .stat-flyout {
     top: calc(100% + 10px);
@@ -931,5 +899,24 @@
   .stat-dock-item:hover .stat-flyout {
     transform: translateX(-50%) translateY(0);
   }
+}
+
+/* Expand / Collapse Toggle Buttons Active Highlight */
+.qb-toggle-btn.active {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+}
+
+.qb-toggle-btn.active i {
+  color: #ffffff !important;
+}
+
+/* Active Favorite Filter Dock Highlight */
+.stat-dock-item.active-favorite-filter .dock-icon-bubble {
+  box-shadow: 0 0 0 3px #f43f5e, 0 4px 12px rgba(244, 63, 94, 0.35) !important;
+  transform: scale(1.18);
+  background-color: #ffe4e6 !important;
 }
 

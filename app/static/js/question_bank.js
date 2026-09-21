@@ -64,25 +64,37 @@ function toggleFavorite(qId, e) {
 // Category Pills Filtering
 function initCategoryPills() {
   const pills = document.querySelectorAll(".category-pill");
+  const favCard = document.getElementById("statCardFavorites");
+
   pills.forEach(pill => {
     pill.addEventListener("click", () => {
       pills.forEach(p => p.classList.remove("active"));
       pill.classList.add("active");
       currentCategory = pill.getAttribute("data-category") || "All";
       showFavoritesOnly = false;
+      favCard?.classList.remove("active-favorite-filter");
       applyFilters();
     });
   });
 
-  // Favorites stat card click handler
-  const favCard = document.getElementById("statCardFavorites");
+  // Favorites stat card click handler (toggle on and release off)
   if (favCard) {
     favCard.style.cursor = "pointer";
     favCard.addEventListener("click", () => {
       showFavoritesOnly = !showFavoritesOnly;
-      pills.forEach(p => p.classList.remove("active"));
+
       if (showFavoritesOnly) {
+        favCard.classList.add("active-favorite-filter");
+        pills.forEach(p => p.classList.remove("active"));
         showToast("Filtering bookmarked questions", "info");
+      } else {
+        // Toggle off / release from favorites: return to All
+        favCard.classList.remove("active-favorite-filter");
+        currentCategory = "All";
+        pills.forEach(p => p.classList.remove("active"));
+        const allPill = document.querySelector('.category-pill[data-category="All"]');
+        if (allPill) allPill.classList.add("active");
+        showToast("Showing all questions", "info");
       }
       applyFilters();
     });
@@ -205,6 +217,8 @@ function initGlobalAccordions() {
     expandAllBtn.addEventListener("click", () => {
       document.querySelectorAll(".company-card").forEach(c => c.classList.add("expanded"));
       document.querySelectorAll(".round-block").forEach(r => r.classList.add("expanded"));
+      expandAllBtn.classList.add("active");
+      collapseAllBtn?.classList.remove("active");
       showToast("All companies & rounds expanded", "info");
     });
   }
@@ -214,6 +228,8 @@ function initGlobalAccordions() {
     collapseAllBtn.addEventListener("click", () => {
       document.querySelectorAll(".company-card").forEach(c => c.classList.remove("expanded"));
       document.querySelectorAll(".round-block").forEach(r => r.classList.remove("expanded"));
+      collapseAllBtn.classList.add("active");
+      expandAllBtn?.classList.remove("active");
       showToast("All companies & rounds collapsed", "info");
     });
   }
@@ -225,6 +241,8 @@ function initGlobalAccordions() {
       document.querySelectorAll(".company-card").forEach(c => c.classList.add("expanded"));
       document.querySelectorAll(".round-block").forEach(r => r.classList.add("expanded"));
       document.querySelectorAll(".question-item").forEach(q => q.classList.add("expanded"));
+      expandAllAnswersBtn.classList.add("active");
+      collapseAllAnswersBtn?.classList.remove("active");
       showToast("All answers expanded", "success");
     });
   }
@@ -233,6 +251,8 @@ function initGlobalAccordions() {
   if (collapseAllAnswersBtn) {
     collapseAllAnswersBtn.addEventListener("click", () => {
       document.querySelectorAll(".question-item").forEach(q => q.classList.remove("expanded"));
+      collapseAllAnswersBtn.classList.add("active");
+      expandAllAnswersBtn?.classList.remove("active");
       showToast("All answers collapsed", "info");
     });
   }
@@ -369,8 +389,9 @@ function sortCompaniesDOM(sortMode) {
 }
 
 // Calendar Pop-Up Modal Logic
-let currentCalYear = 2026;
-let currentCalMonth = 8; // September (0-indexed: 8 = Sep)
+const initialCalDate = new Date();
+let currentCalYear = initialCalDate.getFullYear();
+let currentCalMonth = initialCalDate.getMonth();
 let calendarEventsData = {};
 
 function initCalendarModal() {
@@ -391,6 +412,9 @@ function initCalendarModal() {
 }
 
 function openCalendarModal() {
+  const now = new Date();
+  currentCalYear = now.getFullYear();
+  currentCalMonth = now.getMonth();
   openModal("calendarModal");
   renderCalendarView(currentCalYear, currentCalMonth);
 }
@@ -441,9 +465,16 @@ function renderCalendarView(year, month) {
     gridElem.appendChild(emptyCell);
   }
 
-  // Month short prefix for matching (e.g. "Sep", "Aug")
   const monthShort = MONTH_NAMES[month].substring(0, 3);
-  let firstDateWithEvents = null;
+  const realToday = new Date();
+  const isCurrentMonthView = (year === realToday.getFullYear() && month === realToday.getMonth());
+  const todayDate = realToday.getDate();
+
+  let todayEvents = [];
+  let todayCell = null;
+  let fallbackFirstEventCell = null;
+  let fallbackFirstEvents = [];
+  let fallbackFirstDay = null;
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dayCell = document.createElement("div");
@@ -453,6 +484,12 @@ function renderCalendarView(year, month) {
     dayNum.className = "day-number";
     dayNum.textContent = d;
     dayCell.appendChild(dayNum);
+
+    const isThisToday = isCurrentMonthView && (d === todayDate);
+    if (isThisToday) {
+      dayCell.classList.add("is-today");
+      todayCell = dayCell;
+    }
 
     // Look for matching events in calendarEventsData
     const matchingEvents = [];
@@ -469,86 +506,93 @@ function renderCalendarView(year, month) {
       }
     }
 
+    if (isThisToday) {
+      todayEvents = matchingEvents;
+    }
+
     if (matchingEvents.length > 0) {
       dayCell.classList.add("has-interview");
-      const indicator = document.createElement("div");
-      indicator.className = "interview-dot-indicator";
-      indicator.innerHTML = `<i class="fa-solid fa-circle" style="font-size:0.45rem;"></i> ${matchingEvents.length} R`;
-      dayCell.appendChild(indicator);
+      const badge = document.createElement("div");
+      badge.className = "interview-dot-badge";
+      badge.textContent = `${matchingEvents.length} Rounds`;
+      dayCell.appendChild(badge);
 
-      dayCell.addEventListener("click", () => {
-        document.querySelectorAll(".calendar-day-cell").forEach(c => c.classList.remove("active-day"));
-        dayCell.classList.add("active-day");
-        showDayInterviewDetails(d, MONTH_NAMES[month], year, matchingEvents, true);
-      });
-
-      if (!firstDateWithEvents) {
-        firstDateWithEvents = { day: d, events: matchingEvents, cell: dayCell };
+      if (!fallbackFirstEventCell) {
+        fallbackFirstEventCell = dayCell;
+        fallbackFirstEvents = matchingEvents;
+        fallbackFirstDay = d;
       }
     }
+
+    dayCell.addEventListener("click", () => {
+      document.querySelectorAll(".calendar-day-cell").forEach(c => c.classList.remove("active-day"));
+      dayCell.classList.add("active-day");
+      showDayInterviewDetails(d, MONTH_NAMES[month], year, matchingEvents);
+    });
 
     gridElem.appendChild(dayCell);
   }
 
-  // Auto-select first date with interviews in this month so the user sees results immediately
-  if (firstDateWithEvents) {
-    firstDateWithEvents.cell.classList.add("active-day");
-    showDayInterviewDetails(firstDateWithEvents.day, MONTH_NAMES[month], year, firstDateWithEvents.events, false);
+  // User requirement: By default stay on current date (today)
+  if (isCurrentMonthView && todayCell) {
+    todayCell.classList.add("active-day");
+    showDayInterviewDetails(todayDate, MONTH_NAMES[month], year, todayEvents);
+  } else if (fallbackFirstEventCell) {
+    fallbackFirstEventCell.classList.add("active-day");
+    showDayInterviewDetails(fallbackFirstDay, MONTH_NAMES[month], year, fallbackFirstEvents);
   } else {
-    const list = document.getElementById("selectedDayEventsList");
-    const title = document.getElementById("selectedDayTitle");
-    const subtitle = document.getElementById("selectedDaySubtitle");
-    if (title) title.textContent = "No Interviews This Month";
-    if (subtitle) subtitle.textContent = "Browse other months above";
-    if (list) {
-      list.innerHTML = `
-        <div class="calendar-empty-hint">
-          <i class="fa-regular fa-calendar-xmark" style="font-size:1.6rem; color:var(--text-muted); margin-bottom:0.5rem;"></i>
-          <p>No interview dates recorded for this month.</p>
-        </div>
-      `;
-    }
+    showDayInterviewDetails(1, MONTH_NAMES[month], year, []);
   }
 }
 
-function showDayInterviewDetails(day, monthName, year, events, shouldScroll = true) {
+function showDayInterviewDetails(day, monthName, year, events) {
   const panel = document.getElementById("selectedDayEventsPanel");
   const list = document.getElementById("selectedDayEventsList");
   const title = document.getElementById("selectedDayTitle");
-  const subtitle = document.getElementById("selectedDaySubtitle");
   if (!panel || !list) return;
 
-  if (title) title.textContent = `${day} ${monthName} ${year}`;
-  if (subtitle) subtitle.textContent = `${events.length} Interview Round${events.length > 1 ? 's' : ''} Scheduled`;
+  const realToday = new Date();
+  const isToday = (year === realToday.getFullYear() && monthName === MONTH_NAMES[realToday.getMonth()] && day === realToday.getDate());
+
+  if (title) {
+    title.textContent = `Interviews on ${day} ${monthName} ${year}${isToday ? ' (Today)' : ''}:`;
+  }
 
   list.innerHTML = "";
-  events.forEach(ev => {
-    const card = document.createElement("div");
-    card.className = "calendar-event-card";
-    card.innerHTML = `
-      <div>
-        <div class="calendar-event-company">${escapeHtml(ev.company)}</div>
-        <div class="calendar-event-round"><i class="fa-regular fa-circle-dot" style="margin-right:0.25rem;"></i>${escapeHtml(ev.round)}</div>
-      </div>
-      <div style="display:flex; align-items:center; gap:0.5rem;">
-        <span class="badge badge-purple" style="font-size:0.75rem;">${ev.question_count} Qs</span>
-        <span class="calendar-event-btn"><i class="fa-solid fa-arrow-right"></i> View</span>
+  if (events && events.length > 0) {
+    events.forEach(ev => {
+      const card = document.createElement("div");
+      card.className = "calendar-event-card";
+      card.innerHTML = `
+        <div>
+          <div class="calendar-event-company">${escapeHtml(ev.company)}</div>
+          <div class="calendar-event-round"><i class="fa-regular fa-circle-dot" style="margin-right:0.25rem;"></i>${escapeHtml(ev.round)}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="badge badge-purple" style="font-size:0.75rem;">${ev.question_count} Qs</span>
+          <span class="calendar-event-btn"><i class="fa-solid fa-arrow-right"></i> View</span>
+        </div>
+      `;
+      card.title = `Click to filter Question Bank for ${ev.company}`;
+      card.addEventListener("click", () => {
+        closeModal("calendarModal");
+        searchQuery = ev.company.toLowerCase();
+        const searchInput = document.getElementById("qbSearchInput");
+        if (searchInput) searchInput.value = ev.company;
+        applyFilters();
+        const firstCard = document.querySelector(".company-card");
+        if (firstCard) firstCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      list.appendChild(card);
+    });
+  } else {
+    list.innerHTML = `
+      <div class="calendar-empty-hint" style="padding: 1.5rem 1rem;">
+        <i class="fa-regular fa-calendar" style="font-size:1.6rem; color:var(--text-muted); margin-bottom:0.5rem;"></i>
+        <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">No interview rounds scheduled for ${isToday ? 'today' : 'this date'}.</p>
+        <span style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">Click on any highlighted date (e.g. 3, 9, 17 Sep) to view scheduled rounds.</span>
       </div>
     `;
-    card.title = `Click to filter Question Bank for ${ev.company}`;
-    card.addEventListener("click", () => {
-      closeModal("calendarModal");
-      searchQuery = ev.company.toLowerCase();
-      const searchInput = document.getElementById("qbSearchInput");
-      if (searchInput) searchInput.value = ev.company;
-      applyFilters();
-      const firstCard = document.querySelector(".company-card");
-      if (firstCard) firstCard.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    list.appendChild(card);
-  });
-
-  if (shouldScroll && window.innerWidth <= 720) {
-    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 }
+

@@ -339,27 +339,29 @@ class TrainingService:
         # 1. Flowchart / Mermaid formatting & syntax sanitation
         def replace_mermaid(match):
             code = match.group(1)
-            extracted_images = []
 
-            # Extract @{ img: "..." } metadata
-            def extract_img(m):
-                node_id = m.group(1)
-                img_url = m.group(2)
-                extracted_images.append((node_id, img_url))
-                return ""
-
-            code = re.sub(r'([A-Za-z0-9_]+)@\{\s*img:\s*["\']([^"\']+)["\'][^}]*\}', extract_img, code)
+            # Rewrite any raw.githubusercontent image URLs within the mermaid block to local API endpoint
+            code = re.sub(
+                r'https?://raw\.githubusercontent\.com/artisantek/training-materials/(?:master|main)/',
+                '/api/training/raw/training/',
+                code
+            )
+            code = re.sub(
+                r'https?://raw\.githubusercontent\.com/nagaraj602/Notes/(?:master|main)/',
+                '/api/training/raw/notes/',
+                code
+            )
 
             # Convert 3 or more hyphens to standard -->
             code = re.sub(r'-{3,}>', '-->', code)
 
-            # Sanitize node labels with special characters like **
+            # Sanitize node labels with special characters like ** to quoted strings for Mermaid v11
             def sanitize_labels(m):
                 nid = m.group(1)
                 content = m.group(2).strip()
                 if content.startswith('"') and content.endswith('"'):
                     return f'{nid}[{content}]'
-                clean_content = content.replace('**', '').replace('"', "'")
+                clean_content = content.replace('"', "'")
                 return f'{nid}["{clean_content}"]'
 
             code = re.sub(r'([A-Za-z0-9_]+)\[([^\]\n]+)\]', sanitize_labels, code)
@@ -368,31 +370,7 @@ class TrainingService:
             code_lines = [l for l in code.splitlines() if l.strip()]
             clean_code = "\n".join(code_lines)
 
-            mermaid_html = f'\n<div class="mermaid">\n{clean_code}\n</div>\n'
-
-            # If images were attached to flowchart nodes, render a dedicated screenshot gallery below
-            if extracted_images:
-                mermaid_html += '\n<div class="flowchart-screenshots-gallery" style="margin: 1.5rem 0 2rem 0; padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);">\n'
-                mermaid_html += '<h4 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:1rem;"><i class="fa-solid fa-images" style="color:var(--primary); margin-right:0.5rem;"></i>Step-by-Step Screenshots</h4>\n'
-                mermaid_html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;">\n'
-                for node_id, url in extracted_images:
-                    local_url = url
-                    local_url = re.sub(r'https?://raw\.githubusercontent\.com/artisantek/training-materials/(?:master|main)/', '/api/training/raw/training/', local_url)
-                    local_url = re.sub(r'https?://raw\.githubusercontent\.com/nagaraj602/Notes/(?:master|main)/', '/api/training/raw/notes/', local_url)
-                    img_name = Path(url).stem.replace("-", " ").replace("_", " ").title()
-
-                    mermaid_html += f'''  <div class="step-image-card" style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:0.75rem;">
-    <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between;">
-      <span><i class="fa-regular fa-image" style="color:var(--primary); margin-right:0.4rem;"></i>{img_name}</span>
-      <span class="badge badge-outline" style="font-size:0.72rem;">Step {node_id}</span>
-    </div>
-    <div style="overflow:hidden; border-radius:4px; border:1px solid var(--border-color); cursor:zoom-in;">
-      <img src="{local_url}" alt="{img_name}" class="lightbox-trigger-img" style="width:100%; height:auto; display:block;" loading="lazy">
-    </div>
-  </div>\n'''
-                mermaid_html += '</div>\n</div>\n'
-
-            return mermaid_html
+            return f'\n<div class="mermaid">\n{clean_code}\n</div>\n'
 
         text = re.sub(r'```mermaid\s*([\s\S]*?)```', replace_mermaid, text, flags=re.IGNORECASE)
 

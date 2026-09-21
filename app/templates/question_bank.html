@@ -2,142 +2,144 @@
 
 {% block content %}
 
-<!-- Vertical Quick Stats Dock (Floating on Left Side with hover flyouts) -->
-<aside class="qb-vertical-stat-dock" id="qbVerticalStatDock" aria-label="Quick statistics dock">
-  <!-- 1. Total Companies -->
-  <div class="stat-dock-item" data-stat="companies" title="Total Companies">
-    <div class="dock-icon-bubble blue">
-      <i class="fa-solid fa-building"></i>
-    </div>
-    <div class="stat-flyout">
-      <div class="flyout-icon blue">
+<div class="qb-page-layout">
+  <!-- Vertical Quick Stats Dock (Floating on Left Side with hover flyouts) -->
+  <aside class="qb-vertical-stat-dock" id="qbVerticalStatDock" aria-label="Quick statistics dock">
+    <!-- 1. Total Companies -->
+    <div class="stat-dock-item" data-stat="companies" title="Total Companies">
+      <div class="dock-icon-bubble blue">
         <i class="fa-solid fa-building"></i>
       </div>
-      <div class="flyout-details">
-        <span class="flyout-label">Total Companies</span>
-        <span class="flyout-val">{{ stats.total_companies }}</span>
-        <span class="flyout-sub">Curated Organizations</span>
+      <div class="stat-flyout">
+        <div class="flyout-icon blue">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">Total Companies</span>
+          <span class="flyout-val">{{ stats.total_companies }}</span>
+          <span class="flyout-sub">Curated Organizations</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 2. Interview Rounds -->
-  <div class="stat-dock-item" data-stat="rounds" title="Interview Rounds">
-    <div class="dock-icon-bubble purple">
-      <i class="fa-solid fa-layer-group"></i>
-    </div>
-    <div class="stat-flyout">
-      <div class="flyout-icon purple">
+    <!-- 2. Interview Rounds -->
+    <div class="stat-dock-item" data-stat="rounds" title="Interview Rounds">
+      <div class="dock-icon-bubble purple">
         <i class="fa-solid fa-layer-group"></i>
       </div>
-      <div class="flyout-details">
-        <span class="flyout-label">Interview Rounds</span>
-        <span class="flyout-val">{{ stats.total_rounds }}</span>
-        <span class="flyout-sub">L1, L2, Manager Rounds</span>
+      <div class="stat-flyout">
+        <div class="flyout-icon purple">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">Interview Rounds</span>
+          <span class="flyout-val">{{ stats.total_rounds }}</span>
+          <span class="flyout-sub">L1, L2, Manager Rounds</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 3. Total Questions -->
-  <div class="stat-dock-item" data-stat="questions" title="Total Questions">
-    <div class="dock-icon-bubble emerald">
-      <i class="fa-solid fa-circle-check"></i>
-    </div>
-    <div class="stat-flyout">
-      <div class="flyout-icon emerald">
+    <!-- 3. Total Questions -->
+    <div class="stat-dock-item" data-stat="questions" title="Total Questions">
+      <div class="dock-icon-bubble emerald">
         <i class="fa-solid fa-circle-check"></i>
       </div>
-      <div class="flyout-details">
-        <span class="flyout-label">Total Questions</span>
-        <span class="flyout-val">{{ stats.total_questions }}</span>
-        <span class="flyout-sub">All Curated Questions</span>
+      <div class="stat-flyout">
+        <div class="flyout-icon emerald">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">Total Questions</span>
+          <span class="flyout-val">{{ stats.total_questions }}</span>
+          <span class="flyout-sub">All Curated Questions</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 4. My Favorites (Interactive Bookmark Counter) -->
-  <div class="stat-dock-item stat-dock-interactive" id="statCardFavorites" data-stat="favorites" title="My Favorites (Click to filter bookmarks)">
-    <div class="dock-icon-bubble rose">
-      <i class="fa-solid fa-star"></i>
-    </div>
-    <div class="stat-flyout">
-      <div class="flyout-icon rose">
+    <!-- 4. My Favorites (Interactive Bookmark Counter) -->
+    <div class="stat-dock-item stat-dock-interactive" id="statCardFavorites" data-stat="favorites" title="My Favorites (Click to filter bookmarks)">
+      <div class="dock-icon-bubble rose">
         <i class="fa-solid fa-star"></i>
       </div>
-      <div class="flyout-details">
-        <span class="flyout-label">My Favorites</span>
-        <span class="flyout-val" id="statFavoritesCount">0</span>
-        <span class="flyout-sub">Bookmarked • Click to Filter</span>
+      <div class="stat-flyout">
+        <div class="flyout-icon rose">
+          <i class="fa-solid fa-star"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">My Favorites</span>
+          <span class="flyout-val" id="statFavoritesCount">0</span>
+          <span class="flyout-sub">Bookmarked • Click to Filter</span>
+        </div>
       </div>
     </div>
-  </div>
-</aside>
+  </aside>
 
+  <!-- Main Content Body with Left Margin Separation from Vertical Dock -->
+  <div class="qb-content-body">
+    <!-- Category Filter Pills Bar -->
+    <section class="category-filter-wrap">
+      <!-- All Category Pill -->
+      <button type="button" class="category-pill active" data-category="All">
+        <span>All</span>
+        <span class="pill-count">{{ stats.total_questions }}</span>
+      </button>
 
-<!-- Category Filter Pills Bar -->
-<section class="category-filter-wrap">
-  <!-- All Category Pill -->
-  <button type="button" class="category-pill active" data-category="All">
-    <span>All</span>
-    <span class="pill-count">{{ stats.total_questions }}</span>
-  </button>
+      {% for cat in category_pills %}
+      <button type="button" class="category-pill" data-category="{{ cat.name }}">
+        <span>{{ cat.name }}</span>
+        <span class="pill-count">{{ cat.count }}</span>
+      </button>
+      {% endfor %}
+    </section>
 
-  {% for cat in category_pills %}
-  <button type="button" class="category-pill" data-category="{{ cat.name }}">
-    <span>{{ cat.name }}</span>
-    <span class="pill-count">{{ cat.count }}</span>
-  </button>
-  {% endfor %}
-</section>
+    <!-- Controls Bar: Search, Sort, Expand/Collapse Buttons -->
+    <section class="controls-bar">
+      <!-- Live Search Box -->
+      <div class="search-input-group">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="qbSearchInput" class="search-input" placeholder="Search company, round, topic, question or answer..." value="{{ search_query }}">
+      </div>
 
-<!-- Controls Bar: Search, Sort, Expand/Collapse Buttons -->
-<section class="controls-bar">
-  <!-- Live Search Box -->
-  <div class="search-input-group">
-    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-    <input type="text" id="qbSearchInput" class="search-input" placeholder="Search company, round, topic, question or answer..." value="{{ search_query }}">
-  </div>
+      <!-- Sort Dropdown -->
+      <select id="qbSortSelect" class="sort-select" title="Sort listing">
+        <option value="recent">Sort: Most Recent (Default)</option>
+        <option value="name_asc">Company Name (A - Z)</option>
+        <option value="name_desc">Company Name (Z - A)</option>
+        <option value="most_questions">Most Questions</option>
+        <option value="date">Interview Date</option>
+      </select>
 
-  <!-- Sort Dropdown -->
-  <select id="qbSortSelect" class="sort-select" title="Sort listing">
-    <option value="recent">Sort: Most Recent (Default)</option>
-    <option value="name_asc">Company Name (A - Z)</option>
-    <option value="name_desc">Company Name (Z - A)</option>
-    <option value="most_questions">Most Questions</option>
-    <option value="date">Interview Date</option>
-  </select>
+      <!-- Action Controls -->
+      <div class="action-buttons-group">
+        <!-- Interview Calendar Button (Prominently placed in Action Toolbar) -->
+        <button type="button" class="btn btn-secondary qb-calendar-btn" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
+          <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
+          <span>Interview Calendar</span>
+        </button>
 
-  <!-- Action Controls -->
-  <div class="action-buttons-group">
-    <!-- Interview Calendar Button (Prominently placed in Action Toolbar) -->
-    <button type="button" class="btn btn-secondary qb-calendar-btn" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
-      <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
-      <span>Interview Calendar</span>
-    </button>
+        <!-- Expand / Collapse All Companies -->
+        <button type="button" class="btn btn-secondary qb-toggle-btn" id="expandAllCompaniesBtn" title="Expand all company & round containers">
+          <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+          <span>Expand All</span>
+        </button>
 
-    <!-- Expand / Collapse All Companies -->
-    <button type="button" class="btn btn-secondary" id="expandAllCompaniesBtn" title="Expand all company & round containers">
-      <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-      <span>Expand All</span>
-    </button>
+        <button type="button" class="btn btn-secondary qb-toggle-btn" id="collapseAllCompaniesBtn" title="Collapse all companies & rounds">
+          <i class="fa-solid fa-down-left-and-up-right-to-center"></i>
+          <span>Collapse All</span>
+        </button>
 
-    <button type="button" class="btn btn-secondary" id="collapseAllCompaniesBtn" title="Collapse all companies & rounds">
-      <i class="fa-solid fa-down-left-and-up-right-to-center"></i>
-      <span>Collapse All</span>
-    </button>
+        <!-- Separate Button: Expand / Collapse All Answers -->
+        <button type="button" class="btn btn-secondary qb-toggle-btn" id="expandAllAnswersBtn" title="Expand answers for all questions">
+          <i class="fa-solid fa-eye"></i>
+          <span>Expand Answers</span>
+        </button>
 
-    <!-- Separate Button: Expand / Collapse All Answers -->
-    <button type="button" class="btn btn-primary" id="expandAllAnswersBtn" title="Expand answers for all questions">
-      <i class="fa-solid fa-eye"></i>
-      <span>Expand Answers</span>
-    </button>
-
-    <button type="button" class="btn btn-secondary" id="collapseAllAnswersBtn" title="Collapse all answers">
-      <i class="fa-solid fa-eye-slash"></i>
-      <span>Hide Answers</span>
-    </button>
-  </div>
-</section>
+        <button type="button" class="btn btn-secondary qb-toggle-btn" id="collapseAllAnswersBtn" title="Collapse all answers">
+          <i class="fa-solid fa-eye-slash"></i>
+          <span>Hide Answers</span>
+        </button>
+      </div>
+    </section>
 
 <!-- Empty State Filter Warning (Hidden by default) -->
 <div id="qbEmptyState" style="display:none; text-align:center; padding:3rem; background:#ffffff; border:1px dashed var(--border-light); border-radius:var(--radius-lg); margin-bottom:1.5rem;">
@@ -269,11 +271,12 @@
     </div>
   </article>
   {% endfor %}
-</div>
+  </div><!-- end qb-content-body -->
+</div><!-- end qb-page-layout -->
 
-<!-- Calendar Pop-Up Modal (Split Layout: Compact Calendar + Prominent Interview List) -->
+<!-- Calendar Pop-Up Modal (Original Full-Size Layout) -->
 <div class="modal-overlay" id="calendarModal">
-  <div class="modal-content" style="max-width:840px;">
+  <div class="modal-content" style="max-width:720px;">
     <div class="modal-header">
       <div class="modal-title">
         <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
@@ -284,50 +287,32 @@
       </button>
     </div>
     <div class="modal-body calendar-modal-body">
-      <div class="calendar-modal-split">
-        <!-- Left Side: Compact Calendar -->
-        <div class="calendar-left-col">
-          <div class="calendar-nav-bar">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">
-              <i class="fa-solid fa-chevron-left"></i> Prev
-            </button>
-            <span class="calendar-month-title" id="calendarMonthTitle">September 2026</span>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">
-              Next <i class="fa-solid fa-chevron-right"></i>
-            </button>
-          </div>
+      <div class="calendar-nav-bar">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">
+          <i class="fa-solid fa-chevron-left"></i> Prev
+        </button>
+        <span class="calendar-month-title" id="calendarMonthTitle">September 2026</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">
+          Next <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
 
-          <div class="calendar-grid-header">
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-            <div>Sun</div>
-          </div>
+      <div class="calendar-grid-header">
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+        <div>Sun</div>
+      </div>
 
-          <div class="calendar-grid-days" id="calendarGridDays"></div>
-        </div>
+      <div class="calendar-grid-days" id="calendarGridDays"></div>
 
-        <!-- Right Side: Eye-Catching Selected Date Events View -->
-        <div class="calendar-right-col">
-          <div class="selected-day-events-panel" id="selectedDayEventsPanel">
-            <div class="selected-day-header">
-              <div class="selected-day-icon"><i class="fa-solid fa-calendar-check"></i></div>
-              <div>
-                <h4 class="selected-day-events-title" id="selectedDayTitle">Select a Date</h4>
-                <span class="selected-day-subtitle" id="selectedDaySubtitle">Click on any date with rounds</span>
-              </div>
-            </div>
-            <div class="selected-day-events-list" id="selectedDayEventsList">
-              <div class="calendar-empty-hint">
-                <i class="fa-regular fa-hand-pointer" style="font-size:1.5rem; color:var(--primary); margin-bottom:0.5rem;"></i>
-                <p>Select any highlighted date on the left to see interview rounds & companies.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Selected Day Details Panel -->
+      <div class="selected-day-events-panel" id="selectedDayEventsPanel">
+        <h4 class="selected-day-events-title" id="selectedDayTitle">Interviews on 21 September 2026:</h4>
+        <div class="selected-day-events-list" id="selectedDayEventsList"></div>
       </div>
     </div>
     <div class="modal-footer">
