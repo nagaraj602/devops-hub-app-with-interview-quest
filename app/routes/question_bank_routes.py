@@ -6,11 +6,25 @@ from app.config import DEFAULT_REPOS
 
 router = APIRouter()
 
+_cached_default_html: Optional[str] = None
+
+def invalidate_qb_html_cache():
+    global _cached_default_html
+    _cached_default_html = None
+
+question_bank_service.add_on_refresh_callback(invalidate_qb_html_cache)
+
 @router.get("/", response_class=HTMLResponse)
 @router.get("/question-bank", response_class=HTMLResponse)
 async def question_bank_view(request: Request, category: Optional[str] = "All", search: Optional[str] = ""):
+    global _cached_default_html
+    is_default = (category in (None, "All", "")) and (not search or not search.strip())
+
+    if is_default and _cached_default_html is not None:
+        return HTMLResponse(content=_cached_default_html)
+
     data = question_bank_service.get_data()
-    return request.app.state.templates.TemplateResponse(
+    template_response = request.app.state.templates.TemplateResponse(
         request=request,
         name="question_bank.html",
         context={
@@ -24,3 +38,8 @@ async def question_bank_view(request: Request, category: Optional[str] = "All", 
             "search_query": search
         }
     )
+
+    if is_default:
+        _cached_default_html = template_response.body.decode("utf-8")
+
+    return template_response

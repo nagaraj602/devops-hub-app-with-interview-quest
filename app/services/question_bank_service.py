@@ -1,6 +1,7 @@
 import os
 import re
-from typing import Dict, Any, List, Optional
+import pickle
+from typing import Dict, Any, List, Optional, Callable
 from app.config import INTERVIEW_QUESTIONS_DIR
 from app.services.question_categorizer import (
     BASE_CATEGORIES_LIST,
@@ -31,10 +32,52 @@ class QuestionBankService:
     def __init__(self, questions_dir: Optional[str] = None):
         self.dir_path = questions_dir or INTERVIEW_QUESTIONS_DIR
         self._cache: Optional[Dict[str, Any]] = None
+        self._on_refresh_callbacks: List[Callable[[], None]] = []
+
+    def add_on_refresh_callback(self, cb: Callable[[], None]):
+        self._on_refresh_callbacks.append(cb)
+
+    def _get_cache_path(self) -> str:
+        return os.path.join(self.dir_path, ".cache_qb.pkl")
+
+    def _compute_fingerprint(self) -> str:
+        directory = self.dir_path
+        if not os.path.exists(directory):
+            return ""
+        items = []
+        try:
+            for f in sorted(os.listdir(directory)):
+                if f.endswith(".md"):
+                    fp = os.path.join(directory, f)
+                    st = os.stat(fp)
+                    items.append(f"{f}:{st.st_mtime}:{st.st_size}")
+        except Exception:
+            pass
+        return ";".join(items)
 
     def get_data(self, force_refresh: bool = False) -> Dict[str, Any]:
         if self._cache is not None and not force_refresh:
             return self._cache
+
+        fingerprint = self._compute_fingerprint()
+        cache_path = self._get_cache_path()
+
+        if not force_refresh and os.path.exists(cache_path):
+            try:
+                with open(cache_path, "rb") as cpf:
+                    payload = pickle.load(cpf)
+                    if isinstance(payload, dict) and payload.get("fingerprint") == fingerprint:
+                        self._cache = payload.get("data")
+                        return self._cache
+            except Exception:
+                pass
+
+        if force_refresh:
+            for cb in self._on_refresh_callbacks:
+                try:
+                    cb()
+                except Exception:
+                    pass
 
         directory = self.dir_path
         if not os.path.exists(directory):
@@ -123,6 +166,13 @@ class QuestionBankService:
             "category_pills": sorted_categories,
             "calendar_events": calendar_events
         }
+
+        try:
+            with open(cache_path, "wb") as cpf:
+                pickle.dump({"fingerprint": fingerprint, "data": self._cache}, cpf, protocol=pickle.HIGHEST_PROTOCOL)
+        except Exception:
+            pass
+
         return self._cache
 
     def _parse_company_interview(self, fname: str, content: str, companies_map: Dict[str, Any], category_counts: Dict[str, int], is_nagaraj: bool):

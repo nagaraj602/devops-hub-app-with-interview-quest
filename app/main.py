@@ -1,11 +1,15 @@
 import os
 import uvicorn
 from pathlib import Path
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from starlette.middleware.gzip import GZipMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 from app.config import PORT, HOST, APP_DIR, BASE_DIR
 from app.routes.question_bank_routes import router as question_bank_router
@@ -15,14 +19,42 @@ from app.routes.cheatsheet_routes import router as cheatsheet_router
 from app.routes.sync_routes import router as sync_router
 from app.routes.api_routes import router as api_router
 
+# Lifespan startup pre-warm handler: pre-loads in-memory data caches before user traffic arrives
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        from app.services.question_bank_service import question_bank_service
+        from app.services.cheatsheet_service import cheatsheet_service
+        from app.services.project_service import project_service
+        question_bank_service.get_data()
+        cheatsheet_service.get_data()
+        project_service.get_project_data()
+    except Exception as e:
+        print(f"Lifespan pre-warm notice: {e}")
+    yield
+
 # Initialize FastAPI app
 app = FastAPI(
     title="DevOps Knowledge Portal & Interview Hub",
     description="Universal DevOps Interview Questions, Project Architecture, Training Materials & Command Cheatsheets",
-    version="7.0.0"
+    version="1.0.9",
+    lifespan=lifespan
 )
 
-# Enable CORS for API queries
+# 1. GZip Compression Middleware (High Performance: Compresses responses > 500 bytes by ~90%)
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+# 2. Static Asset Caching Middleware (Sets 7-day browser cache headers for /static/ assets)
+class StaticCacheMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        if request.url.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "public, max-age=604800, stale-while-revalidate=86400"
+        return response
+
+app.add_middleware(StaticCacheMiddleware)
+
+# 3. Enable CORS for API queries
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

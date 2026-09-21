@@ -18,6 +18,7 @@ RESET="\033[0m"
 # Default configuration
 DEFAULT_IMAGE_NAME="nagarajkamath602/devops-hub-app-with-interview-quest"
 DEFAULT_TAG="latest"
+DEFAULT_VERSION="1.0.9"
 PORT="8926"
 K8S_MANIFEST="k8s/all-in-one.yaml"
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -179,12 +180,13 @@ deploy_docker_desktop_k8s() {
     read -p "Do you want to rebuild and push the Docker image before deploying? (Y/n): " do_rebuild
     do_rebuild=${do_rebuild:-Y}
     if [[ "$do_rebuild" =~ ^[Yy]$ ]]; then
-        echo -e "\n${CYAN}==> Building Ubuntu Multi-stage Docker image (tag: ${YELLOW}$DEFAULT_TAG${CYAN})...${RESET}"
-        docker build -t "$DEFAULT_IMAGE_NAME:$DEFAULT_TAG" .
+        echo -e "\n${CYAN}==> Building Ubuntu Multi-stage Docker image (tags: ${YELLOW}$DEFAULT_TAG, $DEFAULT_VERSION${CYAN})...${RESET}"
+        docker build -t "$DEFAULT_IMAGE_NAME:$DEFAULT_TAG" -t "$DEFAULT_IMAGE_NAME:$DEFAULT_VERSION" .
         
         read -p "Push image to Docker Hub? (y/N): " do_push_k8s
         if [[ "$do_push_k8s" =~ ^[Yy]$ ]]; then
             push_with_auth_check "$DEFAULT_IMAGE_NAME:$DEFAULT_TAG"
+            push_with_auth_check "$DEFAULT_IMAGE_NAME:$DEFAULT_VERSION"
         fi
     fi
 

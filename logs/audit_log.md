@@ -34,3 +34,4 @@ This document serves as the continuous, human-readable system log persisted dire
 3. **Training Materials**: `https://github.com/artisantek/training-materials.git` (Active Branch: `main`)
 
 
+| 2026-09-21 20:21:37 | Feature Update (v1.0.9) | Performance & Bug Fixes | Added GZip compression, static cache headers, round toggle icon rotation fix, and deep-dive answer copy fix | Antigravity CLI |

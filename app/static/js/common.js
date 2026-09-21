@@ -105,6 +105,11 @@ function copyTextToClipboard(text, successMsg = "Copied to clipboard!") {
   }
 }
 
+// Global alias for compatibility across all pages and modules
+window.copyText = function(text, event, successMsg = "Copied to clipboard!") {
+  copyTextToClipboard(text, successMsg);
+};
+
 function fallbackCopyText(text, successMsg) {
   const textArea = document.createElement("textarea");
   textArea.value = text;

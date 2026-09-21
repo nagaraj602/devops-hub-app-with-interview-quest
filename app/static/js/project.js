@@ -142,9 +142,54 @@ function copyDeepDiveAnswer(cardId, event) {
   if (event) event.stopPropagation();
   const card = document.getElementById(cardId);
   if (!card) return;
+
   const answerEl = card.querySelector(".highlight-qa-answer");
-  const text = answerEl ? answerEl.innerText : "";
-  if (text) {
-    copyText(text, event);
+  const execSummaryEl = card.querySelector(".exec-summary-text");
+  
+  const execText = execSummaryEl ? (execSummaryEl.innerText || execSummaryEl.textContent || "").trim() : "";
+  
+  let answerText = "";
+  if (answerEl) {
+    if (answerEl.innerText && answerEl.innerText.trim()) {
+      answerText = answerEl.innerText.trim();
+    } else {
+      // In browsers, innerText is empty when an element is hidden with display:none.
+      // Temporarily clone off-screen to retrieve formatted innerText with natural line-breaks:
+      const clone = answerEl.cloneNode(true);
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.top = "-9999px";
+      clone.style.display = "block";
+      clone.style.visibility = "hidden";
+      document.body.appendChild(clone);
+      answerText = (clone.innerText || clone.textContent || "").trim();
+      document.body.removeChild(clone);
+    }
+  }
+
+  let fullCopyText = "";
+  if (execText) {
+    fullCopyText += execText + "\n\n";
+  }
+  if (answerText) {
+    fullCopyText += answerText;
+  }
+
+  if (fullCopyText) {
+    copyTextToClipboard(fullCopyText, "Deep-Dive answer copied to clipboard!");
+
+    const copyBtn = event ? (event.currentTarget || event.target.closest("button")) : card.querySelector(".copy-ans-btn");
+    if (copyBtn) {
+      const originalHtml = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fa-solid fa-check" style="color:var(--success);"></i> Copied!';
+      copyBtn.classList.add("btn-success-active");
+      setTimeout(() => {
+        copyBtn.innerHTML = originalHtml;
+        copyBtn.classList.remove("btn-success-active");
+      }, 2000);
+    }
+  } else {
+    showToast("No answer content found to copy", "warning");
   }
 }
+

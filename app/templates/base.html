@@ -7,6 +7,11 @@
   
   <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
   
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
   <!-- FontAwesome 6 Free CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
@@ -27,13 +32,15 @@
   <link rel="stylesheet" href="/static/css/sync.css">
   {% endif %}
 
-  <!-- Marked.js for Markdown parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  {% if active_page == 'training' %}
+  <!-- Marked.js for Markdown parsing (Training Explorer Only) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
   <!-- Mermaid.js for Flowcharts & Diagrams (v11) -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" defer></script>
   <!-- Highlight.js for Code Syntax Highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+  {% endif %}
 </head>
 <body>
 
@@ -265,18 +272,18 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Common Script -->
-  <script src="/static/js/common.js"></script>
-  <script src="/static/js/maintenance_timer.js"></script>
+  <script src="/static/js/common.js" defer></script>
+  <script src="/static/js/maintenance_timer.js" defer></script>
   {% if active_page == 'question_bank' %}
-  <script src="/static/js/question_bank.js"></script>
+  <script src="/static/js/question_bank.js" defer></script>
   {% elif active_page == 'project' %}
-  <script src="/static/js/project.js"></script>
+  <script src="/static/js/project.js" defer></script>
   {% elif active_page == 'training' %}
-  <script src="/static/js/training.js"></script>
+  <script src="/static/js/training.js" defer></script>
   {% elif active_page == 'cheatsheet' %}
-  <script src="/static/js/cheatsheet.js"></script>
-  {% elif active_page == 'sync' %}
-  <script src="/static/js/sync.js"></script>
+  <script src="/static/js/cheatsheet.js" defer></script>
+  {% elif active_page == 'sync' or active_page == 'app_logs' %}
+  <script src="/static/js/sync.js" defer></script>
   {% endif %}
 
 </body>

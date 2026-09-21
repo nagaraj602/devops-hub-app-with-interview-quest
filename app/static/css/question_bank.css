@@ -157,10 +157,37 @@
   transition: transform 0.2s ease, background-color 0.15s;
 }
 
-.company-card.expanded .toggle-icon {
+.company-card.expanded > .company-header .toggle-icon,
+.company-card.expanded > .company-header .company-header-actions .toggle-icon {
   transform: rotate(180deg);
   background-color: var(--primary-light);
   color: var(--primary);
+}
+
+.company-card:not(.expanded) > .company-header .toggle-icon {
+  transform: rotate(0deg);
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+}
+
+.round-header .toggle-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease, background-color 0.15s;
+}
+
+.round-block.expanded > .round-header .toggle-icon {
+  transform: rotate(180deg) !important;
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.round-block:not(.expanded) > .round-header .toggle-icon {
+  transform: rotate(0deg) !important;
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
 }
 
 /* Company Content / Rounds */
