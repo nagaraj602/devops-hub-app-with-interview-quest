@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- *  GCP Instance Scheduler Maintenance & Countdown Controller
+ *  Cost Optimization Shutdown Controller
  *  Active from 10:30 PM IST (30:00 min countdown) to 11:00 PM IST (Shutdown)
  *  Offline Window: 11:00 PM IST to 6:00 AM IST (Auto-restart at 6:00 AM IST)
  * ==============================================================================
@@ -11,14 +11,12 @@
 
   // Manual test override variables
   let testOverrideSeconds = null;
-  let testInterval = null;
 
   /**
    * Helper: Calculates current time in Indian Standard Time (IST, UTC+5:30)
    */
   function getISTDate() {
     const now = new Date();
-    // Convert to UTC ms + 5.5 hours in ms
     const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
     const istMs = utcMs + (5.5 * 3600000);
     return new Date(istMs);
@@ -42,7 +40,7 @@
     if (params.has('test_shutdown')) {
       const mins = parseFloat(params.get('test_shutdown')) || 30;
       testOverrideSeconds = Math.round(mins * 60);
-      console.log(`[GCP Scheduler] Test mode enabled with ${mins} minutes (${testOverrideSeconds} seconds)`);
+      console.log(`[Cost Optimization] Test mode enabled with ${mins} minutes (${testOverrideSeconds} seconds)`);
     }
   }
 
@@ -50,7 +48,7 @@
    * Core update loop executed every second
    */
   function updateMaintenanceBanner() {
-    const banner = document.getElementById('gcp-maintenance-banner');
+    const banner = document.getElementById('cost-optimization-banner');
     if (!banner) return;
 
     const clockEl = document.getElementById('maintenance-countdown-clock');
@@ -64,25 +62,34 @@
       banner.style.display = 'block';
       if (testOverrideSeconds > 0) {
         testOverrideSeconds--;
-        clockEl.textContent = formatSeconds(testOverrideSeconds);
+        if (clockEl) clockEl.textContent = formatSeconds(testOverrideSeconds);
         if (timerLabel) timerLabel.textContent = 'SHUTDOWN IN';
+        if (titleEl) {
+          titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-circle-info"></i> Cost Optimization</span> <strong>Website Shutdown Notice</strong>';
+        }
+        if (descEl) {
+          descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
+        }
         
         if (testOverrideSeconds <= 300) {
           banner.classList.add('imminent-shutdown');
           banner.classList.remove('maintenance-offline');
+          if (iconEl) iconEl.className = 'fa-solid fa-triangle-exclamation maintenance-pulse-icon';
         } else {
           banner.classList.remove('imminent-shutdown', 'maintenance-offline');
+          if (iconEl) iconEl.className = 'fa-solid fa-clock-rotate-left maintenance-pulse-icon';
         }
       } else {
-        clockEl.textContent = '00:00';
+        if (clockEl) clockEl.textContent = '06:00 AM';
         banner.classList.add('maintenance-offline');
         banner.classList.remove('imminent-shutdown');
-        if (timerLabel) timerLabel.textContent = 'STATUS';
+        if (timerLabel) timerLabel.textContent = 'RETURNS AT';
+        if (iconEl) iconEl.className = 'fa-solid fa-moon maintenance-pulse-icon';
         if (titleEl) {
-          titleEl.innerHTML = '<span class="badge-gcp">GCP Scheduler</span> <strong>Server Maintenance Window Active</strong>';
+          titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-moon"></i> Cost Optimization</span> <strong>Website Offline</strong>';
         }
         if (descEl) {
-          descEl.innerHTML = 'The GCP VM has been shut down for scheduled overnight cost optimization (11:00 PM - 6:00 AM IST). Auto-restarts at <strong>6:00 AM IST</strong>.';
+          descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
         }
       }
       return;
@@ -103,19 +110,18 @@
       banner.style.display = 'block';
 
       // Remaining seconds until 23:00:00 IST
-      // 22:30:00 -> 30 minutes = 1800 seconds
       const minutesRemaining = 59 - minutes;
       const secondsRemaining = 60 - seconds;
       const totalSecondsLeft = (minutesRemaining * 60) + secondsRemaining;
 
-      clockEl.textContent = formatSeconds(totalSecondsLeft);
+      if (clockEl) clockEl.textContent = formatSeconds(totalSecondsLeft);
       if (timerLabel) timerLabel.textContent = 'SHUTDOWN IN';
 
       if (titleEl) {
-        titleEl.innerHTML = '<span class="badge-gcp">GCP Scheduler</span> <strong>Scheduled Cloud Instance Shutdown Warning</strong>';
+        titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-circle-info"></i> Cost Optimization</span> <strong>Website Shutdown Notice</strong>';
       }
       if (descEl) {
-        descEl.innerHTML = 'To optimize cloud infrastructure costs on GCP, this server is scheduled to shut down automatically at <strong>11:00 PM IST</strong> (resuming at <strong>6:00 AM IST</strong>). Please ensure any in-progress work is saved.';
+        descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
       }
 
       // Imminent shutdown styling during the last 5 minutes
@@ -134,14 +140,14 @@
       banner.classList.remove('imminent-shutdown');
 
       if (iconEl) iconEl.className = 'fa-solid fa-moon maintenance-pulse-icon';
-      if (timerLabel) timerLabel.textContent = 'AUTO-START';
-      if (clockEl) clockEl.textContent = '06:00 AM IST';
+      if (timerLabel) timerLabel.textContent = 'RETURNS AT';
+      if (clockEl) clockEl.textContent = '06:00 AM';
 
       if (titleEl) {
-        titleEl.innerHTML = '<span class="badge-gcp">GCP Scheduler</span> <strong>Server Maintenance Window Active (11:00 PM - 6:00 AM IST)</strong>';
+        titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-moon"></i> Cost Optimization</span> <strong>Website Offline</strong>';
       }
       if (descEl) {
-        descEl.innerHTML = 'This GCP instance is scheduled offline for overnight cloud cost optimization. The instance scheduler will automatically boot the server at <strong>6:00 AM IST</strong>.';
+        descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
       }
 
     } else {
@@ -155,13 +161,13 @@
   document.addEventListener('DOMContentLoaded', function () {
     checkTestMode();
 
-    const banner = document.getElementById('gcp-maintenance-banner');
+    const banner = document.getElementById('cost-optimization-banner');
     const dismissBtn = document.getElementById('maintenance-dismiss-btn');
 
     if (dismissBtn && banner) {
       dismissBtn.addEventListener('click', function () {
         banner.style.display = 'none';
-        sessionStorage.setItem('gcp_maintenance_dismissed', Date.now());
+        sessionStorage.setItem('shutdown_banner_dismissed', Date.now());
       });
     }
 
@@ -175,13 +181,13 @@
   window.testShutdownTimer = function (minutes) {
     const mins = typeof minutes === 'number' ? minutes : 30;
     testOverrideSeconds = Math.round(mins * 60);
-    console.log(`[GCP Scheduler] Testing shutdown countdown with ${mins} minutes.`);
+    console.log(`[Cost Optimization] Testing shutdown countdown with ${mins} minutes.`);
     updateMaintenanceBanner();
   };
 
   window.resetShutdownTimer = function () {
     testOverrideSeconds = null;
-    console.log(`[GCP Scheduler] Reset to live IST system time.`);
+    console.log(`[Cost Optimization] Reset to live IST system time.`);
     updateMaintenanceBanner();
   };
 

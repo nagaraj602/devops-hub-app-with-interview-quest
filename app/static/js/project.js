@@ -7,16 +7,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const INSTANCE_PROFILES = {
-  "m6i.4xlarge": { vcpu: 16, ram: 64, allocatable_cpu: 14, allocatable_ram: 58, name: "General Purpose (m6i.4xlarge - Recommended)" },
+  "m6i.4xlarge": { vcpu: 16, ram: 64, allocatable_cpu: 14, allocatable_ram: 58, name: "General Purpose (m6i.4xlarge - Standard)" },
   "c6i.4xlarge": { vcpu: 16, ram: 32, allocatable_cpu: 14, allocatable_ram: 28, name: "Compute Optimized (c6i.4xlarge)" },
-  "m6i.8xlarge": { vcpu: 32, ram: 128, allocatable_cpu: 29, allocatable_ram: 118, name: "Large Scale (m6i.8xlarge)" },
-  "r6i.4xlarge": { vcpu: 16, ram: 128, allocatable_cpu: 14, allocatable_ram: 118, name: "Memory Optimized (r6i.4xlarge)" }
+  "m6i.8xlarge": { vcpu: 32, ram: 128, allocatable_cpu: 29, allocatable_ram: 118, name: "Large Scale (m6i.8xlarge)" }
 };
 
 function initClusterCalculator() {
   const cpuSlider = document.getElementById("calcCpuSlider");
   const ramRatioSlider = document.getElementById("calcRamRatioSlider");
-  const msSlider = document.getElementById("calcMsSlider");
   const instanceSelect = document.getElementById("calcInstanceSelect");
   const azSelect = document.getElementById("calcAzSelect");
 
@@ -25,16 +23,17 @@ function initClusterCalculator() {
   const updateCalculations = () => {
     const targetCpu = parseInt(cpuSlider.value, 10);
     const ramRatio = parseFloat(ramRatioSlider.value);
-    const msCount = parseInt(msSlider.value, 10);
-    const instanceKey = instanceSelect.value;
-    const azCount = parseInt(azSelect.value, 10);
+    const instanceKey = instanceSelect ? instanceSelect.value : "m6i.4xlarge";
+    const azCount = azSelect ? parseInt(azSelect.value, 10) : 3;
 
     const inst = INSTANCE_PROFILES[instanceKey] || INSTANCE_PROFILES["m6i.4xlarge"];
 
     // Update displayed slider values
-    document.getElementById("calcCpuVal").textContent = `${targetCpu} vCPUs`;
-    document.getElementById("calcRamRatioVal").textContent = `${ramRatio.toFixed(1)} GB / core`;
-    document.getElementById("calcMsVal").textContent = `${msCount} Services`;
+    const cpuValEl = document.getElementById("calcCpuVal");
+    if (cpuValEl) cpuValEl.textContent = `${targetCpu} vCPUs`;
+    
+    const ramRatioValEl = document.getElementById("calcRamRatioVal");
+    if (ramRatioValEl) ramRatioValEl.textContent = `${ramRatio.toFixed(1)} GB / core`;
 
     // RAM demand
     const targetRamGb = Math.round(targetCpu * ramRatio);
@@ -47,7 +46,7 @@ function initClusterCalculator() {
 
     // High availability buffer: round up to multiple of AZs + 1 node per AZ buffer
     const nodesPerAzBase = Math.ceil(baseNodesNeeded / azCount);
-    // Add N+2 buffer (1 spare per AZ for rolling upgrades & burst)
+    // Add 1 spare node per AZ for rolling upgrades & burst
     const nodesPerAzFinal = nodesPerAzBase + 1;
     const totalNodes = nodesPerAzFinal * azCount;
 
@@ -56,19 +55,38 @@ function initClusterCalculator() {
     const cpuHeadroom = Math.round(((totalVcpu - targetCpu) / totalVcpu) * 100);
 
     // Update UI Results
-    document.getElementById("resTotalNodes").textContent = totalNodes;
-    document.getElementById("resNodesPerAz").textContent = `${nodesPerAzFinal} / AZ`;
-    document.getElementById("resTotalVcpu").textContent = `${totalVcpu} vCPUs`;
-    document.getElementById("resTotalRam").textContent = `${totalRam.toLocaleString()} GB`;
-    document.getElementById("resHeadroom").textContent = `${cpuHeadroom}% Headroom`;
-    document.getElementById("resTargetRam").textContent = `~${targetRamGb} GB RAM required`;
+    const resTotalNodesEl = document.getElementById("resTotalNodes");
+    if (resTotalNodesEl) resTotalNodesEl.textContent = totalNodes;
+
+    const resNodesPerAzEl = document.getElementById("resNodesPerAz");
+    if (resNodesPerAzEl) resNodesPerAzEl.textContent = `${nodesPerAzFinal} / AZ`;
+
+    const resTotalVcpuEl = document.getElementById("resTotalVcpu");
+    if (resTotalVcpuEl) resTotalVcpuEl.textContent = `${totalVcpu} vCPUs`;
+
+    const resTotalRamEl = document.getElementById("resTotalRam");
+    if (resTotalRamEl) resTotalRamEl.textContent = `${totalRam.toLocaleString()} GB`;
+
+    const resHeadroomEl = document.getElementById("resHeadroom");
+    if (resHeadroomEl) resHeadroomEl.textContent = `${cpuHeadroom}% Headroom`;
+
+    const resTargetRamEl = document.getElementById("resTargetRam");
+    if (resTargetRamEl) resTargetRamEl.textContent = `~${targetRamGb} GB RAM required`;
+
+    // Update plain English formula banner
+    const formulaBanner = document.getElementById("calcFormulaSentence");
+    if (formulaBanner) {
+      formulaBanner.innerHTML = `
+        <i class="fa-solid fa-check-circle" style="color:var(--success); margin-right:0.35rem;"></i>
+        <strong>Calculation:</strong> ${targetCpu} vCPUs &divide; ${inst.allocatable_cpu} usable = ${baseNodesNeeded} base nodes + ${azCount} HA buffer = <strong>${totalNodes} nodes</strong> (${nodesPerAzFinal} per AZ across ${azCount} AZs) with ${cpuHeadroom}% headroom.
+      `;
+    }
   };
 
   cpuSlider.addEventListener("input", updateCalculations);
   ramRatioSlider.addEventListener("input", updateCalculations);
-  msSlider.addEventListener("input", updateCalculations);
-  instanceSelect.addEventListener("change", updateCalculations);
-  azSelect.addEventListener("change", updateCalculations);
+  if (instanceSelect) instanceSelect.addEventListener("change", updateCalculations);
+  if (azSelect) azSelect.addEventListener("change", updateCalculations);
 
   updateCalculations();
 }
@@ -87,22 +105,35 @@ function togglePrepAccordion(accordionId) {
 }
 
 function toggleDeepDiveAnswer(cardId) {
+  // If user is selecting text for copying, don't toggle
+  const selectedText = window.getSelection().toString();
+  if (selectedText && selectedText.length > 0) return;
+
   const card = document.getElementById(cardId);
   if (!card) return;
   const answerEl = card.querySelector(".highlight-qa-answer");
   const toggleBtn = card.querySelector(".toggle-ans-btn");
+  const chevron = document.getElementById(`deepdive-chevron-${cardId}`);
   if (!answerEl) return;
 
   const isHidden = answerEl.style.display === "none" || window.getComputedStyle(answerEl).display === "none";
   if (isHidden) {
     answerEl.style.display = "block";
+    card.classList.add("expanded");
     if (toggleBtn) {
       toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hide Answer';
     }
+    if (chevron) {
+      chevron.style.transform = "rotate(180deg)";
+    }
   } else {
     answerEl.style.display = "none";
+    card.classList.remove("expanded");
     if (toggleBtn) {
       toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Show Answer';
+    }
+    if (chevron) {
+      chevron.style.transform = "rotate(0deg)";
     }
   }
 }
@@ -117,4 +148,3 @@ function copyDeepDiveAnswer(cardId, event) {
     copyText(text, event);
   }
 }
-

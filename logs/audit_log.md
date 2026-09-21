@@ -23,4 +23,6 @@ This document serves as the continuous, human-readable system log persisted dire
 1. **DevOps Hub App & Storage**: `https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git` (Active Branch: `main`)
 2. **Notes & Interview Questions**: `https://github.com/nagaraj602/Notes.git` (Active Branch: `main`)
 3. **Training Materials**: `https://github.com/artisantek/training-materials.git` (Active Branch: `main`)
-| 2026-09-21 00:22:37 | Feature Update | GCP Instance Scheduler & Multi-Method Q&As | Added 10:30 PM IST 30-minute countdown banner and enriched answers for 1050+ questions across Notes repo | Antigravity Assistant |
+| 2026-09-21 00:22:37 | Feature Update | Cost Optimization Scheduler & Multi-Method Q&As | Added 10:30 PM IST 30-minute countdown banner and enriched answers for 1050+ questions across Notes repo | Antigravity Assistant |
+| 2026-09-21 12:15:00 | Release v1.0.1 | Cost Optimization Banner & UI Refinements | Refined cost optimization shutdown banner (no GCP/maintenance references), clickable deep-dive questions with chevrons, simplified EKS calculator at bottom, darker text, high-contrast code blocks, scroll reset, compact split calendar | Antigravity Assistant |
+

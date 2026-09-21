@@ -77,6 +77,16 @@ function initTreeNodeClicks() {
 }
 
 // ------------------------------------------------------------------------------
+function resetTrainingScroll() {
+  window.scrollTo({ top: 0, behavior: "instant" });
+  const contentBody = document.getElementById("trainingContentBody");
+  if (contentBody) contentBody.scrollTop = 0;
+  const contentViewer = document.querySelector(".content-viewer-card");
+  if (contentViewer) contentViewer.scrollTop = 0;
+  const mainContent = document.querySelector(".main-content");
+  if (mainContent) mainContent.scrollTop = 0;
+}
+
 // Load File Content via API & Render Markdown
 // ------------------------------------------------------------------------------
 function loadFileContent(repoId, filePath, searchQuery = null) {
@@ -88,6 +98,9 @@ function loadFileContent(repoId, filePath, searchQuery = null) {
 
   currentRepoId = repoId;
   currentFilePath = filePath;
+
+  // Reset scroll position to top of viewer immediately
+  resetTrainingScroll();
 
   // Highlight active tree file node
   document.querySelectorAll(".tree-node.file > .tree-node-row").forEach(row => {
@@ -132,6 +145,7 @@ function loadFileContent(repoId, filePath, searchQuery = null) {
           </div>
         `;
         hideSearchNavigator();
+        resetTrainingScroll();
       } else {
         // Render Markdown via marked
         let html = marked.parse(data.formatted_content || data.raw_content);
@@ -142,6 +156,7 @@ function loadFileContent(repoId, filePath, searchQuery = null) {
           highlightSearchMatches(searchQuery);
         } else {
           hideSearchNavigator();
+          resetTrainingScroll();
         }
 
         postProcessMarkdownContent(contentBody, repoId, filePath);
@@ -813,6 +828,8 @@ function loadLiveCustomRepo(url, branch, name, filePath = "README.md") {
   currentRepoId = `custom_${name}`;
   currentFilePath = filePath;
 
+  resetTrainingScroll();
+
   if (contentBody) {
     contentBody.innerHTML = `
       <div style="text-align:center; padding:3rem;">
@@ -837,6 +854,7 @@ function loadLiveCustomRepo(url, branch, name, filePath = "README.md") {
       if (contentBody) {
         let html = marked.parse(data.formatted_content || data.raw_content);
         contentBody.innerHTML = `<div class="markdown-pane">${html}</div>`;
+        resetTrainingScroll();
         postProcessMarkdownContent(contentBody, `custom_${name}`, filePath);
       }
     })

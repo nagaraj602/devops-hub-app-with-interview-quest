@@ -24,7 +24,7 @@ async def health_check():
 
 @router.get("/maintenance-status")
 async def get_maintenance_status():
-    """Returns real-time GCP instance scheduler shutdown status in Indian Standard Time (IST)."""
+    """Returns real-time cost optimization shutdown status in Indian Standard Time (IST)."""
     from datetime import datetime, timezone, timedelta
     
     IST = timezone(timedelta(hours=5, minutes=30))
@@ -45,11 +45,11 @@ async def get_maintenance_status():
         "timezone": "IST (UTC+05:30)",
         "current_ist_time": now_ist.strftime("%Y-%m-%d %H:%M:%S"),
         "is_countdown_active": is_countdown,
-        "is_maintenance_window": is_offline,
+        "is_offline_window": is_offline,
         "seconds_until_shutdown": seconds_remaining,
         "shutdown_time": "23:00:00 IST (11:00 PM)",
         "startup_time": "06:00:00 IST (06:00 AM)",
-        "gcp_scheduler_policy": "Daily auto-shutdown at 23:00 IST, auto-startup at 06:00 IST to optimize cloud costs"
+        "message": "This website is getting shutdown for cost optimization. So it will come back at 6 am."
     }
 
 @router.get("/questions")

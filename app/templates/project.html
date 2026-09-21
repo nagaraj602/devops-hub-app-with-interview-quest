@@ -1,275 +1,296 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="project-page-wrapper">
 
-<!-- ==============================================================================
-     BOX 1: Title Card (Centered pill and bold project title)
-     ============================================================================== -->
-<section class="project-box project-title-box">
-  <div class="project-guide-header">
-    <div class="project-guide-badge">
-      <i class="fa-solid fa-book-open"></i>
-      <span>{{ project.guide_badge }}</span>
+  <!-- ==============================================================================
+       BOX 1: Title Card (Centered pill and bold project title)
+       ============================================================================== -->
+  <section class="project-box project-title-box">
+    <div class="project-guide-header">
+      <div class="project-guide-badge">
+        <i class="fa-solid fa-book-open"></i>
+        <span>{{ project.guide_badge }}</span>
+      </div>
+      <h1 class="project-main-title">{{ project.title }}</h1>
     </div>
-    <h1 class="project-main-title">{{ project.title }}</h1>
-  </div>
-</section>
+  </section>
 
-<!-- ==============================================================================
-     BOX 2: Project Overview & Architecture Card
-     ============================================================================== -->
-<section class="project-box project-overview-box">
-  <!-- Section: Project Overview -->
-  <div class="project-section-block">
-    <div class="project-section-label label-purple">
-      <span class="label-dot"></span>
-      <span>PROJECT OVERVIEW</span>
+  <!-- ==============================================================================
+       BOX 2: Project Overview & Architecture Card
+       ============================================================================== -->
+  <section class="project-box project-overview-box">
+    <!-- Section: Project Overview -->
+    <div class="project-section-block">
+      <div class="project-section-label label-purple">
+        <span class="label-dot"></span>
+        <span>PROJECT OVERVIEW</span>
+      </div>
+      <div class="project-section-text">
+        {% for p in project.overview_paragraphs %}
+        <p>{{ p }}</p>
+        {% endfor %}
+      </div>
     </div>
-    <div class="project-section-text">
-      {% for p in project.overview_paragraphs %}
-      <p>{{ p }}</p>
+
+    <!-- Section: Microservices Architecture -->
+    <div class="project-section-block">
+      <div class="project-section-label label-purple">
+        <span class="label-dot"></span>
+        <span>MICROSERVICES ARCHITECTURE</span>
+      </div>
+      <div class="project-section-text">
+        <p>The platform consisted of approximately 25 microservices. Key microservices include:</p>
+        <ul class="project-bullet-list">
+          {% for ms in project.microservices %}
+          <li><strong>{{ ms.name }}:</strong> {{ ms.detail|default(ms.desc) }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section: Tools & Technologies -->
+    <div class="project-section-block">
+      <div class="project-section-label label-green">
+        <span class="label-dot"></span>
+        <span>TOOLS & TECHNOLOGIES</span>
+      </div>
+      <div class="project-section-text">
+        <ul class="project-bullet-list">
+          {% for tool in project.tools_and_tech %}
+          <li>{{ tool }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section: Key Results & Impact -->
+    <div class="project-section-block">
+      <div class="project-section-label label-amber">
+        <span class="label-dot"></span>
+        <span>KEY RESULTS & IMPACT</span>
+      </div>
+      <div class="project-section-text">
+        <ul class="project-bullet-list">
+          {% for impact in project.key_results %}
+          <li>{{ impact }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section: Anticipated Follow-Up Questions (Callout Box) -->
+    <div class="anticipated-qa-box">
+      <div class="anticipated-qa-header">
+        <div class="anticipated-qa-icon">
+          <i class="fa-regular fa-circle-question"></i>
+        </div>
+        <div>
+          <h3 class="anticipated-qa-title">Anticipated Follow-Up Questions</h3>
+          <span class="anticipated-qa-subtitle">Only if asked specifically during the interview</span>
+        </div>
+      </div>
+      <div class="anticipated-qa-list">
+        {% for qa in project.anticipated_follow_ups %}
+        <div class="anticipated-qa-item">
+          <h4 class="anticipated-q">&ldquo;{{ qa.question }}&rdquo;</h4>
+          <p class="anticipated-a">&ldquo;{{ qa.answer }}&rdquo;</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================================
+       BOX 3: Preparation Questions & Answers (Collapsible Accordions)
+       ============================================================================== -->
+  <section class="project-box project-prep-box">
+    <div class="prep-qa-heading-area">
+      <h2 class="prep-qa-main-title">Preparation Questions & Answers</h2>
+      <p class="prep-qa-subtitle">Key responses tailored to this architecture and role.</p>
+    </div>
+
+    <div class="prep-accordion-list">
+      {% for prep in project.preparation_checklist %}
+      <div class="prep-accordion-item" id="{{ prep.id }}">
+        <div class="prep-accordion-header" onclick="togglePrepAccordion('{{ prep.id }}')">
+          <span class="prep-accordion-title">{{ prep.title }}</span>
+          <span class="prep-accordion-icon">
+            <i class="fa-solid fa-chevron-down"></i>
+          </span>
+        </div>
+        <div class="prep-accordion-body">
+          <div class="prep-markdown-content markdown-pane">
+            {{ prep.content_html|safe }}
+          </div>
+        </div>
+      </div>
       {% endfor %}
     </div>
-  </div>
+  </section>
 
-  <!-- Section: Microservices Architecture -->
-  <div class="project-section-block">
-    <div class="project-section-label label-purple">
-      <span class="label-dot"></span>
-      <span>MICROSERVICES ARCHITECTURE</span>
-    </div>
-    <div class="project-section-text">
-      <p>The platform consisted of approximately 25 microservices. Key microservices include:</p>
-      <ul class="project-bullet-list">
-        {% for ms in project.microservices %}
-        <li><strong>{{ ms.name }}:</strong> {{ ms.detail|default(ms.desc) }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <!-- Section: Tools & Technologies -->
-  <div class="project-section-block">
-    <div class="project-section-label label-green">
-      <span class="label-dot"></span>
-      <span>TOOLS & TECHNOLOGIES</span>
-    </div>
-    <div class="project-section-text">
-      <ul class="project-bullet-list">
-        {% for tool in project.tools_and_tech %}
-        <li>{{ tool }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <!-- Section: Key Results & Impact -->
-  <div class="project-section-block">
-    <div class="project-section-label label-amber">
-      <span class="label-dot"></span>
-      <span>KEY RESULTS & IMPACT</span>
-    </div>
-    <div class="project-section-text">
-      <ul class="project-bullet-list">
-        {% for impact in project.key_results %}
-        <li>{{ impact }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <!-- Section: Anticipated Follow-Up Questions (Callout Box) -->
-  <div class="anticipated-qa-box">
-    <div class="anticipated-qa-header">
-      <div class="anticipated-qa-icon">
-        <i class="fa-regular fa-circle-question"></i>
-      </div>
-      <div>
-        <h3 class="anticipated-qa-title">Anticipated Follow-Up Questions</h3>
-        <span class="anticipated-qa-subtitle">Only if asked specifically during the interview</span>
-      </div>
-    </div>
-    <div class="anticipated-qa-list">
-      {% for qa in project.anticipated_follow_ups %}
-      <div class="anticipated-qa-item">
-        <h4 class="anticipated-q">&ldquo;{{ qa.question }}&rdquo;</h4>
-        <p class="anticipated-a">&ldquo;{{ qa.answer }}&rdquo;</p>
+  <!-- ==============================================================================
+       BOX 4: Metrics, Crucial Deep-Dive Q&As & Simplified Calculator at Bottom
+       ============================================================================== -->
+  <section class="project-box project-deepdives-box">
+    <!-- Impact Metrics Strip -->
+    <div class="project-metrics-strip">
+      {% for m in project.metrics %}
+      <div class="metric-box">
+        <div class="metric-val" style="color:{{ m.color }};">{{ m.value }}</div>
+        <div class="metric-lbl">{{ m.label }} ({{ m.detail }})</div>
       </div>
       {% endfor %}
     </div>
-  </div>
-</section>
 
-<!-- ==============================================================================
-     BOX 3: Preparation Questions & Answers (Collapsible Accordions)
-     ============================================================================== -->
-<section class="project-box project-prep-box">
-  <div class="prep-qa-heading-area">
-    <h2 class="prep-qa-main-title">Preparation Questions & Answers</h2>
-    <p class="prep-qa-subtitle">Key responses tailored to this architecture and role.</p>
-  </div>
+    <!-- 1. Dedicated High-Priority Interview Q&A Deep Dives -->
+    <div class="highlight-qa-section">
+      <h2 class="highlight-qa-main-title">
+        <i class="fa-solid fa-star" style="color:#f59e0b; margin-right:0.4rem;"></i>
+        Crucial Architectural Interview Deep-Dives
+      </h2>
 
-  <div class="prep-accordion-list">
-    {% for prep in project.preparation_checklist %}
-    <div class="prep-accordion-item" id="{{ prep.id }}">
-      <div class="prep-accordion-header" onclick="togglePrepAccordion('{{ prep.id }}')">
-        <span class="prep-accordion-title">{{ prep.title }}</span>
-        <span class="prep-accordion-icon">
-          <i class="fa-solid fa-chevron-down"></i>
-        </span>
-      </div>
-      <div class="prep-accordion-body">
-        <div class="prep-markdown-content markdown-pane">
-          {{ prep.content_html|safe }}
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</section>
-
-<!-- ==============================================================================
-     BOX 4: Metrics, Calculator & Collapsed Deep-Dive Q&As
-     ============================================================================== -->
-<section class="project-box project-deepdives-box">
-  <!-- Impact Metrics Strip -->
-  <div class="project-metrics-strip">
-    {% for m in project.metrics %}
-    <div class="metric-box">
-      <div class="metric-val" style="color:{{ m.color }};">{{ m.value }}</div>
-      <div class="metric-lbl">{{ m.label }} ({{ m.detail }})</div>
-    </div>
-    {% endfor %}
-  </div>
-
-  <!-- Interactive EKS Cluster Sizing & Capacity Calculator -->
-  <div class="cluster-calc-panel">
-    <div class="calc-header">
-      <div class="calc-title">
-        <i class="fa-solid fa-calculator" style="color:var(--primary);"></i>
-        <span>Interactive EKS Cluster Sizing & Capacity Calculator</span>
-      </div>
-      <span class="badge badge-purple">Production Mathematical Model</span>
-    </div>
-
-    <div class="calc-grid">
-      <!-- Sliders / Inputs Column -->
-      <div class="calc-inputs-col">
-        <div class="calc-field">
-          <label>
-            <span>Target Microservices CPU Demand</span>
-            <strong id="calcCpuVal" style="color:var(--primary);">200 vCPUs</strong>
-          </label>
-          <input type="range" id="calcCpuSlider" min="50" max="500" step="10" value="200">
-          <span style="font-size:0.75rem; color:var(--text-muted);">Baseline + peak flash sale workload demand across services</span>
-        </div>
-
-        <div class="calc-field">
-          <label>
-            <span>Memory to CPU Ratio</span>
-            <strong id="calcRamRatioVal" style="color:var(--primary);">3.5 GB / core</strong>
-          </label>
-          <input type="range" id="calcRamRatioSlider" min="1.5" max="6.0" step="0.5" value="3.5">
-          <span style="font-size:0.75rem; color:var(--text-muted);" id="resTargetRam">~700 GB RAM required (Java JVM heaps + Kafka streaming)</span>
-        </div>
-
-        <div class="calc-field">
-          <label>
-            <span>Microservices Count</span>
-            <strong id="calcMsVal" style="color:var(--primary);">25 Services</strong>
-          </label>
-          <input type="range" id="calcMsSlider" min="5" max="60" step="1" value="25">
-        </div>
-
-        <div class="calc-field">
-          <label>Worker Node EC2 Instance Type</label>
-          <select id="calcInstanceSelect">
-            <option value="m6i.4xlarge" selected>m6i.4xlarge (16 vCPU, 64 GB RAM - Recommended)</option>
-            <option value="c6i.4xlarge">c6i.4xlarge (16 vCPU, 32 GB RAM - Compute Intensive)</option>
-            <option value="m6i.8xlarge">m6i.8xlarge (32 vCPU, 128 GB RAM - Large Sizing)</option>
-            <option value="r6i.4xlarge">r6i.4xlarge (16 vCPU, 128 GB RAM - Memory Intensive)</option>
-          </select>
-        </div>
-
-        <div class="calc-field">
-          <label>Availability Zones (Multi-AZ Deployment)</label>
-          <select id="calcAzSelect">
-            <option value="3" selected>3 AZs (us-east-1a, us-east-1b, us-east-1c)</option>
-            <option value="2">2 AZs</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Results Display Column -->
-      <div class="calc-results-col">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:700; color:var(--text-primary);">Recommended Cluster Capacity</span>
-          <span class="badge badge-green" id="resHeadroom">31% Headroom</span>
-        </div>
-
-        <div class="results-summary-row">
-          <div class="res-box">
-            <div class="res-val" id="resTotalNodes">18</div>
-            <div class="res-lbl">Total Worker Nodes</div>
+      {% for q in project.additional_questions %}
+      <article class="highlight-qa-card" id="{{ q.id }}">
+        <!-- Clickable header to expand/collapse -->
+        <div class="highlight-qa-top-row" onclick="toggleDeepDiveAnswer('{{ q.id }}')" title="Click to view detailed answer">
+          <h3 class="highlight-qa-q">
+            <i class="fa-solid fa-chevron-down deepdive-chevron" id="deepdive-chevron-{{ q.id }}"></i>
+            <span>{{ q.question }}</span>
+          </h3>
+          <div class="highlight-qa-actions" onclick="event.stopPropagation()">
+            <button type="button" class="btn btn-sm btn-secondary toggle-ans-btn" id="deepdive-btn-{{ q.id }}" onclick="toggleDeepDiveAnswer('{{ q.id }}')">
+              <i class="fa-solid fa-eye"></i> Show Answer
+            </button>
+            <button type="button" class="btn btn-sm btn-outline copy-ans-btn" onclick="copyDeepDiveAnswer('{{ q.id }}', event)">
+              <i class="fa-regular fa-copy"></i> Copy
+            </button>
           </div>
-          <div class="res-box">
-            <div class="res-val" id="resNodesPerAz">6 / AZ</div>
-            <div class="res-lbl">Balanced Per AZ</div>
+        </div>
+        
+        <!-- Clickable Executive Summary -->
+        <div class="highlight-qa-exec-summary" onclick="toggleDeepDiveAnswer('{{ q.id }}')" title="Click to expand/collapse detailed answer">
+          <div class="exec-summary-text">
+            <i class="fa-solid fa-lightbulb" style="color:var(--primary); margin-right:0.35rem;"></i>
+            <strong>Executive Summary:</strong> {{ q.executive_summary }}
+          </div>
+          <span class="deepdive-expand-hint"><i class="fa-solid fa-angle-down"></i> Click to toggle details</span>
+        </div>
+
+        <!-- Collapsed by default -->
+        <div class="highlight-qa-answer markdown-pane" style="display:none;">
+          {{ q.detailed_answer_html|safe }}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    <!-- 2. Simplified Interactive EKS Cluster Sizing Calculator (Placed at Bottom) -->
+    <div class="cluster-calc-panel">
+      <div class="calc-header">
+        <div class="calc-title">
+          <i class="fa-solid fa-calculator" style="color:var(--primary);"></i>
+          <span>Simplified EKS Cluster Sizing & Capacity Calculator</span>
+        </div>
+        <span class="badge badge-purple">Easy Step-by-Step Math</span>
+      </div>
+
+      <!-- Quick Intuitive Explanation Card -->
+      <div class="calc-simple-explainer">
+        <div class="explainer-step">
+          <span class="step-badge">Step 1</span>
+          <strong>25 Microservices Demand:</strong>
+          <span>Need <strong>200 vCPUs</strong> & <strong>~700 GB RAM</strong> (average 3.5 GB/vCPU).</span>
+        </div>
+        <div class="explainer-step">
+          <span class="step-badge">Step 2</span>
+          <strong>EC2 m6i.4xlarge Worker Node:</strong>
+          <span>Provides 16 vCPU & 64 GB RAM. After OS & Kubelet overhead (~2 vCPU, 6 GB RAM), each node gives <strong>14 usable vCPUs & 58 GB RAM</strong>.</span>
+        </div>
+        <div class="explainer-step">
+          <span class="step-badge">Step 3</span>
+          <strong>Simple Math:</strong>
+          <span>200 vCPUs &divide; 14 = <strong>15 base nodes</strong> (5 per AZ across 3 AZs) + <strong>3 buffer nodes</strong> (1 per AZ for rolling updates) = <strong style="color:var(--primary);">18 Worker Nodes Total</strong> (6 per AZ).</span>
+        </div>
+      </div>
+
+      <div class="calc-grid">
+        <!-- Interactive Controls -->
+        <div class="calc-inputs-col">
+          <div class="calc-field">
+            <label>
+              <span>Target Microservices CPU Demand</span>
+              <strong id="calcCpuVal" style="color:var(--primary);">200 vCPUs</strong>
+            </label>
+            <input type="range" id="calcCpuSlider" min="50" max="500" step="10" value="200">
+            <span style="font-size:0.75rem; color:var(--text-muted);">Adjust to simulate different traffic workloads</span>
+          </div>
+
+          <div class="calc-field">
+            <label>
+              <span>Memory to CPU Ratio</span>
+              <strong id="calcRamRatioVal" style="color:var(--primary);">3.5 GB / core</strong>
+            </label>
+            <input type="range" id="calcRamRatioSlider" min="1.5" max="6.0" step="0.5" value="3.5">
+            <span style="font-size:0.75rem; color:var(--text-muted);" id="resTargetRam">~700 GB RAM required</span>
+          </div>
+
+          <div class="calc-field">
+            <label>Worker Node Instance Type</label>
+            <select id="calcInstanceSelect">
+              <option value="m6i.4xlarge" selected>m6i.4xlarge (16 vCPU, 64 GB RAM - Standard)</option>
+              <option value="c6i.4xlarge">c6i.4xlarge (16 vCPU, 32 GB RAM - Compute)</option>
+              <option value="m6i.8xlarge">m6i.8xlarge (32 vCPU, 128 GB RAM - Large)</option>
+            </select>
+          </div>
+
+          <div class="calc-field">
+            <label>Availability Zones</label>
+            <select id="calcAzSelect">
+              <option value="3" selected>3 AZs (us-east-1a, us-east-1b, us-east-1c)</option>
+              <option value="2">2 AZs</option>
+            </select>
           </div>
         </div>
 
-        <div class="results-summary-row">
-          <div class="res-box">
-            <div class="res-val" id="resTotalVcpu">288 vCPUs</div>
-            <div class="res-lbl">Provisioned CPU</div>
+        <!-- Calculated Summary Results -->
+        <div class="calc-results-col">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; color:var(--text-primary);">Sizing Outcome</span>
+            <span class="badge badge-green" id="resHeadroom">31% Headroom</span>
           </div>
-          <div class="res-box">
-            <div class="res-val" id="resTotalRam">1,152 GB</div>
-            <div class="res-lbl">Provisioned RAM</div>
-          </div>
-        </div>
 
-        <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5; background:#ffffff; padding:0.85rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-          <i class="fa-solid fa-shield-halved" style="color:var(--success); margin-right:0.35rem;"></i>
-          <strong>Resiliency Guarantee:</strong> Includes N+2 node buffer (1 node per AZ) guaranteeing that draining a node for rolling updates or unexpected host hardware failure never causes unschedulable pod eviction delays.
+          <div class="results-summary-row">
+            <div class="res-box">
+              <div class="res-val" id="resTotalNodes">18</div>
+              <div class="res-lbl">Total Worker Nodes</div>
+            </div>
+            <div class="res-box">
+              <div class="res-val" id="resNodesPerAz">6 / AZ</div>
+              <div class="res-lbl">Balanced Across AZs</div>
+            </div>
+          </div>
+
+          <div class="results-summary-row">
+            <div class="res-box">
+              <div class="res-val" id="resTotalVcpu">288 vCPUs</div>
+              <div class="res-lbl">Provisioned CPU</div>
+            </div>
+            <div class="res-box">
+              <div class="res-val" id="resTotalRam">1,152 GB</div>
+              <div class="res-lbl">Provisioned RAM</div>
+            </div>
+          </div>
+
+          <!-- Plain English Formula Sentence -->
+          <div class="calc-formula-banner" id="calcFormulaSentence">
+            <i class="fa-solid fa-check-circle" style="color:var(--success); margin-right:0.35rem;"></i>
+            <strong>Calculation:</strong> 200 vCPUs &divide; 14 usable = 15 base nodes + 3 HA buffer = <strong>18 nodes</strong> (6 per AZ in 3 AZs) with 31% headroom.
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Dedicated High-Priority Interview Q&A Deep Dives -->
-  <div class="highlight-qa-section">
-    <h2 class="highlight-qa-main-title">
-      <i class="fa-solid fa-star" style="color:#f59e0b; margin-right:0.4rem;"></i>
-      Crucial Architectural Interview Deep-Dives
-    </h2>
-
-    {% for q in project.additional_questions %}
-    <article class="highlight-qa-card" id="{{ q.id }}">
-      <div class="highlight-qa-top-row">
-        <h3 class="highlight-qa-q">{{ q.question }}</h3>
-        <div class="highlight-qa-actions">
-          <button type="button" class="btn btn-sm btn-secondary toggle-ans-btn" onclick="toggleDeepDiveAnswer('{{ q.id }}')">
-            <i class="fa-solid fa-eye"></i> Show Answer
-          </button>
-          <button type="button" class="btn btn-sm btn-outline copy-ans-btn" onclick="copyDeepDiveAnswer('{{ q.id }}', event)">
-            <i class="fa-regular fa-copy"></i> Copy
-          </button>
-        </div>
-      </div>
-      
-      <div class="highlight-qa-exec-summary">
-        <i class="fa-solid fa-lightbulb" style="color:var(--primary); margin-right:0.35rem;"></i>
-        <strong>Executive Summary:</strong> {{ q.executive_summary }}
-      </div>
-
-      <!-- Collapsed by default -->
-      <div class="highlight-qa-answer markdown-pane" style="display:none;">
-        {{ q.detailed_answer_html|safe }}
-      </div>
-    </article>
-    {% endfor %}
-  </div>
-</section>
-
+</div>
 {% endblock %}

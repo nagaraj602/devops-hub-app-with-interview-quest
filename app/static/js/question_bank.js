@@ -413,6 +413,7 @@ function renderCalendarView(year, month) {
 
   // Month short prefix for matching (e.g. "Sep", "Aug")
   const monthShort = MONTH_NAMES[month].substring(0, 3);
+  let firstDateWithEvents = null;
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dayCell = document.createElement("div");
@@ -424,7 +425,6 @@ function renderCalendarView(year, month) {
     dayCell.appendChild(dayNum);
 
     // Look for matching events in calendarEventsData
-    // Format in dates could be DD-MM-YYYY or D-Sep-YYYY or 17-09-2026
     const matchingEvents = [];
     const dayStrPadded = d < 10 ? `0${d}` : `${d}`;
     const monthPadded = (month + 1) < 10 ? `0${month + 1}` : `${month + 1}`;
@@ -441,51 +441,84 @@ function renderCalendarView(year, month) {
 
     if (matchingEvents.length > 0) {
       dayCell.classList.add("has-interview");
-      const badge = document.createElement("div");
-      badge.className = "interview-dot-badge";
-      badge.textContent = `${matchingEvents.length} Rounds`;
-      dayCell.appendChild(badge);
+      const indicator = document.createElement("div");
+      indicator.className = "interview-dot-indicator";
+      indicator.innerHTML = `<i class="fa-solid fa-circle" style="font-size:0.45rem;"></i> ${matchingEvents.length} R`;
+      dayCell.appendChild(indicator);
 
       dayCell.addEventListener("click", () => {
-        showDayInterviewDetails(d, MONTH_NAMES[month], year, matchingEvents);
+        document.querySelectorAll(".calendar-day-cell").forEach(c => c.classList.remove("active-day"));
+        dayCell.classList.add("active-day");
+        showDayInterviewDetails(d, MONTH_NAMES[month], year, matchingEvents, true);
       });
+
+      if (!firstDateWithEvents) {
+        firstDateWithEvents = { day: d, events: matchingEvents, cell: dayCell };
+      }
     }
 
     gridElem.appendChild(dayCell);
   }
+
+  // Auto-select first date with interviews in this month so the user sees results immediately
+  if (firstDateWithEvents) {
+    firstDateWithEvents.cell.classList.add("active-day");
+    showDayInterviewDetails(firstDateWithEvents.day, MONTH_NAMES[month], year, firstDateWithEvents.events, false);
+  } else {
+    const list = document.getElementById("selectedDayEventsList");
+    const title = document.getElementById("selectedDayTitle");
+    const subtitle = document.getElementById("selectedDaySubtitle");
+    if (title) title.textContent = "No Interviews This Month";
+    if (subtitle) subtitle.textContent = "Browse other months above";
+    if (list) {
+      list.innerHTML = `
+        <div class="calendar-empty-hint">
+          <i class="fa-regular fa-calendar-xmark" style="font-size:1.6rem; color:var(--text-muted); margin-bottom:0.5rem;"></i>
+          <p>No interview dates recorded for this month.</p>
+        </div>
+      `;
+    }
+  }
 }
 
-function showDayInterviewDetails(day, monthName, year, events) {
+function showDayInterviewDetails(day, monthName, year, events, shouldScroll = true) {
   const panel = document.getElementById("selectedDayEventsPanel");
   const list = document.getElementById("selectedDayEventsList");
+  const title = document.getElementById("selectedDayTitle");
+  const subtitle = document.getElementById("selectedDaySubtitle");
   if (!panel || !list) return;
 
-  panel.style.display = "block";
-  document.getElementById("selectedDayTitle").textContent = `Interviews on ${day} ${monthName} ${year}:`;
+  if (title) title.textContent = `${day} ${monthName} ${year}`;
+  if (subtitle) subtitle.textContent = `${events.length} Interview Round${events.length > 1 ? 's' : ''} Scheduled`;
 
   list.innerHTML = "";
   events.forEach(ev => {
-    const item = document.createElement("div");
-    item.className = "metric-box";
-    item.style.padding = "0.75rem 1rem";
-    item.style.marginBottom = "0.5rem";
-    item.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <strong style="color:var(--primary);">${ev.company}</strong>
-          <span style="font-size:0.85rem; color:var(--text-secondary); margin-left:0.5rem;">• ${ev.round}</span>
-        </div>
-        <span class="badge badge-blue">${ev.question_count} Qs</span>
+    const card = document.createElement("div");
+    card.className = "calendar-event-card";
+    card.innerHTML = `
+      <div>
+        <div class="calendar-event-company">${escapeHtml(ev.company)}</div>
+        <div class="calendar-event-round"><i class="fa-regular fa-circle-dot" style="margin-right:0.25rem;"></i>${escapeHtml(ev.round)}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span class="badge badge-purple" style="font-size:0.75rem;">${ev.question_count} Qs</span>
+        <span class="calendar-event-btn"><i class="fa-solid fa-arrow-right"></i> View</span>
       </div>
     `;
-    item.style.cursor = "pointer";
-    item.addEventListener("click", () => {
+    card.title = `Click to filter Question Bank for ${ev.company}`;
+    card.addEventListener("click", () => {
       closeModal("calendarModal");
       searchQuery = ev.company.toLowerCase();
       const searchInput = document.getElementById("qbSearchInput");
       if (searchInput) searchInput.value = ev.company;
       applyFilters();
+      const firstCard = document.querySelector(".company-card");
+      if (firstCard) firstCard.scrollIntoView({ behavior: "smooth", block: "start" });
     });
-    list.appendChild(item);
+    list.appendChild(card);
   });
+
+  if (shouldScroll && window.innerWidth <= 720) {
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
 }

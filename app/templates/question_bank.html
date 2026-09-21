@@ -276,9 +276,9 @@
   {% endfor %}
 </div>
 
-<!-- Calendar Pop-Up Modal (Month-wise Data) -->
+<!-- Calendar Pop-Up Modal (Split Layout: Compact Calendar + Prominent Interview List) -->
 <div class="modal-overlay" id="calendarModal">
-  <div class="modal-content" style="max-width:680px;">
+  <div class="modal-content" style="max-width:840px;">
     <div class="modal-header">
       <div class="modal-title">
         <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
@@ -289,35 +289,50 @@
       </button>
     </div>
     <div class="modal-body calendar-modal-body">
-      <!-- Month Navigation Bar -->
-      <div class="calendar-nav-bar">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">
-          <i class="fa-solid fa-chevron-left"></i> Prev
-        </button>
-        <span class="calendar-month-title" id="calendarMonthTitle">September 2026</span>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">
-          Next <i class="fa-solid fa-chevron-right"></i>
-        </button>
-      </div>
+      <div class="calendar-modal-split">
+        <!-- Left Side: Compact Calendar -->
+        <div class="calendar-left-col">
+          <div class="calendar-nav-bar">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">
+              <i class="fa-solid fa-chevron-left"></i> Prev
+            </button>
+            <span class="calendar-month-title" id="calendarMonthTitle">September 2026</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">
+              Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
 
-      <!-- Calendar Days Header -->
-      <div class="calendar-grid-header">
-        <div>Mon</div>
-        <div>Tue</div>
-        <div>Wed</div>
-        <div>Thu</div>
-        <div>Fri</div>
-        <div>Sat</div>
-        <div>Sun</div>
-      </div>
+          <div class="calendar-grid-header">
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+            <div>Sun</div>
+          </div>
 
-      <!-- Calendar Days Grid -->
-      <div class="calendar-grid-days" id="calendarGridDays"></div>
+          <div class="calendar-grid-days" id="calendarGridDays"></div>
+        </div>
 
-      <!-- Selected Date Events View -->
-      <div class="selected-day-events-panel" id="selectedDayEventsPanel" style="display:none;">
-        <h4 class="selected-day-events-title" id="selectedDayTitle">Interviews on this Date:</h4>
-        <div id="selectedDayEventsList"></div>
+        <!-- Right Side: Eye-Catching Selected Date Events View -->
+        <div class="calendar-right-col">
+          <div class="selected-day-events-panel" id="selectedDayEventsPanel">
+            <div class="selected-day-header">
+              <div class="selected-day-icon"><i class="fa-solid fa-calendar-check"></i></div>
+              <div>
+                <h4 class="selected-day-events-title" id="selectedDayTitle">Select a Date</h4>
+                <span class="selected-day-subtitle" id="selectedDaySubtitle">Click on any date with rounds</span>
+              </div>
+            </div>
+            <div class="selected-day-events-list" id="selectedDayEventsList">
+              <div class="calendar-empty-hint">
+                <i class="fa-regular fa-hand-pointer" style="font-size:1.5rem; color:var(--primary); margin-bottom:0.5rem;"></i>
+                <p>Select any highlighted date on the left to see interview rounds & companies.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">

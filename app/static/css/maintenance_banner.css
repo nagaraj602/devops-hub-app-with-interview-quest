@@ -1,9 +1,10 @@
 /* ==========================================================================
-   GCP Instance Scheduler Maintenance & Shutdown Countdown Banner
+   Cost Optimization Shutdown Countdown Banner
    Active from 10:30 PM IST (30:00 min countdown) to 11:00 PM IST (Shutdown)
+   Offline Window: 11:00 PM IST to 6:00 AM IST (Auto-restart at 6:00 AM IST)
    ========================================================================== */
 
-.gcp-maintenance-banner {
+.cost-optimization-banner {
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
   border-bottom: 2px solid #f59e0b;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
@@ -82,8 +83,8 @@
   flex-wrap: wrap;
 }
 
-.badge-gcp {
-  background: #2563eb;
+.badge-notice {
+  background: #d97706;
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 700;
@@ -93,11 +94,7 @@
   letter-spacing: 0.5px;
   display: inline-flex;
   align-items: center;
-}
-
-.badge-gcp::before {
-  content: "☁";
-  margin-right: 4px;
+  gap: 4px;
 }
 
 .maintenance-desc {
@@ -142,32 +139,32 @@
 }
 
 /* Imminent shutdown highlight (last 5 minutes) */
-.gcp-maintenance-banner.imminent-shutdown {
+.cost-optimization-banner.imminent-shutdown {
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   border-bottom: 2px solid #ef4444;
 }
 
-.gcp-maintenance-banner.imminent-shutdown .maintenance-icon-wrap {
+.cost-optimization-banner.imminent-shutdown .maintenance-icon-wrap {
   background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
   color: #dc2626;
 }
 
-.gcp-maintenance-banner.imminent-shutdown .maintenance-title {
+.cost-optimization-banner.imminent-shutdown .maintenance-title {
   color: #991b1b;
 }
 
-.gcp-maintenance-banner.imminent-shutdown .maintenance-desc {
+.cost-optimization-banner.imminent-shutdown .maintenance-desc {
   color: #b91c1c;
 }
 
-.gcp-maintenance-banner.imminent-shutdown .maintenance-timer-card {
+.cost-optimization-banner.imminent-shutdown .maintenance-timer-card {
   border-color: #ef4444;
   background: #ffffff;
   animation: pulseCard 1s infinite alternate;
 }
 
-.gcp-maintenance-banner.imminent-shutdown .timer-clock {
+.cost-optimization-banner.imminent-shutdown .timer-clock {
   color: #dc2626;
 }
 
@@ -180,36 +177,36 @@
   }
 }
 
-/* Active Maintenance Window (11 PM to 6 AM) */
-.gcp-maintenance-banner.maintenance-offline {
+/* Active Shutdown Window (11 PM to 6 AM) */
+.cost-optimization-banner.maintenance-offline {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-bottom: 2px solid #3b82f6;
   color: #1e40af;
 }
 
-.gcp-maintenance-banner.maintenance-offline .maintenance-icon-wrap {
+.cost-optimization-banner.maintenance-offline .maintenance-icon-wrap {
   background: rgba(59, 130, 246, 0.2);
   border-color: #3b82f6;
   color: #2563eb;
 }
 
-.gcp-maintenance-banner.maintenance-offline .maintenance-title {
+.cost-optimization-banner.maintenance-offline .maintenance-title {
   color: #1e3a8a;
 }
 
-.gcp-maintenance-banner.maintenance-offline .maintenance-desc {
+.cost-optimization-banner.maintenance-offline .maintenance-desc {
   color: #1e40af;
 }
 
-.gcp-maintenance-banner.maintenance-offline .maintenance-timer-card {
+.cost-optimization-banner.maintenance-offline .maintenance-timer-card {
   border-color: #3b82f6;
 }
 
-.gcp-maintenance-banner.maintenance-offline .timer-label {
+.cost-optimization-banner.maintenance-offline .timer-label {
   color: #1d4ed8;
 }
 
-.gcp-maintenance-banner.maintenance-offline .timer-clock {
+.cost-optimization-banner.maintenance-offline .timer-clock {
   font-size: 1.1rem;
   color: #1d4ed8;
   letter-spacing: 0.5px;

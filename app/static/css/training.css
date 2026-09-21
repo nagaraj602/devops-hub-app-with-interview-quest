@@ -555,43 +555,93 @@ mark.search-highlight.active-match {
    ============================================================================== */
 .markdown-pane pre {
   position: relative;
-  background-color: #0f172a;
-  color: #f8fafc;
-  padding: 1.1rem 1.25rem;
+  background-color: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid var(--primary);
+  padding: 1.15rem 1.35rem;
   border-radius: 8px;
   overflow-x: auto;
   margin: 1.25rem 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.88rem;
-  line-height: 1.6;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .markdown-pane pre code {
   background-color: transparent !important;
-  color: inherit !important;
+  color: #0f172a !important;
   padding: 0 !important;
   font-size: inherit;
   font-family: inherit;
 }
 
+/* High-Contrast Syntax Highlighting Tokens */
+.markdown-pane pre code .hljs-keyword,
+.markdown-pane pre code .hljs-selector-tag,
+.markdown-pane pre code .hljs-subst {
+  color: #cf222e !important; /* Vivid Red */
+  font-weight: 700;
+}
+
+.markdown-pane pre code .hljs-string,
+.markdown-pane pre code .hljs-title,
+.markdown-pane pre code .hljs-section,
+.markdown-pane pre code .hljs-attribute,
+.markdown-pane pre code .hljs-literal,
+.markdown-pane pre code .hljs-template-tag,
+.markdown-pane pre code .hljs-template-variable,
+.markdown-pane pre code .hljs-type,
+.markdown-pane pre code .hljs-addition {
+  color: #0969da !important; /* Crisp Blue */
+  font-weight: 600;
+}
+
+.markdown-pane pre code .hljs-comment,
+.markdown-pane pre code .hljs-quote,
+.markdown-pane pre code .hljs-deletion {
+  color: #57606a !important; /* Legible Muted Gray */
+  font-style: italic;
+}
+
+.markdown-pane pre code .hljs-variable,
+.markdown-pane pre code .hljs-number,
+.markdown-pane pre code .hljs-symbol,
+.markdown-pane pre code .hljs-bullet {
+  color: #953800 !important; /* Deep Amber */
+  font-weight: 600;
+}
+
+.markdown-pane pre code .hljs-built_in,
+.markdown-pane pre code .hljs-doctag {
+  color: #8250df !important; /* Vivid Purple */
+  font-weight: 600;
+}
+
+/* Copy Button for Light Code Blocks */
 .code-copy-btn {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  border-radius: 4px;
-  color: #ffffff;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  color: #334155;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.15s ease;
   z-index: 5;
 }
 
 .code-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
+  background: #f1f5f9;
+  color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Inter-connecting Markdown Links */
@@ -599,7 +649,7 @@ mark.search-highlight.active-match {
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 2px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
 }
 
