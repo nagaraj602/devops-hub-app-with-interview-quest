@@ -1026,17 +1026,6 @@ function loadCustomReposIntoTree() {
         <i class="fa-brands fa-github tree-icon" style="color:var(--primary);"></i>
         <span class="tree-label" style="font-weight:700;">${escapeHtml(repo.name)}</span>
         <span class="badge badge-outline" style="font-size:0.68rem; margin-left:auto;">CUSTOM</span>
-        <div class="repo-row-actions">
-          <button type="button" class="repo-action-btn repo-up-btn" onclick="moveRepo('${repoId}', 'up', event)" title="Move repository up" aria-label="Move up">
-            <i class="fa-solid fa-arrow-up"></i>
-          </button>
-          <button type="button" class="repo-action-btn repo-down-btn" onclick="moveRepo('${repoId}', 'down', event)" title="Move repository down" aria-label="Move down">
-            <i class="fa-solid fa-arrow-down"></i>
-          </button>
-          <button type="button" class="repo-action-btn repo-delete-btn" onclick="removeCustomRepo('${repo.id}', event)" title="Remove custom repository" aria-label="Remove repository">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
-        </div>
       </div>
       <div class="tree-children" id="customTreeChildren_${repo.id}">
         <div style="padding:0.5rem 1rem; color:var(--text-muted); font-size:0.8rem;">

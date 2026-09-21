@@ -77,14 +77,6 @@
             <i class="fa-solid {{ root.icon }} tree-icon" style="color:var(--primary);"></i>
             <span class="tree-label" style="font-weight:700;">{{ root.name }}</span>
             <span class="badge badge-outline" style="font-size:0.68rem; margin-left:auto; text-transform:uppercase;">{{ root.repo_id }}</span>
-            <div class="repo-row-actions">
-              <button type="button" class="repo-action-btn repo-up-btn" onclick="moveRepo('{{ root.repo_id }}', 'up', event)" title="Move repository up" aria-label="Move up">
-                <i class="fa-solid fa-arrow-up"></i>
-              </button>
-              <button type="button" class="repo-action-btn repo-down-btn" onclick="moveRepo('{{ root.repo_id }}', 'down', event)" title="Move repository down" aria-label="Move down">
-                <i class="fa-solid fa-arrow-down"></i>
-              </button>
-            </div>
           </div>
           <div class="tree-children">
             {{ render_tree_nodes(root.children) }}
