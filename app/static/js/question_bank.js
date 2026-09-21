@@ -8,6 +8,16 @@ let searchQuery = "";
 let showFavoritesOnly = false;
 let userFavorites = JSON.parse(localStorage.getItem("devops_hub_favorites") || "[]");
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initQuestionBank();
 });
@@ -442,6 +452,113 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+const MONTH_MAP = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+};
+
+// Robust date key parser: matches 23-Aug-2026, 17-08-2026 03:49 PM, 9-Sep-2026, 03-09-2026, etc.
+function parseCalendarDateKey(key) {
+  if (!key || key === "N/A") return null;
+  const match = String(key).trim().match(/^(\d{1,2})[-/]([A-Za-z]+|\d{1,2})[-/](\d{4})/);
+  if (!match) return null;
+  const d = parseInt(match[1], 10);
+  const mVal = match[2].toLowerCase();
+  const y = parseInt(match[3], 10);
+  let mIdx = -1;
+  if (/^\d+$/.test(mVal)) {
+    mIdx = parseInt(mVal, 10) - 1;
+  } else {
+    const prefix = mVal.substring(0, 3);
+    mIdx = MONTH_MAP[prefix] !== undefined ? MONTH_MAP[prefix] : -1;
+  }
+  if (mIdx < 0 || mIdx > 11) return null;
+  return { day: d, month: mIdx, year: y };
+}
+
+function dateKeyMatches(key, d, month, year) {
+  const parsed = parseCalendarDateKey(key);
+  if (!parsed) return false;
+  return parsed.day === d && parsed.month === month && parsed.year === year;
+}
+
+// Opens the specific company and round directly in the Question Bank list
+function openRoundInQuestionBank(companyName, roundName) {
+  closeModal("calendarModal");
+
+  // 1. Reset category filter to "All" so all companies and rounds are searchable
+  currentCategory = "All";
+  document.querySelectorAll(".category-pill").forEach(p => {
+    p.classList.toggle("active", p.dataset.category === "All");
+  });
+
+  // 2. Clear search input and search query
+  const searchInput = document.getElementById("qbSearchInput");
+  if (searchInput) searchInput.value = "";
+  searchQuery = "";
+
+  // 3. Remove favorites filter if active
+  showFavoritesOnly = false;
+  const favDock = document.getElementById("statCardFavorites");
+  if (favDock) favDock.classList.remove("active-favorite-filter");
+
+  // 4. Apply filters to show all company cards
+  applyFilters();
+
+  // 5. Locate the company card
+  const compCards = Array.from(document.querySelectorAll(".company-card"));
+  const targetCard = compCards.find(c => {
+    const cName = (c.dataset.companyName || "").trim().toLowerCase();
+    const query = (companyName || "").trim().toLowerCase();
+    return cName === query || cName.includes(query) || query.includes(cName);
+  });
+
+  if (targetCard) {
+    // Expand company card
+    targetCard.classList.add("expanded");
+
+    // Locate the specific round inside the company card
+    const roundBlocks = Array.from(targetCard.querySelectorAll(".round-block"));
+    const qRound = (roundName || "").trim().toLowerCase();
+    const normQ = qRound.replace(/^level\s*/, "l");
+
+    let targetRound = roundBlocks.find(r => (r.dataset.roundName || "").trim().toLowerCase() === qRound);
+    if (!targetRound) {
+      targetRound = roundBlocks.find(r => {
+        const normR = (r.dataset.roundName || "").trim().toLowerCase().replace(/^level\s*/, "l");
+        return normR === normQ || normR.includes(normQ) || normQ.includes(normR);
+      });
+    }
+    if (!targetRound && roundBlocks.length > 0) {
+      targetRound = roundBlocks[0];
+    }
+
+    if (targetRound) {
+      targetRound.classList.add("expanded");
+
+      // Scroll smoothly directly to the round block in question bank list
+      setTimeout(() => {
+        targetRound.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // Trigger attractive glow/pulse animation
+        targetRound.classList.add("highlight-pulse");
+        setTimeout(() => {
+          targetRound.classList.remove("highlight-pulse");
+        }, 2200);
+      }, 150);
+
+      showToast(`Opened ${companyName} • ${roundName}`, "success");
+    } else {
+      setTimeout(() => {
+        targetCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+      showToast(`Opened ${companyName}`, "info");
+    }
+  } else {
+    showToast(`Company "${companyName}" not found in list`, "warning");
+  }
+}
+
 function renderCalendarView(year, month) {
   const titleElem = document.getElementById("calendarMonthTitle");
   if (titleElem) {
@@ -465,7 +582,6 @@ function renderCalendarView(year, month) {
     gridElem.appendChild(emptyCell);
   }
 
-  const monthShort = MONTH_NAMES[month].substring(0, 3);
   const realToday = new Date();
   const isCurrentMonthView = (year === realToday.getFullYear() && month === realToday.getMonth());
   const todayDate = realToday.getDate();
@@ -491,17 +607,10 @@ function renderCalendarView(year, month) {
       todayCell = dayCell;
     }
 
-    // Look for matching events in calendarEventsData
+    // Look for matching events in calendarEventsData with exact parsed matching
     const matchingEvents = [];
-    const dayStrPadded = d < 10 ? `0${d}` : `${d}`;
-    const monthPadded = (month + 1) < 10 ? `0${month + 1}` : `${month + 1}`;
-
     for (const [dateStr, events] of Object.entries(calendarEventsData)) {
-      if (
-        dateStr.includes(`${dayStrPadded}-${monthPadded}-${year}`) ||
-        dateStr.includes(`${d}-${monthShort}-${year}`) ||
-        dateStr.includes(`${dayStrPadded}-${monthShort}-${year}`)
-      ) {
+      if (dateKeyMatches(dateStr, d, month, year)) {
         matchingEvents.push(...events);
       }
     }
@@ -514,7 +623,7 @@ function renderCalendarView(year, month) {
       dayCell.classList.add("has-interview");
       const badge = document.createElement("div");
       badge.className = "interview-dot-badge";
-      badge.textContent = `${matchingEvents.length} Rounds`;
+      badge.textContent = `${matchingEvents.length} Round${matchingEvents.length > 1 ? 's' : ''}`;
       dayCell.appendChild(badge);
 
       if (!fallbackFirstEventCell) {
@@ -549,13 +658,21 @@ function showDayInterviewDetails(day, monthName, year, events) {
   const panel = document.getElementById("selectedDayEventsPanel");
   const list = document.getElementById("selectedDayEventsList");
   const title = document.getElementById("selectedDayTitle");
+  const subtitle = document.getElementById("selectedDaySubtitle");
   if (!panel || !list) return;
 
   const realToday = new Date();
   const isToday = (year === realToday.getFullYear() && monthName === MONTH_NAMES[realToday.getMonth()] && day === realToday.getDate());
 
   if (title) {
-    title.textContent = `Interviews on ${day} ${monthName} ${year}${isToday ? ' (Today)' : ''}:`;
+    title.textContent = `Interviews on ${day} ${monthName} ${year}${isToday ? ' (Today)' : ''}`;
+  }
+  if (subtitle) {
+    if (events && events.length > 0) {
+      subtitle.textContent = `${events.length} Round${events.length > 1 ? 's' : ''} • Click to open in Question Bank list`;
+    } else {
+      subtitle.textContent = `No scheduled interviews on this date`;
+    }
   }
 
   list.innerHTML = "";
@@ -564,24 +681,19 @@ function showDayInterviewDetails(day, monthName, year, events) {
       const card = document.createElement("div");
       card.className = "calendar-event-card";
       card.innerHTML = `
-        <div>
+        <div style="flex: 1; min-width: 0;">
           <div class="calendar-event-company">${escapeHtml(ev.company)}</div>
           <div class="calendar-event-round"><i class="fa-regular fa-circle-dot" style="margin-right:0.25rem;"></i>${escapeHtml(ev.round)}</div>
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;"><i class="fa-regular fa-clock" style="margin-right:0.25rem;"></i>${escapeHtml(ev.date || `${day}-${monthName}-${year}`)}</div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.5rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
           <span class="badge badge-purple" style="font-size:0.75rem;">${ev.question_count} Qs</span>
-          <span class="calendar-event-btn"><i class="fa-solid fa-arrow-right"></i> View</span>
+          <span class="calendar-event-btn"><i class="fa-solid fa-arrow-right"></i> Open Round</span>
         </div>
       `;
-      card.title = `Click to filter Question Bank for ${ev.company}`;
+      card.title = `Click to open ${ev.company} (${ev.round}) directly in Question Bank list`;
       card.addEventListener("click", () => {
-        closeModal("calendarModal");
-        searchQuery = ev.company.toLowerCase();
-        const searchInput = document.getElementById("qbSearchInput");
-        if (searchInput) searchInput.value = ev.company;
-        applyFilters();
-        const firstCard = document.querySelector(".company-card");
-        if (firstCard) firstCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        openRoundInQuestionBank(ev.company, ev.round);
       });
       list.appendChild(card);
     });
@@ -590,7 +702,7 @@ function showDayInterviewDetails(day, monthName, year, events) {
       <div class="calendar-empty-hint" style="padding: 1.5rem 1rem;">
         <i class="fa-regular fa-calendar" style="font-size:1.6rem; color:var(--text-muted); margin-bottom:0.5rem;"></i>
         <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">No interview rounds scheduled for ${isToday ? 'today' : 'this date'}.</p>
-        <span style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">Click on any highlighted date (e.g. 3, 9, 17 Sep) to view scheduled rounds.</span>
+        <span style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">Click on any highlighted date (e.g. 3, 5, 9, 17 Sep) to view scheduled rounds.</span>
       </div>
     `;
   }
