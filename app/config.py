@@ -14,6 +14,8 @@ os.makedirs(LOGS_DIR, exist_ok=True)
 # Port & Server settings
 PORT = int(os.getenv("PORT", "8926"))
 HOST = os.getenv("HOST", "0.0.0.0")
+ADMIN_PORT = int(os.getenv("ADMIN_PORT", "9256"))
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "devops-admin-2026")
 
 # Content directories
 INTERVIEW_QUESTIONS_DIR = os.getenv("INTERVIEW_QUESTIONS_DIR", str(CONTENT_DIR / "interview_questions"))
@@ -25,6 +27,7 @@ PROJECT_FILE = os.getenv("PROJECT_FILE", str(BASE_DIR / "Project"))
 # Git Storage & Continuous Logs
 AUDIT_LOG_FILE = os.getenv("AUDIT_LOG_FILE", str(LOGS_DIR / "audit_log.md"))
 SYSTEM_STATUS_FILE = os.getenv("SYSTEM_STATUS_FILE", str(LOGS_DIR / "system_status.json"))
+PAGE_VISIBILITY_FILE = os.getenv("PAGE_VISIBILITY_FILE", str(LOGS_DIR / "page_visibility.json"))
 
 # Default Git Repositories
 DEFAULT_REPOS = {

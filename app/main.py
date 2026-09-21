@@ -11,13 +11,15 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.config import PORT, HOST, APP_DIR, BASE_DIR
+from app.config import PORT, ADMIN_PORT, HOST, APP_DIR, BASE_DIR
 from app.routes.question_bank_routes import router as question_bank_router
 from app.routes.project_routes import router as project_router
 from app.routes.training_routes import router as training_router
 from app.routes.cheatsheet_routes import router as cheatsheet_router
 from app.routes.sync_routes import router as sync_router
 from app.routes.api_routes import router as api_router
+from app.routes.admin_routes import router as admin_router, is_admin_request
+from app.services.page_visibility_service import page_visibility_service
 
 # Lifespan startup pre-warm handler: pre-loads in-memory data caches before user traffic arrives
 @asynccontextmanager
@@ -37,7 +39,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="DevOps Knowledge Portal & Interview Hub",
     description="Universal DevOps Interview Questions, Project Architecture, Training Materials & Command Cheatsheets",
-    version="1.0.9",
+    version="1.0.10",
     lifespan=lifespan
 )
 
@@ -54,7 +56,28 @@ class StaticCacheMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(StaticCacheMiddleware)
 
-# 3. Enable CORS for API queries
+# 3. Dedicated Admin Domain & Port Routing Middleware
+# Automatically routes requests on admin.sidorea.shop or port 9256 from '/' to '/admin'
+class AdminHostRoutingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        host_header = (request.headers.get("host") or "").lower()
+        host_without_port = host_header.split(":")[0]
+        port = None
+        if ":" in host_header:
+            try:
+                port = int(host_header.split(":")[1])
+            except ValueError:
+                pass
+
+        is_admin_entry = (host_without_port.startswith("admin.") or port == ADMIN_PORT)
+        if is_admin_entry and request.url.path == "/":
+            return RedirectResponse(url="/admin", status_code=307)
+
+        return await call_next(request)
+
+app.add_middleware(AdminHostRoutingMiddleware)
+
+# 4. Enable CORS for API queries
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -71,6 +94,12 @@ os.makedirs(templates_dir, exist_ok=True)
 os.makedirs(static_dir, exist_ok=True)
 
 templates = Jinja2Templates(directory=str(templates_dir))
+# Register template global helpers for dynamic page visibility and auth
+templates.env.globals["get_page_visibility"] = page_visibility_service.get_visibility_map
+templates.env.globals["is_page_published"] = page_visibility_service.is_page_published
+templates.env.globals["get_home_url"] = page_visibility_service.get_first_published_route
+templates.env.globals["is_admin_request"] = is_admin_request
+templates.env.globals["is_admin"] = False
 app.state.templates = templates
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
@@ -82,6 +111,7 @@ app.include_router(training_router)
 app.include_router(cheatsheet_router)
 app.include_router(sync_router)
 app.include_router(api_router)
+app.include_router(admin_router)
 
 # Exception handler for 404
 @app.exception_handler(404)

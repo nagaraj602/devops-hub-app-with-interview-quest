@@ -51,15 +51,17 @@ COPY content/ /app/content/
 COPY logs/ /app/logs/
 COPY Project /app/Project
 COPY README.md /app/README.md
+COPY run.py /app/run.py
 
 # Environment Configuration
 ENV PORT=8926
+ENV ADMIN_PORT=9256
 ENV HOST=0.0.0.0
 ENV PYTHONUNBUFFERED=1
 
-EXPOSE 8926
+EXPOSE 8926 9256
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:8926/api/health || exit 1
 
-CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8926"]
+CMD ["python3", "run.py"]

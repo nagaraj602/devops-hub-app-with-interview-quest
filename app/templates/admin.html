@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-dashboard-wrap">
+
+  <!-- Top Admin Hero Banner -->
+  <div class="admin-top-banner">
+    <div class="admin-banner-left">
+      <div class="admin-shield-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div class="admin-title-group">
+        <h1>
+          <span>Admin Portal — Page & Menu Publisher</span>
+          <span class="admin-badge-private"><i class="fa-solid fa-lock"></i> Private Control</span>
+        </h1>
+        <p>Manage public menu visibility across Question Bank, Project Architecture, Training Materials, Cheatsheets, and App Logs.</p>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+      <div class="admin-access-indicator" title="Current Connection Host">
+        <i class="fa-solid fa-network-wired" style="color:var(--primary);"></i>
+        <span>Host: <strong>{{ host_header }}</strong></span>
+      </div>
+      {% if is_authenticated %}
+      <button type="button" class="btn btn-sm btn-secondary" id="adminLogoutBtn" title="Lock Admin Session">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Lock Session
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Quick Overview Stats -->
+  <div class="admin-stats-grid">
+    <div class="admin-stat-card">
+      <div class="admin-stat-icon blue">
+        <i class="fa-solid fa-bars-staggered"></i>
+      </div>
+      <div class="admin-stat-info">
+        <span class="admin-stat-label">Total Managed Pages</span>
+        <span class="admin-stat-value">{{ total_pages }}</span>
+      </div>
+    </div>
+
+    <div class="admin-stat-card">
+      <div class="admin-stat-icon green">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="admin-stat-info">
+        <span class="admin-stat-label">Published & Live</span>
+        <span class="admin-stat-value" id="adminStatPublished">{{ published_count }}</span>
+      </div>
+    </div>
+
+    <div class="admin-stat-card">
+      <div class="admin-stat-icon amber">
+        <i class="fa-solid fa-eye-slash"></i>
+      </div>
+      <div class="admin-stat-info">
+        <span class="admin-stat-label">Hidden (Unpublished)</span>
+        <span class="admin-stat-value" id="adminStatHidden">{{ hidden_count }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if not is_authenticated %}
+  <!-- Authentication Unlock Gate -->
+  <div class="admin-auth-card">
+    <div class="admin-auth-icon">
+      <i class="fa-solid fa-key"></i>
+    </div>
+    <h2>Admin Session Locked</h2>
+    <p>Please enter the administrator passphrase to unlock page publishing and menu visibility controls.</p>
+
+    <form id="adminLoginForm">
+      <div class="admin-input-wrap">
+        <input type="password" id="adminPassInput" placeholder="Enter administrator passphrase..." autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem; font-weight:700;">
+        <i class="fa-solid fa-unlock" style="margin-right:0.4rem;"></i> Unlock Controls
+      </button>
+    </form>
+    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:1rem;">
+      Default passphrase: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">devops-admin-2026</code> (Configurable via <code>ADMIN_PASSWORD</code>)
+    </div>
+  </div>
+  {% else %}
+
+  <!-- Page Visibility Controller Section -->
+  <div class="admin-section-header">
+    <h2>
+      <i class="fa-solid fa-sliders" style="color:var(--primary);"></i>
+      <span>Page Visibility Controls</span>
+    </h2>
+    <span style="font-size:0.82rem; color:var(--text-muted);">Changes take effect immediately across all visitors and git audit log</span>
+  </div>
+
+  <div class="admin-pages-grid">
+    {% for p in pages %}
+    <div class="admin-page-card {% if p.is_published %}is-published-mode{% else %}is-hidden-mode{% endif %}" data-page-key="{{ p.key }}" id="admin-card-{{ p.key }}">
+      <div class="admin-page-info">
+        <div class="admin-page-icon-wrap">
+          <i class="fa-solid {{ p.icon }}"></i>
+        </div>
+        <div class="admin-page-details">
+          <div class="admin-page-title-row">
+            <span class="admin-page-name">{{ p.name }}</span>
+            <span class="admin-page-route">{{ p.route }}</span>
+            <span class="admin-status-pill {% if p.is_published %}published{% else %}hidden{% endif %}">
+              {% if p.is_published %}
+              <i class="fa-solid fa-circle-check"></i> Published & Live
+              {% else %}
+              <i class="fa-solid fa-eye-slash"></i> Hidden (Unpublished)
+              {% endif %}
+            </span>
+          </div>
+          <p class="admin-page-desc">{{ p.description }}</p>
+        </div>
+      </div>
+
+      <div class="admin-page-actions">
+        <!-- Preview Link -->
+        <a href="{{ p.route }}" target="_blank" class="btn btn-sm btn-outline" title="Preview Page in New Tab">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview
+        </a>
+
+        <!-- Publish Button -->
+        <button type="button" class="btn-toggle-publish publish-btn btn-publish-action" title="Publish this page to public visitors" {% if p.is_published %}disabled style="opacity:0.6; cursor:default;"{% endif %}>
+          <i class="fa-solid fa-circle-check"></i> Publish
+        </button>
+
+        <!-- Hide Button -->
+        <button type="button" class="btn-toggle-publish hide-btn btn-hide-action" title="Hide this page from public menu and direct navigation" {% if not p.is_published %}disabled style="opacity:0.6; cursor:default;"{% endif %}>
+          <i class="fa-solid fa-eye-slash"></i> Hide
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Network & Domain Access Guide -->
+  <div class="admin-guide-card">
+    <h3>
+      <i class="fa-solid fa-globe" style="color:var(--primary);"></i>
+      <span>Admin Access & Cloudflare Tunnel Configuration</span>
+    </h3>
+    
+    <div class="admin-guide-grid">
+      <!-- Localhost Access -->
+      <div class="admin-guide-box">
+        <h4><i class="fa-solid fa-laptop-code" style="color:#0284c7;"></i> Localhost Access</h4>
+        <p>Access the admin portal locally using either the dedicated port <strong>{{ admin_port }}</strong> or the main app route:</p>
+        <pre class="admin-guide-code">http://localhost:{{ admin_port }}/
+http://localhost:{{ main_port }}/admin</pre>
+        <p style="margin-top:0.6rem; font-size:0.78rem; color:var(--text-muted);">
+          Docker Desktop Kubernetes routes port 9256 via Service NodePort <code>30956</code>.
+        </p>
+      </div>
+
+      <!-- Cloudflare Tunnel Access on GCP -->
+      <div class="admin-guide-box">
+        <h4><i class="fa-solid fa-cloud" style="color:#f59e0b;"></i> Cloudflare Tunnel on GCP</h4>
+        <p>In your Cloudflare Tunnel configuration on GCP (<code>/etc/cloudflared/config.yml</code>), add the ingress rule for <strong>admin.sidorea.shop</strong>:</p>
+        <pre class="admin-guide-code">ingress:
+  - hostname: admin.sidorea.shop
+    service: http://localhost:{{ admin_port }}
+  - hostname: sidorea.shop
+    service: http://localhost:{{ main_port }}
+  - service: http_status:404</pre>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}

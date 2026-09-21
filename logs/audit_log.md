@@ -35,3 +35,9 @@ This document serves as the continuous, human-readable system log persisted dire
 
 
 | 2026-09-21 20:21:37 | Feature Update (v1.0.9) | Performance & Bug Fixes | Added GZip compression, static cache headers, round toggle icon rotation fix, and deep-dive answer copy fix | Antigravity CLI |
+| 2026-09-21 21:44:15 | Page Visibility Changed | Menu: Training Materials | Status set to Hidden (Unpublished) (previous: Published) | Admin Portal (Web UI) |
+| 2026-09-21 21:44:28 | Page Visibility Changed | Menu: Training Materials | Status set to Hidden (Unpublished) (previous: Hidden) | Admin Portal (Web UI) |
+| 2026-09-21 21:44:29 | Page Visibility Changed | Menu: Training Materials | Status set to Published (Active) (previous: Hidden) | Admin Portal (Web UI) |
+| 2026-09-21 21:44:29 | Page Visibility Changed | Menu: Question Bank | Status set to Hidden (Unpublished) (previous: Published) | Admin Portal (Web UI) |
+| 2026-09-21 21:44:29 | Page Visibility Changed | Menu: Question Bank | Status set to Published (Active) (previous: Hidden) | Admin Portal (Web UI) |
+| 2026-09-21 21:45:00 | Release v1.0.10 | Hidden Admin Portal & Dynamic Page Visibility | Added private Admin Portal at port 9256 & admin.sidorea.shop with publish/unpublished toggles for Question Bank, Project, Training, Cheatsheets, and App Logs with friendly 403 notices and zero external DB | Antigravity Assistant |

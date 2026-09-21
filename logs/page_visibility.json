@@ -1,0 +1,42 @@
+{
+  "question_bank": {
+    "key": "question_bank",
+    "name": "Question Bank",
+    "route": "/question-bank",
+    "is_published": true,
+    "icon": "fa-circle-question",
+    "description": "53 Curated Organizations & 1,291 Interview Questions categorized by technology and round."
+  },
+  "project": {
+    "key": "project",
+    "name": "Project Architecture",
+    "route": "/project",
+    "is_published": true,
+    "icon": "fa-diagram-project",
+    "description": "E-Commerce Marketplace Risk Detection Platform, microservices architecture, and EKS sizing."
+  },
+  "training": {
+    "key": "training",
+    "name": "Training Materials",
+    "route": "/training-materials",
+    "is_published": true,
+    "icon": "fa-book-open-reader",
+    "description": "Live sync of ArtisanTek curriculum, AWS labs, Kubernetes, Docker, and Linux guides."
+  },
+  "cheatsheet": {
+    "key": "cheatsheet",
+    "name": "Command Cheatsheet",
+    "route": "/command-cheatsheet",
+    "is_published": true,
+    "icon": "fa-terminal",
+    "description": "Instant reference for Linux, Bash, Git, Docker, Kubernetes, Terraform, and Ansible."
+  },
+  "app_logs": {
+    "key": "app_logs",
+    "name": "App Logs",
+    "route": "/app-logs",
+    "is_published": true,
+    "icon": "fa-server",
+    "description": "Live health status of application components, infrastructure mode, and Git audit trail."
+  }
+}

@@ -27,9 +27,13 @@ spec:
           ports:
             - containerPort: 8926
               name: http
+            - containerPort: 9256
+              name: admin-http
           env:
             - name: PORT
               value: "8926"
+            - name: ADMIN_PORT
+              value: "9256"
             - name: HOST
               value: "0.0.0.0"
           resources:
@@ -62,7 +66,7 @@ metadata:
   name: devops-hub-service
   namespace: devops-hub
 spec:
-  type: LoadBalancer # Docker Desktop routes LoadBalancer directly to localhost:8926
+  type: LoadBalancer # Docker Desktop routes LoadBalancer directly to localhost:8926 and 9256
   selector:
     app: devops-hub
   ports:
@@ -70,3 +74,7 @@ spec:
       port: 8926
       targetPort: 8926
       nodePort: 30926
+    - name: admin-http
+      port: 9256
+      targetPort: 9256
+      nodePort: 30956

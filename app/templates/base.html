@@ -30,6 +30,8 @@
   <link rel="stylesheet" href="/static/css/cheatsheet.css">
   {% elif active_page == 'sync' or active_page == 'app_logs' %}
   <link rel="stylesheet" href="/static/css/sync.css">
+  {% elif active_page == 'admin' %}
+  <link rel="stylesheet" href="/static/css/admin.css">
   {% endif %}
 
   {% if active_page == 'training' %}
@@ -73,7 +75,7 @@
   <header class="site-header">
     <div class="app-container header-inner">
       <!-- Brand / Logo -->
-      <a href="/question-bank" class="brand-group">
+      <a href="{{ get_home_url() }}" class="brand-group">
         <div class="brand-icon">
           <i class="fa-solid fa-cloud-bolt"></i>
         </div>
@@ -85,26 +87,44 @@
 
       <!-- Desktop Navigation Bar -->
       <nav class="main-nav">
+        {% set v_map = get_page_visibility() %}
+        {% set user_is_admin = is_admin or (request and is_admin_request(request)) %}
+        {% if v_map.question_bank.is_published or user_is_admin %}
         <a href="/question-bank" class="nav-link {% if active_page == 'question_bank' %}active{% endif %}">
           <i class="fa-solid fa-circle-question"></i>
           <span>Question Bank</span>
         </a>
+        {% endif %}
+        {% if v_map.project.is_published or user_is_admin %}
         <a href="/project" class="nav-link {% if active_page == 'project' %}active{% endif %}">
           <i class="fa-solid fa-diagram-project"></i>
           <span>Project</span>
         </a>
+        {% endif %}
+        {% if v_map.training.is_published or user_is_admin %}
         <a href="/training-materials" class="nav-link {% if active_page == 'training' %}active{% endif %}">
           <i class="fa-solid fa-book-open-reader"></i>
           <span>Training Materials</span>
         </a>
+        {% endif %}
+        {% if v_map.cheatsheet.is_published or user_is_admin %}
         <a href="/command-cheatsheet" class="nav-link {% if active_page == 'cheatsheet' %}active{% endif %}">
           <i class="fa-solid fa-terminal"></i>
           <span>Command Cheatsheet</span>
         </a>
+        {% endif %}
+        {% if v_map.app_logs.is_published or user_is_admin %}
         <a href="/app-logs" class="nav-link {% if active_page == 'app_logs' %}active{% endif %}">
           <i class="fa-solid fa-server"></i>
           <span>App Logs</span>
         </a>
+        {% endif %}
+        {% if user_is_admin %}
+        <a href="/admin" class="nav-link {% if active_page == 'admin' %}active{% endif %}" style="color:var(--primary); font-weight:700;">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Admin Portal</span>
+        </a>
+        {% endif %}
       </nav>
 
       <!-- Action Buttons -->
@@ -130,26 +150,44 @@
 
     <!-- Mobile Drawer Navigation -->
     <div class="mobile-drawer" id="mobileNavDrawer">
+      {% set v_map = get_page_visibility() %}
+      {% set user_is_admin = is_admin or (request and is_admin_request(request)) %}
+      {% if v_map.question_bank.is_published or user_is_admin %}
       <a href="/question-bank" class="nav-link {% if active_page == 'question_bank' %}active{% endif %}">
         <i class="fa-solid fa-circle-question"></i>
         <span>Question Bank</span>
       </a>
+      {% endif %}
+      {% if v_map.project.is_published or user_is_admin %}
       <a href="/project" class="nav-link {% if active_page == 'project' %}active{% endif %}">
         <i class="fa-solid fa-diagram-project"></i>
         <span>Project</span>
       </a>
+      {% endif %}
+      {% if v_map.training.is_published or user_is_admin %}
       <a href="/training-materials" class="nav-link {% if active_page == 'training' %}active{% endif %}">
         <i class="fa-solid fa-book-open-reader"></i>
         <span>Training Materials</span>
       </a>
+      {% endif %}
+      {% if v_map.cheatsheet.is_published or user_is_admin %}
       <a href="/command-cheatsheet" class="nav-link {% if active_page == 'cheatsheet' %}active{% endif %}">
         <i class="fa-solid fa-terminal"></i>
         <span>Command Cheatsheet</span>
       </a>
+      {% endif %}
+      {% if v_map.app_logs.is_published or user_is_admin %}
       <a href="/app-logs" class="nav-link {% if active_page == 'app_logs' %}active{% endif %}">
         <i class="fa-solid fa-server"></i>
         <span>App Logs</span>
       </a>
+      {% endif %}
+      {% if user_is_admin %}
+      <a href="/admin" class="nav-link {% if active_page == 'admin' %}active{% endif %}">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Admin Portal</span>
+      </a>
+      {% endif %}
       <a href="/sync-all" class="nav-link {% if active_page == 'sync' %}active{% endif %}">
         <i class="fa-solid fa-rotate"></i>
         <span>Sync all</span>
@@ -171,11 +209,23 @@
         <span>DevOps Knowledge Portal & Interview Hub &copy; 2026. Powered by Git Database Architecture.</span>
       </div>
       <div class="footer-links">
+        {% set v_map = get_page_visibility() %}
+        {% set user_is_admin = is_admin or (request and is_admin_request(request)) %}
+        {% if v_map.question_bank.is_published or user_is_admin %}
         <a href="/question-bank">Questions</a>
+        {% endif %}
+        {% if v_map.project.is_published or user_is_admin %}
         <a href="/project">Project Architecture</a>
+        {% endif %}
+        {% if v_map.training.is_published or user_is_admin %}
         <a href="/training-materials">Training Materials</a>
+        {% endif %}
+        {% if v_map.cheatsheet.is_published or user_is_admin %}
         <a href="/command-cheatsheet">Cheatsheet</a>
+        {% endif %}
+        {% if v_map.app_logs.is_published or user_is_admin %}
         <a href="/app-logs">App Logs</a>
+        {% endif %}
       </div>
     </div>
   </footer>
@@ -284,6 +334,8 @@
   <script src="/static/js/cheatsheet.js" defer></script>
   {% elif active_page == 'sync' or active_page == 'app_logs' %}
   <script src="/static/js/sync.js" defer></script>
+  {% elif active_page == 'admin' %}
+  <script src="/static/js/admin.js" defer></script>
   {% endif %}
 
 </body>

@@ -8,8 +8,10 @@ services:
     restart: unless-stopped
     ports:
       - "8926:8926"
+      - "9256:9256"
     environment:
       - PORT=8926
+      - ADMIN_PORT=9256
       - HOST=0.0.0.0
       - PYTHONUNBUFFERED=1
     healthcheck:
