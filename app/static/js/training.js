@@ -37,6 +37,11 @@ function initTrainingExplorer() {
 // ------------------------------------------------------------------------------
 function initTreeNodeClicks() {
   document.addEventListener("click", (e) => {
+    // 0. Ignore clicks on repository reorder / action buttons
+    if (e.target.closest(".repo-action-btn")) {
+      return;
+    }
+
     // 1. Folder Click (Toggle Expand / Collapse)
     const folderRow = e.target.closest(".tree-node.folder > .tree-node-row");
     if (folderRow) {
@@ -675,6 +680,7 @@ function updateLightboxImageTransform() {
 function initCustomReposManager() {
   const addRepoBtn = document.getElementById("openAddRepoModalBtn");
   const saveRepoBtn = document.getElementById("saveCustomRepoBtn");
+  const manageReposBtn = document.getElementById("openManageReposModalBtn");
 
   if (addRepoBtn) {
     addRepoBtn.addEventListener("click", () => {
@@ -688,6 +694,14 @@ function initCustomReposManager() {
     });
   }
 
+  if (manageReposBtn) {
+    manageReposBtn.addEventListener("click", () => {
+      renderManageReposList();
+      openModal("manageReposModal");
+    });
+  }
+
+  initRepoDragAndDrop();
   loadCustomReposIntoTree();
 }
 
@@ -697,6 +711,269 @@ function getStoredCustomRepos() {
   } catch (e) {
     return [];
   }
+}
+
+function getStoredRepoOrder() {
+  try {
+    return JSON.parse(localStorage.getItem("devops_hub_repo_order") || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCurrentRepoOrder() {
+  const treeContainer = document.getElementById("treeNodesContainer");
+  if (!treeContainer) return;
+  const repoNodes = treeContainer.querySelectorAll(":scope > .repo-root-folder");
+  const order = Array.from(repoNodes).map(node => node.getAttribute("data-repo-id")).filter(Boolean);
+  localStorage.setItem("devops_hub_repo_order", JSON.stringify(order));
+}
+
+function applyStoredRepoOrder() {
+  const treeContainer = document.getElementById("treeNodesContainer");
+  if (!treeContainer) return;
+  const savedOrder = getStoredRepoOrder();
+  if (!savedOrder || savedOrder.length === 0) return;
+
+  const currentNodes = Array.from(treeContainer.querySelectorAll(":scope > .repo-root-folder"));
+  if (currentNodes.length <= 1) return;
+
+  const nodeMap = new Map();
+  currentNodes.forEach(node => {
+    const id = node.getAttribute("data-repo-id");
+    if (id) nodeMap.set(id, node);
+  });
+
+  savedOrder.forEach(id => {
+    const node = nodeMap.get(id);
+    if (node) {
+      treeContainer.appendChild(node);
+      nodeMap.delete(id);
+    }
+  });
+
+  nodeMap.forEach(node => {
+    treeContainer.appendChild(node);
+  });
+}
+
+function updateRepoActionButtonsState() {
+  const treeContainer = document.getElementById("treeNodesContainer");
+  if (!treeContainer) return;
+  const roots = Array.from(treeContainer.querySelectorAll(":scope > .repo-root-folder"));
+  const total = roots.length;
+
+  roots.forEach((root, idx) => {
+    const upBtn = root.querySelector(".repo-up-btn");
+    const downBtn = root.querySelector(".repo-down-btn");
+    if (upBtn) upBtn.disabled = (idx === 0);
+    if (downBtn) downBtn.disabled = (idx === total - 1);
+  });
+}
+
+function moveRepo(repoId, direction, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const treeContainer = document.getElementById("treeNodesContainer");
+  if (!treeContainer) return;
+
+  const node = treeContainer.querySelector(`:scope > .repo-root-folder[data-repo-id="${repoId}"]`);
+  if (!node) return;
+
+  if (direction === "up") {
+    const prev = node.previousElementSibling;
+    if (prev && prev.classList.contains("repo-root-folder")) {
+      treeContainer.insertBefore(node, prev);
+    }
+  } else if (direction === "down") {
+    const next = node.nextElementSibling;
+    if (next && next.classList.contains("repo-root-folder")) {
+      treeContainer.insertBefore(next, node);
+    }
+  }
+
+  saveCurrentRepoOrder();
+  updateRepoActionButtonsState();
+
+  const manageModal = document.getElementById("manageReposModal");
+  if (manageModal && manageModal.classList.contains("active")) {
+    renderManageReposList();
+  }
+}
+
+function removeCustomRepo(id, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  if (!confirm("Are you sure you want to remove this repository from your session?")) {
+    return;
+  }
+
+  const customRepos = getStoredCustomRepos();
+  const filtered = customRepos.filter(r => r.id !== id);
+  localStorage.setItem("devops_hub_custom_repos", JSON.stringify(filtered));
+
+  const repoId = `custom_${id}`;
+  const node = document.querySelector(`.repo-root-folder[data-repo-id="${repoId}"]`);
+  if (node) {
+    node.remove();
+  }
+
+  const savedOrder = getStoredRepoOrder();
+  const updatedOrder = savedOrder.filter(item => item !== repoId);
+  localStorage.setItem("devops_hub_repo_order", JSON.stringify(updatedOrder));
+
+  updateRepoActionButtonsState();
+
+  const manageModal = document.getElementById("manageReposModal");
+  if (manageModal && manageModal.classList.contains("active")) {
+    renderManageReposList();
+  }
+
+  if (currentRepoId === repoId || currentRepoId.includes(id)) {
+    loadFileContent("training", "README.md");
+  }
+
+  showToast("Repository removed from session", "info");
+}
+
+function renderManageReposList() {
+  const listContainer = document.getElementById("manageReposList");
+  const treeContainer = document.getElementById("treeNodesContainer");
+  if (!listContainer || !treeContainer) return;
+
+  const roots = Array.from(treeContainer.querySelectorAll(":scope > .repo-root-folder"));
+  if (roots.length === 0) {
+    listContainer.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:1rem;">No repositories available.</p>`;
+    return;
+  }
+
+  let html = "";
+  roots.forEach((root, idx) => {
+    const repoId = root.getAttribute("data-repo-id") || "";
+    const labelElem = root.querySelector(".tree-label");
+    const name = labelElem ? labelElem.textContent.trim() : repoId;
+    const isCustom = repoId.startsWith("custom_");
+    const isFirst = (idx === 0);
+    const isLast = (idx === roots.length - 1);
+    const rawCustomId = isCustom ? repoId.replace(/^custom_/, "") : "";
+
+    html += `
+      <div class="manage-repo-item" data-repo-id="${escapeHtml(repoId)}">
+        <div class="manage-repo-info">
+          <span class="manage-repo-index">#${idx + 1}</span>
+          <i class="${isCustom ? 'fa-brands fa-github' : 'fa-solid fa-folder-tree'}" style="color:var(--primary); font-size:1.1rem; width:20px; text-align:center;"></i>
+          <div class="manage-repo-text">
+            <span class="manage-repo-name">${escapeHtml(name)}</span>
+            <span class="manage-repo-sub">${isCustom ? 'Custom Repository (Session)' : 'Default Permanent Repository'}</span>
+          </div>
+        </div>
+        <div class="manage-repo-btns">
+          <button type="button" class="btn btn-outline btn-sm" onclick="moveRepo('${escapeHtml(repoId)}', 'up', event)" ${isFirst ? 'disabled' : ''} title="Move Up">
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="moveRepo('${escapeHtml(repoId)}', 'down', event)" ${isLast ? 'disabled' : ''} title="Move Down">
+            <i class="fa-solid fa-arrow-down"></i>
+          </button>
+          ${isCustom ? `
+            <button type="button" class="btn btn-outline btn-sm" style="color:var(--danger); border-color:#fca5a5;" onclick="removeCustomRepo('${escapeHtml(rawCustomId)}', event)" title="Remove Repository">
+              <i class="fa-solid fa-trash-can"></i> Remove
+            </button>
+          ` : `
+            <span class="badge badge-outline" style="font-size:0.7rem; color:var(--text-muted); padding:0.3rem 0.5rem;">PERMANENT</span>
+          `}
+        </div>
+      </div>
+    `;
+  });
+
+  listContainer.innerHTML = html;
+}
+
+function initRepoDragAndDrop() {
+  const treeContainer = document.getElementById("treeNodesContainer");
+  if (!treeContainer) return;
+
+  let draggedNode = null;
+
+  treeContainer.addEventListener("dragstart", (e) => {
+    if (e.target.closest(".tree-children") || e.target.closest(".repo-action-btn")) {
+      e.preventDefault();
+      return;
+    }
+    const root = e.target.closest(".repo-root-folder");
+    if (!root) return;
+    draggedNode = root;
+    root.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", root.getAttribute("data-repo-id") || "");
+  });
+
+  treeContainer.addEventListener("dragover", (e) => {
+    if (!draggedNode) return;
+    const targetRoot = e.target.closest(".repo-root-folder");
+    if (!targetRoot || targetRoot === draggedNode) return;
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    const rect = targetRoot.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    if (e.clientY < midY) {
+      targetRoot.classList.add("drag-over-above");
+      targetRoot.classList.remove("drag-over-below");
+    } else {
+      targetRoot.classList.add("drag-over-below");
+      targetRoot.classList.remove("drag-over-above");
+    }
+  });
+
+  treeContainer.addEventListener("dragleave", (e) => {
+    const targetRoot = e.target.closest(".repo-root-folder");
+    if (targetRoot) {
+      targetRoot.classList.remove("drag-over-above", "drag-over-below");
+    }
+  });
+
+  treeContainer.addEventListener("drop", (e) => {
+    if (!draggedNode) return;
+    const targetRoot = e.target.closest(".repo-root-folder");
+    if (!targetRoot || targetRoot === draggedNode) return;
+
+    e.preventDefault();
+
+    const rect = targetRoot.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+
+    if (e.clientY < midY) {
+      treeContainer.insertBefore(draggedNode, targetRoot);
+    } else {
+      treeContainer.insertBefore(draggedNode, targetRoot.nextSibling);
+    }
+
+    targetRoot.classList.remove("drag-over-above", "drag-over-below");
+    saveCurrentRepoOrder();
+    updateRepoActionButtonsState();
+
+    const manageModal = document.getElementById("manageReposModal");
+    if (manageModal && manageModal.classList.contains("active")) {
+      renderManageReposList();
+    }
+  });
+
+  treeContainer.addEventListener("dragend", () => {
+    if (draggedNode) {
+      draggedNode.classList.remove("dragging");
+      draggedNode = null;
+    }
+    treeContainer.querySelectorAll(".repo-root-folder").forEach(el => {
+      el.classList.remove("drag-over-above", "drag-over-below");
+    });
+  });
 }
 
 function renderRecursiveCustomNodes(nodes, repoId, repoUrl, repoBranch, repoName) {
@@ -742,12 +1019,24 @@ function loadCustomReposIntoTree() {
     const rootNode = document.createElement("div");
     rootNode.className = "tree-node folder repo-root-folder expanded";
     rootNode.setAttribute("data-repo-id", repoId);
+    rootNode.setAttribute("draggable", "true");
     rootNode.innerHTML = `
       <div class="tree-node-row repo-root-row">
         <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
         <i class="fa-brands fa-github tree-icon" style="color:var(--primary);"></i>
         <span class="tree-label" style="font-weight:700;">${escapeHtml(repo.name)}</span>
         <span class="badge badge-outline" style="font-size:0.68rem; margin-left:auto;">CUSTOM</span>
+        <div class="repo-row-actions">
+          <button type="button" class="repo-action-btn repo-up-btn" onclick="moveRepo('${repoId}', 'up', event)" title="Move repository up" aria-label="Move up">
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+          <button type="button" class="repo-action-btn repo-down-btn" onclick="moveRepo('${repoId}', 'down', event)" title="Move repository down" aria-label="Move down">
+            <i class="fa-solid fa-arrow-down"></i>
+          </button>
+          <button type="button" class="repo-action-btn repo-delete-btn" onclick="removeCustomRepo('${repo.id}', event)" title="Remove custom repository" aria-label="Remove repository">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
       </div>
       <div class="tree-children" id="customTreeChildren_${repo.id}">
         <div style="padding:0.5rem 1rem; color:var(--text-muted); font-size:0.8rem;">
@@ -792,6 +1081,9 @@ function loadCustomReposIntoTree() {
         }
       });
   });
+
+  applyStoredRepoOrder();
+  updateRepoActionButtonsState();
 }
 
 function saveCustomRepo() {
@@ -825,8 +1117,14 @@ function saveCustomRepo() {
   if (nameInput) nameInput.value = "";
 
   loadCustomReposIntoTree();
+  saveCurrentRepoOrder();
+  updateRepoActionButtonsState();
   loadLiveCustomRepo(url, branch, name, "README.md");
 }
+
+window.moveRepo = moveRepo;
+window.removeCustomRepo = removeCustomRepo;
+window.renderManageReposList = renderManageReposList;
 
 function loadLiveCustomRepo(url, branch, name, filePath = "README.md") {
   const contentBody = document.getElementById("trainingContentBody");

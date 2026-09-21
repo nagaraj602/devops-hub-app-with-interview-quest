@@ -13,9 +13,14 @@
         <span style="font-size:0.88rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
           <i class="fa-solid fa-folder-tree" style="color:var(--primary);"></i> Knowledge Repos
         </span>
-        <button type="button" class="btn btn-outline btn-sm" id="openAddRepoModalBtn" title="Add Custom Public GitHub Repo (Saved in Browser Session)">
-          <i class="fa-solid fa-plus"></i> Add
-        </button>
+        <div style="display:flex; align-items:center; gap:0.35rem;">
+          <button type="button" class="btn btn-outline btn-sm" id="openManageReposModalBtn" title="Reorder and manage repositories">
+            <i class="fa-solid fa-arrow-down-up-across-line"></i> Reorder
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" id="openAddRepoModalBtn" title="Add Custom Public GitHub Repo (Saved in Browser Session)">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
       </div>
 
       <!-- Search Wrapper: Tree Filter & Full-Text Search -->
@@ -66,12 +71,20 @@
 
       {% if trees %}
         {% for root in trees %}
-        <div class="tree-node folder repo-root-folder expanded" data-repo-id="{{ root.repo_id }}">
+        <div class="tree-node folder repo-root-folder expanded" data-repo-id="{{ root.repo_id }}" draggable="true">
           <div class="tree-node-row repo-root-row">
             <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
             <i class="fa-solid {{ root.icon }} tree-icon" style="color:var(--primary);"></i>
             <span class="tree-label" style="font-weight:700;">{{ root.name }}</span>
             <span class="badge badge-outline" style="font-size:0.68rem; margin-left:auto; text-transform:uppercase;">{{ root.repo_id }}</span>
+            <div class="repo-row-actions">
+              <button type="button" class="repo-action-btn repo-up-btn" onclick="moveRepo('{{ root.repo_id }}', 'up', event)" title="Move repository up" aria-label="Move up">
+                <i class="fa-solid fa-arrow-up"></i>
+              </button>
+              <button type="button" class="repo-action-btn repo-down-btn" onclick="moveRepo('{{ root.repo_id }}', 'down', event)" title="Move repository down" aria-label="Move down">
+                <i class="fa-solid fa-arrow-down"></i>
+              </button>
+            </div>
           </div>
           <div class="tree-children">
             {{ render_tree_nodes(root.children) }}
@@ -174,6 +187,30 @@
       <button type="button" class="btn btn-primary btn-sm" id="saveCustomRepoBtn">
         <i class="fa-solid fa-plus"></i> Add to Session
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage & Reorder Repositories Modal -->
+<div class="modal-overlay" id="manageReposModal">
+  <div class="modal-content" style="max-width: 560px;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-arrow-down-up-across-line" style="color:var(--primary);"></i>
+        <span>Manage & Reorder Repositories</span>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeModal('manageReposModal')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">
+        Reorder repository positions or remove custom repositories from your browser session. Default repositories remain permanent.
+      </p>
+      <div class="manage-repos-list" id="manageReposList"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('manageReposModal')">Close</button>
     </div>
   </div>
 </div>

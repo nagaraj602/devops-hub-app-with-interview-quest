@@ -150,6 +150,138 @@
   display: block;
 }
 
+/* ==============================================================================
+   Repository Reordering, Action Buttons & Manage Modal
+   ============================================================================== */
+.repo-root-folder {
+  margin-bottom: 0.5rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.repo-root-folder.dragging {
+  opacity: 0.45;
+  background-color: var(--primary-light);
+}
+
+.repo-root-folder.drag-over-above {
+  border-top: 2px solid var(--primary) !important;
+}
+
+.repo-root-folder.drag-over-below {
+  border-bottom: 2px solid var(--primary) !important;
+}
+
+.repo-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.45rem;
+}
+
+.repo-action-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.repo-action-btn:hover:not(:disabled) {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+
+.repo-action-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.repo-delete-btn:hover:not(:disabled) {
+  background-color: #fee2e2 !important;
+  color: var(--danger) !important;
+  border-color: #fca5a5 !important;
+}
+
+/* Manage Repositories Modal */
+.manage-repos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.manage-repo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.manage-repo-item:hover {
+  border-color: var(--primary-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.manage-repo-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.manage-repo-index {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  width: 24px;
+}
+
+.manage-repo-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.manage-repo-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.manage-repo-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.manage-repo-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
 /* Right Content Viewer */
 .content-viewer {
   background-color: #ffffff;

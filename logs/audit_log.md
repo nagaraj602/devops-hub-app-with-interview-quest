@@ -23,6 +23,7 @@ This document serves as the continuous, human-readable system log persisted dire
 | 2026-09-21 15:15:00 | Release v1.0.3 | Flowchart Embedded Screenshots, Margin Fix, Calendar Current Date & Button Highlighting | Embedded screenshots natively in Mermaid flowchart, separated vertical dock with 80px margin, defaulted calendar to current date with full-size layout, enabled toggle release on favorites, and added dynamic active button highlighting | Antigravity Assistant |
 | 2026-09-21 15:40:00 | Release v1.0.4 | Revert Calendar Button to Full-Size Stat Card & Restore Compact Split Calendar Modal | Reverted calendar button to original interactive stat card size/style at top of content, removed small calendar toolbar button, and restored compact split calendar layout with side-by-side day events panel | Antigravity Assistant |
 | 2026-09-21 15:50:00 | Release v1.0.5 | Calendar Round Event Listing & Direct Round Navigation | Fixed calendar round listing on date click (resolved escapeHtml definition), added exact date parsing, and enabled direct navigation to expand and highlight selected company round in Question Bank | Antigravity Assistant |
+| 2026-09-21 16:10:00 | Release v1.0.6 | Custom Repo Reordering & Deletion in Training Materials | Added move up/down controls, drag-and-drop reordering, repo management modal, and removal of custom repositories from session with confirmation | Antigravity Assistant |
 
 ## Active Repositories Monitored
 
