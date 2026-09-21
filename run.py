@@ -64,7 +64,7 @@ def main():
     print("DevOps Knowledge Portal & Interview Hub (Multi-Port Engine)")
     print("=" * 70)
     print(f"  * Public Web Portal  : http://{HOST}:{PORT}")
-    print(f"  * Admin Private Hub  : http://{HOST}:{ADMIN_PORT} (and /admin)")
+    print(f"  * Admin Private Hub  : http://{HOST}:{ADMIN_PORT}")
     print("=" * 70)
 
     try:

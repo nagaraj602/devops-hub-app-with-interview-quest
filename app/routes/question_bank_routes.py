@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from typing import Optional
 from app.services.question_bank_service import question_bank_service
 from app.services.page_visibility_service import page_visibility_service
-from app.routes.admin_routes import is_admin_request
+from app.routes.admin_routes import is_admin_request, is_admin_server_request, admin_portal_view
 from app.config import DEFAULT_REPOS
 
 router = APIRouter()
@@ -20,6 +20,9 @@ page_visibility_service.add_on_change_callback(invalidate_qb_html_cache)
 @router.get("/", response_class=HTMLResponse)
 @router.get("/question-bank", response_class=HTMLResponse)
 async def question_bank_view(request: Request, category: Optional[str] = "All", search: Optional[str] = ""):
+    # 1. On dedicated admin port (9256) / admin domain, '/' loads the Admin Dashboard directly
+    if request.url.path == "/" and is_admin_server_request(request):
+        return await admin_portal_view(request)
     # Check if Question Bank is currently published
     if not page_visibility_service.is_page_published("question_bank") and not is_admin_request(request):
         if request.url.path == "/":

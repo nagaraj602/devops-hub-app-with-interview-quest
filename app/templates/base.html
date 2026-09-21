@@ -75,7 +75,7 @@
   <header class="site-header">
     <div class="app-container header-inner">
       <!-- Brand / Logo -->
-      <a href="{{ get_home_url() }}" class="brand-group">
+      <a href="{% if user_is_admin and active_page == 'admin' %}/{% else %}{{ get_home_url() }}{% endif %}" class="brand-group">
         <div class="brand-icon">
           <i class="fa-solid fa-cloud-bolt"></i>
         </div>
@@ -120,7 +120,7 @@
         </a>
         {% endif %}
         {% if user_is_admin %}
-        <a href="/admin" class="nav-link {% if active_page == 'admin' %}active{% endif %}" style="color:var(--primary); font-weight:700;">
+        <a href="/" class="nav-link {% if active_page == 'admin' %}active{% endif %}" style="color:var(--primary); font-weight:700;">
           <i class="fa-solid fa-shield-halved"></i>
           <span>Admin Portal</span>
         </a>
@@ -183,7 +183,7 @@
       </a>
       {% endif %}
       {% if user_is_admin %}
-      <a href="/admin" class="nav-link {% if active_page == 'admin' %}active{% endif %}">
+      <a href="/" class="nav-link {% if active_page == 'admin' %}active{% endif %}">
         <i class="fa-solid fa-shield-halved"></i>
         <span>Admin Portal</span>
       </a>

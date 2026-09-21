@@ -41,3 +41,6 @@ This document serves as the continuous, human-readable system log persisted dire
 | 2026-09-21 21:44:29 | Page Visibility Changed | Menu: Question Bank | Status set to Hidden (Unpublished) (previous: Published) | Admin Portal (Web UI) |
 | 2026-09-21 21:44:29 | Page Visibility Changed | Menu: Question Bank | Status set to Published (Active) (previous: Hidden) | Admin Portal (Web UI) |
 | 2026-09-21 21:45:00 | Release v1.0.10 | Hidden Admin Portal & Dynamic Page Visibility | Added private Admin Portal at port 9256 & admin.sidorea.shop with publish/unpublished toggles for Question Bank, Project, Training, Cheatsheets, and App Logs with friendly 403 notices and zero external DB | Antigravity Assistant |
+| 2026-09-21 22:57:36 | Page Visibility Changed | Menu: Training Materials | Status set to Hidden (Unpublished) (previous: Published) | Admin Portal (Web UI) |
+| 2026-09-21 22:57:36 | Page Visibility Changed | Menu: Training Materials | Status set to Published (Active) (previous: Hidden) | Admin Portal (Web UI) |
+| 2026-09-21 23:00:00 | Release v1.0.11 | Admin Port Separation & Path Isolation | Restricted admin dashboard exclusively to port 9256 & admin.sidorea.shop root / without /admin prefix; blocked /admin on public port 8926 (returns 404) | Antigravity Assistant |

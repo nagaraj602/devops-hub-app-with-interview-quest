@@ -18,7 +18,7 @@ from app.routes.training_routes import router as training_router
 from app.routes.cheatsheet_routes import router as cheatsheet_router
 from app.routes.sync_routes import router as sync_router
 from app.routes.api_routes import router as api_router
-from app.routes.admin_routes import router as admin_router, is_admin_request
+from app.routes.admin_routes import router as admin_router, is_admin_request, is_admin_server_request
 from app.services.page_visibility_service import page_visibility_service
 
 # Lifespan startup pre-warm handler: pre-loads in-memory data caches before user traffic arrives
@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="DevOps Knowledge Portal & Interview Hub",
     description="Universal DevOps Interview Questions, Project Architecture, Training Materials & Command Cheatsheets",
-    version="1.0.10",
+    version="1.0.11",
     lifespan=lifespan
 )
 
@@ -57,21 +57,34 @@ class StaticCacheMiddleware(BaseHTTPMiddleware):
 app.add_middleware(StaticCacheMiddleware)
 
 # 3. Dedicated Admin Domain & Port Routing Middleware
-# Automatically routes requests on admin.sidorea.shop or port 9256 from '/' to '/admin'
+# Ensures:
+# - On public port (8926): /admin and /api/admin paths do NOT work (returns 404)
+# - On dedicated admin port (9256): do NOT add /admin to URL; if /admin is visited, redirect to '/'
 class AdminHostRoutingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        host_header = (request.headers.get("host") or "").lower()
-        host_without_port = host_header.split(":")[0]
-        port = None
-        if ":" in host_header:
-            try:
-                port = int(host_header.split(":")[1])
-            except ValueError:
-                pass
+        is_admin_entry = is_admin_server_request(request)
 
-        is_admin_entry = (host_without_port.startswith("admin.") or port == ADMIN_PORT)
-        if is_admin_entry and request.url.path == "/":
-            return RedirectResponse(url="/admin", status_code=307)
+        # 1. On public port 8926 / non-admin domain: /admin and /api/admin paths must NOT work
+        if not is_admin_entry:
+            if request.url.path in ("/admin", "/admin/") or request.url.path.startswith("/admin/") or request.url.path.startswith("/api/admin"):
+                return request.app.state.templates.TemplateResponse(
+                    request=request,
+                    name="404.html",
+                    context={
+                        "page_title": "Page Not Found",
+                        "active_page": "404"
+                    },
+                    status_code=404
+                )
+            return await call_next(request)
+
+        # 2. On dedicated admin port 9256 / admin.sidorea.shop:
+        # Don't add /admin when admin dashboard itself is accessed at :9256. If /admin requested, redirect to '/'
+        if request.url.path in ("/admin", "/admin/"):
+            redirect_url = "/"
+            if request.url.query:
+                redirect_url += f"?{request.url.query}"
+            return RedirectResponse(url=redirect_url, status_code=307)
 
         return await call_next(request)
 

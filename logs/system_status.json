@@ -9,10 +9,10 @@
     "total_rounds": 70,
     "tech_categories": 18
   },
-  "last_synced": "2026-09-21 21:45:00",
+  "last_synced": "2026-09-21 22:57:36",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "admin_port": 9256,
-  "last_event": "Release v1.0.10 - Hidden Admin Portal & Dynamic Page Visibility"
+  "last_event": "Release v1.0.11 - Admin Port Separation & Path Isolation"
 }

@@ -150,18 +150,17 @@
       <!-- Localhost Access -->
       <div class="admin-guide-box">
         <h4><i class="fa-solid fa-laptop-code" style="color:#0284c7;"></i> Localhost Access</h4>
-        <p>Access the admin portal locally using either the dedicated port <strong>{{ admin_port }}</strong> or the main app route:</p>
-        <pre class="admin-guide-code">http://localhost:{{ admin_port }}/
-http://localhost:{{ main_port }}/admin</pre>
+        <p>Access the admin portal directly on dedicated port <strong>{{ admin_port }}</strong> (blocked on public port {{ main_port }}):</p>
+        <pre class="admin-guide-code">http://localhost:{{ admin_port }}/</pre>
         <p style="margin-top:0.6rem; font-size:0.78rem; color:var(--text-muted);">
-          Docker Desktop Kubernetes routes port 9256 via Service NodePort <code>30956</code>.
+          Docker Desktop Kubernetes routes port 9256 directly to <code>localhost:9256</code> (NodePort <code>30956</code>).
         </p>
       </div>
 
       <!-- Cloudflare Tunnel Access on GCP -->
       <div class="admin-guide-box">
         <h4><i class="fa-solid fa-cloud" style="color:#f59e0b;"></i> Cloudflare Tunnel on GCP</h4>
-        <p>In your Cloudflare Tunnel configuration on GCP (<code>/etc/cloudflared/config.yml</code>), add the ingress rule for <strong>admin.sidorea.shop</strong>:</p>
+        <p>In your Cloudflare Tunnel configuration on GCP (<code>/etc/cloudflared/config.yml</code>) or Cloudflare Dashboard Public Hostnames, route <strong>admin.sidorea.shop</strong> to port {{ admin_port }}:</p>
         <pre class="admin-guide-code">ingress:
   - hostname: admin.sidorea.shop
     service: http://localhost:{{ admin_port }}
