@@ -76,6 +76,22 @@
 
   <!-- Main Content Body with Left Margin Separation from Vertical Dock -->
   <div class="qb-content-body">
+    <!-- Top Interview Calendar Trigger Card (Reverted to Original Stat Card Size & Style) -->
+    <div class="qb-calendar-card-wrap">
+      <div class="stat-card stat-card-interactive qb-calendar-stat-card" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
+        <div class="stat-icon indigo" style="background:#eef2ff; color:var(--primary);">
+          <i class="fa-regular fa-calendar-days"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Interview Calendar</span>
+          <span class="stat-value" style="font-size:1.15rem; display:flex; align-items:center; gap:0.35rem;">
+            Calendar <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; color:var(--primary);"></i>
+          </span>
+          <span class="stat-desc">Month-wise Dates</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Category Filter Pills Bar -->
     <section class="category-filter-wrap">
       <!-- All Category Pill -->
@@ -111,12 +127,6 @@
 
       <!-- Action Controls -->
       <div class="action-buttons-group">
-        <!-- Interview Calendar Button (Prominently placed in Action Toolbar) -->
-        <button type="button" class="btn btn-secondary qb-calendar-btn" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
-          <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
-          <span>Interview Calendar</span>
-        </button>
-
         <!-- Expand / Collapse All Companies -->
         <button type="button" class="btn btn-secondary qb-toggle-btn" id="expandAllCompaniesBtn" title="Expand all company & round containers">
           <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
@@ -274,9 +284,9 @@
   </div><!-- end qb-content-body -->
 </div><!-- end qb-page-layout -->
 
-<!-- Calendar Pop-Up Modal (Original Full-Size Layout) -->
+<!-- Calendar Pop-Up Modal (Split Layout: Compact Calendar Grid + Prominent Side-by-Side Interview List) -->
 <div class="modal-overlay" id="calendarModal">
-  <div class="modal-content" style="max-width:720px;">
+  <div class="modal-content" style="max-width:840px;">
     <div class="modal-header">
       <div class="modal-title">
         <i class="fa-regular fa-calendar-days" style="color:var(--primary);"></i>
@@ -287,32 +297,50 @@
       </button>
     </div>
     <div class="modal-body calendar-modal-body">
-      <div class="calendar-nav-bar">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">
-          <i class="fa-solid fa-chevron-left"></i> Prev
-        </button>
-        <span class="calendar-month-title" id="calendarMonthTitle">September 2026</span>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">
-          Next <i class="fa-solid fa-chevron-right"></i>
-        </button>
-      </div>
+      <div class="calendar-modal-split">
+        <!-- Left Side: Compact Calendar -->
+        <div class="calendar-left-col">
+          <div class="calendar-nav-bar">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">
+              <i class="fa-solid fa-chevron-left"></i> Prev
+            </button>
+            <span class="calendar-month-title" id="calendarMonthTitle">September 2026</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">
+              Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
 
-      <div class="calendar-grid-header">
-        <div>Mon</div>
-        <div>Tue</div>
-        <div>Wed</div>
-        <div>Thu</div>
-        <div>Fri</div>
-        <div>Sat</div>
-        <div>Sun</div>
-      </div>
+          <div class="calendar-grid-header">
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+            <div>Sun</div>
+          </div>
 
-      <div class="calendar-grid-days" id="calendarGridDays"></div>
+          <div class="calendar-grid-days" id="calendarGridDays"></div>
+        </div>
 
-      <!-- Selected Day Details Panel -->
-      <div class="selected-day-events-panel" id="selectedDayEventsPanel">
-        <h4 class="selected-day-events-title" id="selectedDayTitle">Interviews on 21 September 2026:</h4>
-        <div class="selected-day-events-list" id="selectedDayEventsList"></div>
+        <!-- Right Side: Eye-Catching Selected Date Events View -->
+        <div class="calendar-right-col">
+          <div class="selected-day-events-panel" id="selectedDayEventsPanel">
+            <div class="selected-day-header">
+              <div class="selected-day-icon"><i class="fa-solid fa-calendar-check"></i></div>
+              <div>
+                <h4 class="selected-day-events-title" id="selectedDayTitle">Select a Date</h4>
+                <span class="selected-day-subtitle" id="selectedDaySubtitle">Click on any date with rounds</span>
+              </div>
+            </div>
+            <div class="selected-day-events-list" id="selectedDayEventsList">
+              <div class="calendar-empty-hint">
+                <i class="fa-regular fa-hand-pointer" style="font-size:1.5rem; color:var(--primary); margin-bottom:0.5rem;"></i>
+                <p>Select any highlighted date on the left to see interview rounds & companies.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
