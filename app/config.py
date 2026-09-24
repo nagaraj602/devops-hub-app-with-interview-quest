@@ -46,7 +46,7 @@ DEFAULT_REPOS = {
     "training": {
         "name": "ArtisanTek Training Materials",
         "url": "https://github.com/artisantek/training-materials.git",
-        "branch": "main",
+        "branch": "master",
         "description": "Comprehensive DevOps hands-on curriculum, labs, AWS, K8s, Jenkins, and Linux modules."
     }
 }

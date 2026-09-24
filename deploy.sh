@@ -18,7 +18,7 @@ RESET="\033[0m"
 # Default configuration
 DEFAULT_IMAGE_NAME="nagarajkamath602/devops-hub-app-with-interview-quest"
 DEFAULT_TAG="latest"
-DEFAULT_VERSION="1.0.11"
+DEFAULT_VERSION="1.0.12"
 PORT="8926"
 ADMIN_PORT="9256"
 K8S_MANIFEST="k8s/all-in-one.yaml"

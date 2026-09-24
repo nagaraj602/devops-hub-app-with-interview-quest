@@ -147,6 +147,21 @@ class GitStorageService:
             cluster_details = "K8s Cluster: Docker Desktop • Namespace: devops-hub • Service: devops-hub-service:8926"
             workload_status = "1/1 Pods Running"
 
+        # Dynamic totals
+        try:
+            from app.services.question_bank_service import question_bank_service
+            qb_stats = question_bank_service.get_data().get("stats", {})
+            qb_details = f"{qb_stats.get('total_questions', 1269):,} Questions • {qb_stats.get('total_companies', 52)} Companies • {qb_stats.get('total_rounds', 70)} Rounds • {qb_stats.get('tech_categories_count', 18)} Tech Categories"
+        except Exception:
+            qb_details = "1,269 Questions • 52 Companies • 70 Rounds • 18 Tech Categories"
+
+        try:
+            from app.services.cheatsheet_service import cheatsheet_service
+            cs_count = len(cheatsheet_service.get_data().get("all_items", []))
+            cs_details = f"{cs_count} Curated CLI & Manifest Examples • Shell, K8s Manifests, Terraform, Ansible"
+        except Exception:
+            cs_details = "16 Tech Categories • Shell, K8s Manifests, Terraform, Ansible"
+
         components = [
             {
                 "name": "FastAPI Core Application Server",
@@ -181,7 +196,7 @@ class GitStorageService:
                 "status": "UP",
                 "is_up": True,
                 "color": "green",
-                "details": "1,269 Questions • 52 Companies • 70 Rounds • 18 Tech Categories",
+                "details": qb_details,
                 "uptime": "Indexed & Searchable"
             },
             {
@@ -199,7 +214,7 @@ class GitStorageService:
                 "status": "UP",
                 "is_up": True,
                 "color": "green",
-                "details": "16 Tech Categories • Shell, K8s Manifests, Terraform, Ansible",
+                "details": cs_details,
                 "uptime": "Operational"
             }
         ]
