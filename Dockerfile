@@ -1,12 +1,12 @@
 # ==========================================
 # Stage 1: Build & Python Dependencies (Ubuntu Base)
 # ==========================================
-FROM ubuntu:24.04 AS builder
+FROM ubuntu:26.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     python3 \
     python3-pip \
     python3-venv \
@@ -26,7 +26,7 @@ RUN python3 -m venv /install/venv && \
 # ==========================================
 # Stage 2: Final Production Runtime Image (Ubuntu Base)
 # ==========================================
-FROM ubuntu:24.04 AS runner
+FROM ubuntu:26.04 AS runner
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -35,7 +35,7 @@ ENV PATH="/install/venv/bin:$PATH"
 WORKDIR /app
 
 # Install runtime system packages on Ubuntu
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     python3 \
     git \
     curl \
