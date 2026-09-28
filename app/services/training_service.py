@@ -9,9 +9,27 @@ class TrainingService:
     def __init__(self, training_dir: Optional[str] = None, notes_dir: Optional[str] = None):
         self.training_dir = Path(training_dir or TRAINING_MATERIALS_DIR)
         self.notes_dir = Path(notes_dir or NOTES_DIR)
+        self._cached_combined_trees: Optional[List[Dict[str, Any]]] = None
+        self._cached_repo_trees: Dict[str, Dict[str, Any]] = {}
+        self._on_refresh_callbacks: List[Any] = []
 
-    def get_combined_trees(self) -> List[Dict[str, Any]]:
-        """Returns folder trees for both default repositories (ArtisanTek Training and DevOps Notes)."""
+    def add_on_refresh_callback(self, cb):
+        self._on_refresh_callbacks.append(cb)
+
+    def invalidate_cache(self):
+        self._cached_combined_trees = None
+        self._cached_repo_trees.clear()
+        for cb in self._on_refresh_callbacks:
+            try:
+                cb()
+            except Exception:
+                pass
+
+    def get_combined_trees(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
+        """Returns folder trees for both default repositories (cached in-memory for instant loading)."""
+        if self._cached_combined_trees is not None and not force_refresh:
+            return self._cached_combined_trees
+
         trees = []
 
         # 1. ArtisanTek Training Materials
@@ -36,10 +54,14 @@ class TrainingService:
                 "children": self._scan_directory(self.notes_dir, self.notes_dir, "notes")
             })
 
-        return trees
+        self._cached_combined_trees = trees
+        return self._cached_combined_trees
 
-    def get_repo_tree(self, repo_id: str) -> Dict[str, Any]:
-        """Builds hierarchical folder/file tree for a repository."""
+    def get_repo_tree(self, repo_id: str, force_refresh: bool = False) -> Dict[str, Any]:
+        """Builds hierarchical folder/file tree for a repository (cached in-memory)."""
+        if not force_refresh and repo_id in self._cached_repo_trees:
+            return self._cached_repo_trees[repo_id]
+
         if repo_id == "training":
             root_dir = self.training_dir
             repo_name = "ArtisanTek Training Materials"
@@ -54,9 +76,11 @@ class TrainingService:
             icon = "fa-folder"
 
         if not root_dir.exists():
-            return {"repo_id": repo_id, "name": repo_name, "icon": icon, "type": "directory", "children": []}
+            res = {"repo_id": repo_id, "name": repo_name, "icon": icon, "type": "directory", "children": []}
+            self._cached_repo_trees[repo_id] = res
+            return res
 
-        return {
+        tree_res = {
             "repo_id": repo_id,
             "name": repo_name,
             "icon": icon,
@@ -64,21 +88,26 @@ class TrainingService:
             "path": "",
             "children": self._scan_directory(root_dir, root_dir, repo_id)
         }
+        self._cached_repo_trees[repo_id] = tree_res
+        return tree_res
 
     def _scan_directory(self, current_dir: Path, base_dir: Path, repo_id: str = "training") -> List[Dict[str, Any]]:
         nodes = []
+        c_str = str(current_dir)
+        b_str = str(base_dir)
         try:
-            entries = sorted(list(current_dir.iterdir()), key=lambda e: (not e.is_dir(), e.name.lower()))
-            for entry in entries:
-                # Skip hidden or ignored files
-                if entry.name.startswith(".") or entry.name == "devops-notes-portal-web-app":
-                    continue
+            with os.scandir(c_str) as it:
+                entries = []
+                for entry in it:
+                    if entry.name.startswith(".") or entry.name == "devops-notes-portal-web-app":
+                        continue
+                    entries.append(entry)
 
-                rel_path = str(entry.relative_to(base_dir)).replace("\\", "/")
-
-                if entry.is_dir():
-                    children = self._scan_directory(entry, base_dir, repo_id)
-                    if children or not any(entry.iterdir()):
+                entries.sort(key=lambda e: (not e.is_dir(), e.name.lower()))
+                for entry in entries:
+                    rel_path = os.path.relpath(entry.path, b_str).replace("\\", "/")
+                    if entry.is_dir():
+                        children = self._scan_directory(Path(entry.path), base_dir, repo_id)
                         nodes.append({
                             "repo_id": repo_id,
                             "name": entry.name,
@@ -86,15 +115,16 @@ class TrainingService:
                             "path": rel_path,
                             "children": children
                         })
-                else:
-                    if entry.suffix.lower() in [".md", ".txt", ".yaml", ".yml", ".json", ".sh", ".py", ".png", ".jpg", ".jpeg", ".svg"]:
-                        nodes.append({
-                            "repo_id": repo_id,
-                            "name": entry.name,
-                            "type": "file",
-                            "path": rel_path,
-                            "extension": entry.suffix.lower().lstrip(".")
-                        })
+                    else:
+                        ext = os.path.splitext(entry.name)[1].lower()
+                        if ext in [".md", ".txt", ".yaml", ".yml", ".json", ".sh", ".py", ".png", ".jpg", ".jpeg", ".svg"]:
+                            nodes.append({
+                                "repo_id": repo_id,
+                                "name": entry.name,
+                                "type": "file",
+                                "path": rel_path,
+                                "extension": ext.lstrip(".")
+                            })
         except Exception as e:
             print(f"Error scanning directory {current_dir}: {e}")
 

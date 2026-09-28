@@ -29,9 +29,25 @@ def render_md(text: str) -> str:
 class ProjectService:
     def __init__(self, project_path: Optional[str] = None):
         self.project_path = Path(project_path or PROJECT_FILE)
+        self._cached_project_data: Optional[Dict[str, Any]] = None
+        self._on_refresh_callbacks: List[Any] = []
 
-    def get_project_data(self) -> Dict[str, Any]:
+    def add_on_refresh_callback(self, cb):
+        self._on_refresh_callbacks.append(cb)
+
+    def invalidate_cache(self):
+        self._cached_project_data = None
+        for cb in self._on_refresh_callbacks:
+            try:
+                cb()
+            except Exception:
+                pass
+
+    def get_project_data(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Loads and returns the exact Project documentation matching Project file & Screenshot_2026_0920_214720.jpg."""
+        if self._cached_project_data is not None and not force_refresh:
+            return self._cached_project_data
+
         # Render HTML for all crucial deep-dive questions
         deep_dives = []
         for q in CRUCIAL_INTERVIEW_QUESTIONS:
@@ -39,7 +55,7 @@ class ProjectService:
             q_copy["detailed_answer_html"] = render_md(q["detailed_answer"].strip())
             deep_dives.append(q_copy)
 
-        return {
+        self._cached_project_data = {
             "title": "E-Commerce - Marketplace Risk Detection Platform",
             "guide_badge": "Project Architecture & Guide",
             "overview_paragraphs": [
@@ -234,5 +250,6 @@ Once the release is validated in UAT, a PR is raised from `staging` into `master
             "additional_questions": deep_dives,
             "cluster_sizing_specs": CLUSTER_SIZING_SPECS
         }
+        return self._cached_project_data
 
 project_service = ProjectService()

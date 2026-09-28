@@ -17,6 +17,8 @@
   box-shadow: var(--shadow-card);
   overflow: hidden;
   transition: all 0.15s ease-in-out;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 100px;
 }
 
 .company-card:hover {
@@ -26,6 +28,7 @@
 
 .company-card.expanded {
   border-color: #c7d2fe;
+  contain-intrinsic-size: 0 400px;
 }
 
 /* Company Header */
