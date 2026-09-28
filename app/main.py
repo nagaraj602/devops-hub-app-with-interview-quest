@@ -29,6 +29,7 @@ async def lifespan(app: FastAPI):
         from app.services.cheatsheet_service import cheatsheet_service
         from app.services.project_service import project_service
         from app.services.training_service import training_service
+        from app.services.sync_service import sync_service
         # Pre-warm all data caches in memory
         question_bank_service.get_data()
         cheatsheet_service.get_data()
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI):
         training_service.get_combined_trees()
         training_service.get_repo_tree("training")
         training_service.get_repo_tree("notes")
+        sync_service.get_sync_status()
     except Exception as e:
         print(f"Lifespan pre-warm notice: {e}")
     yield
@@ -44,7 +46,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="DevOps Knowledge Portal & Interview Hub",
     description="Universal DevOps Interview Questions, Project Architecture, Training Materials & Command Cheatsheets",
-    version="1.0.13",
+    version="1.0.14",
     lifespan=lifespan
 )
 

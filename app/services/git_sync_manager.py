@@ -26,6 +26,7 @@ class GitSyncManager:
         self.notes_repo_dir = self.repos_dir / "notes"
         self.training_repo_dir = self.repos_dir / "training"
         self.repos_dir.mkdir(parents=True, exist_ok=True)
+        self._commit_cache: Dict[str, str] = {}
 
     def _get_git_executable(self) -> str:
         return shutil.which("git") or "git"
@@ -120,6 +121,7 @@ class GitSyncManager:
                 "commit": "local",
                 "message": f"Could not pull from remote: {msg}. Using existing local files."
             }
+        self._commit_cache["notes"] = commit_hash
 
         # 1. Sync Old Interview Questions
         source_questions_dir = self.notes_repo_dir / "Old Interview Questions"
@@ -187,6 +189,7 @@ class GitSyncManager:
                 "commit": "local",
                 "message": f"Training materials sync notice: {msg}"
             }
+        self._commit_cache["training"] = commit_hash
 
         # Mirror into TRAINING_MATERIALS_DIR
         target_dir = Path(TRAINING_MATERIALS_DIR)
@@ -207,31 +210,46 @@ class GitSyncManager:
             "message": f"Successfully synchronized ArtisanTek training materials (commit {commit_hash})."
         }
 
-    def get_repo_commit(self, repo_id: str) -> str:
-        """Returns the current local Git commit hash for the specified repository."""
+    def invalidate_commit_cache(self, repo_id: Optional[str] = None):
+        """Invalidates cached git commit hashes so they are re-queried on next access."""
+        if repo_id:
+            self._commit_cache.pop(repo_id, None)
+        else:
+            self._commit_cache.clear()
+
+    def get_repo_commit(self, repo_id: str, force_refresh: bool = False) -> str:
+        """Returns the current local Git commit hash for the specified repository (cached in memory)."""
+        if not force_refresh and repo_id in self._commit_cache:
+            return self._commit_cache[repo_id]
+
+        commit_hash = "Ready"
         if repo_id == "notes":
             if (self.notes_repo_dir / ".git").is_dir():
                 _, commit, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=self.notes_repo_dir)
                 if commit:
-                    return commit
-            local_scratch = BASE_DIR / "scratch" / "notes_repo"
-            if (local_scratch / ".git").is_dir():
-                _, commit, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=local_scratch)
-                if commit:
-                    return commit
-            return "origin/main"
+                    commit_hash = commit
+            else:
+                local_scratch = BASE_DIR / "scratch" / "notes_repo"
+                if (local_scratch / ".git").is_dir():
+                    _, commit, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=local_scratch)
+                    if commit:
+                        commit_hash = commit
+                else:
+                    commit_hash = "origin/main"
 
         elif repo_id == "training":
             if (self.training_repo_dir / ".git").is_dir():
                 _, commit, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=self.training_repo_dir)
                 if commit:
-                    return commit
-            return "master"
+                    commit_hash = commit
+            else:
+                commit_hash = "master"
 
         elif repo_id == "hub_storage":
             _, commit, _ = self._run_git(["rev-parse", "--short", "HEAD"], cwd=BASE_DIR)
-            return commit or "main"
+            commit_hash = commit or "main"
 
-        return "Ready"
+        self._commit_cache[repo_id] = commit_hash
+        return commit_hash
 
 git_sync_manager = GitSyncManager()
