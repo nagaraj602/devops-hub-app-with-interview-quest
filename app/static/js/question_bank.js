@@ -483,7 +483,7 @@ function dateKeyMatches(key, d, month, year) {
 }
 
 // Opens the specific company and round directly in the Question Bank list
-function openRoundInQuestionBank(companyName, roundName) {
+function openRoundInQuestionBank(companyName, roundName, eventDate) {
   closeModal("calendarModal");
 
   // 1. Reset category filter to "All" so all companies and rounds are searchable
@@ -505,13 +505,27 @@ function openRoundInQuestionBank(companyName, roundName) {
   // 4. Apply filters to show all company cards
   applyFilters();
 
-  // 5. Locate the company card
+  // 5. Locate the company card (prioritizing matching event date if provided)
   const compCards = Array.from(document.querySelectorAll(".company-card"));
-  const targetCard = compCards.find(c => {
-    const cName = (c.dataset.companyName || "").trim().toLowerCase();
-    const query = (companyName || "").trim().toLowerCase();
-    return cName === query || cName.includes(query) || query.includes(cName);
-  });
+  const query = (companyName || "").trim().toLowerCase();
+  const cleanEventDate = (eventDate || "").trim().split(" ")[0].toLowerCase();
+
+  let targetCard = null;
+  if (cleanEventDate) {
+    targetCard = compCards.find(c => {
+      const cName = (c.dataset.companyName || "").trim().toLowerCase();
+      const cDate = (c.dataset.companyDate || "").trim().toLowerCase();
+      const nameMatch = cName === query || cName.includes(query) || query.includes(cName);
+      const dateMatch = cDate.includes(cleanEventDate) || cleanEventDate.includes(cDate);
+      return nameMatch && dateMatch;
+    });
+  }
+  if (!targetCard) {
+    targetCard = compCards.find(c => {
+      const cName = (c.dataset.companyName || "").trim().toLowerCase();
+      return cName === query || cName.includes(query) || query.includes(cName);
+    });
+  }
 
   if (targetCard) {
     // Expand company card
@@ -522,7 +536,16 @@ function openRoundInQuestionBank(companyName, roundName) {
     const qRound = (roundName || "").trim().toLowerCase();
     const normQ = qRound.replace(/^level\s*/, "l");
 
-    let targetRound = roundBlocks.find(r => (r.dataset.roundName || "").trim().toLowerCase() === qRound);
+    let targetRound = roundBlocks.find(r => {
+      const rName = (r.dataset.roundName || "").trim().toLowerCase();
+      const rDate = (r.dataset.roundDate || "").trim().toLowerCase();
+      const nameMatch = rName === qRound;
+      const dateMatch = !cleanEventDate || rDate.includes(cleanEventDate) || cleanEventDate.includes(rDate);
+      return nameMatch && dateMatch;
+    });
+    if (!targetRound) {
+      targetRound = roundBlocks.find(r => (r.dataset.roundName || "").trim().toLowerCase() === qRound);
+    }
     if (!targetRound) {
       targetRound = roundBlocks.find(r => {
         const normR = (r.dataset.roundName || "").trim().toLowerCase().replace(/^level\s*/, "l");
@@ -693,7 +716,7 @@ function showDayInterviewDetails(day, monthName, year, events) {
       `;
       card.title = `Click to open ${ev.company} (${ev.round}) directly in Question Bank list`;
       card.addEventListener("click", () => {
-        openRoundInQuestionBank(ev.company, ev.round);
+        openRoundInQuestionBank(ev.company, ev.round, ev.date);
       });
       list.appendChild(card);
     });

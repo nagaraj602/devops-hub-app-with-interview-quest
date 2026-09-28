@@ -164,6 +164,7 @@
   <article class="company-card" 
            id="comp_{{ loop.index }}"
            data-company-name="{{ company.company_name }}"
+           data-company-date="{{ company.latest_date }}"
            data-total-questions="{{ company.total_questions }}"
            data-timestamp="{{ company.timestamp }}"
            data-file-order="{{ company.file_order }}"
@@ -219,7 +220,7 @@
     <!-- Company Body: Rounds & Questions -->
     <div class="company-body">
       {% for round in company.rounds %}
-      <div class="round-block" data-round-name="{{ round.round_name }}">
+      <div class="round-block" data-round-name="{{ round.round_name }}" data-round-date="{{ round.date }}">
         <!-- Round Header -->
         <div class="round-header">
           <div class="round-title-group">

@@ -22,8 +22,10 @@ CATEGORY_NORMALIZE_MAP = {
     "bash": "Shell script",
     "cloud": "AWS / Cloud",
     "aws": "AWS / Cloud",
+    "aws / cloud": "AWS / Cloud",
     "iac": "Terraform / IaC",
     "terraform": "Terraform / IaC",
+    "terraform / iac": "Terraform / IaC",
     "security": "Security",
     "networking": "Networking",
     "monitoring": "Monitoring",
@@ -31,15 +33,19 @@ CATEGORY_NORMALIZE_MAP = {
     "behavioral": "Behavioral",
     "git": "Git / GitHub",
     "github": "Git / GitHub",
+    "git / github": "Git / GitHub",
     "ansible": "Ansible",
     "python": "Python",
     "boto3": "Python",
     "ai/ml": "AI/ML",
     "build tools": "Build Tools",
+    "general": "General",
     "other": "General",
     "nagaraj's interview": "Nagaraj's Interview",
     "nagaraj interview": "Nagaraj's Interview"
 }
+
+BASE_CATEGORIES_MAP = {c.lower(): c for c in BASE_CATEGORIES_LIST}
 
 def is_nagaraj_interview_file(filename: str) -> bool:
     """
@@ -76,7 +82,11 @@ def normalize_category(cat: str) -> str:
     if not cat:
         return "General"
     cleaned = cat.strip().lower()
-    return CATEGORY_NORMALIZE_MAP.get(cleaned, cat.strip())
+    if cleaned in CATEGORY_NORMALIZE_MAP:
+        return CATEGORY_NORMALIZE_MAP[cleaned]
+    if cleaned in BASE_CATEGORIES_MAP:
+        return BASE_CATEGORIES_MAP[cleaned]
+    return cat.strip()
 
 def detect_category_from_text(q_text: str, ans_text: str = "", section_cat: str = "") -> str:
     ql = q_text.lower().strip()
