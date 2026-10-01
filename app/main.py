@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="DevOps Knowledge Portal & Interview Hub",
     description="Universal DevOps Interview Questions, Project Architecture, Training Materials & Command Cheatsheets",
-    version="1.0.14",
+    version="1.0.15",
     lifespan=lifespan
 )
 
