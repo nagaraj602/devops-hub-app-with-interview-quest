@@ -8,6 +8,13 @@ let searchQuery = "";
 let showFavoritesOnly = false;
 let userFavorites = JSON.parse(localStorage.getItem("devops_hub_favorites") || "[]");
 
+// Update 21: Toggle states and pagination (Load More chunking)
+let isCompaniesExpanded = false;
+let isAnswersExpanded = false;
+let visibleCompaniesLimit = 10;
+const PAGE_CHUNK = 10;
+let currentMatchedCards = [];
+
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -27,6 +34,7 @@ function initQuestionBank() {
   initCategoryPills();
   initSearchAndSort();
   initGlobalAccordions();
+  initLoadMore();
   initQuestionToggles();
   initCalendarModal();
 }
@@ -83,6 +91,7 @@ function initCategoryPills() {
       currentCategory = pill.getAttribute("data-category") || "All";
       showFavoritesOnly = false;
       favCard?.classList.remove("active-favorite-filter");
+      visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on filter change
       applyFilters();
     });
   });
@@ -106,6 +115,7 @@ function initCategoryPills() {
         if (allPill) allPill.classList.add("active");
         showToast("Showing all questions", "info");
       }
+      visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on favorites toggle
       applyFilters();
     });
   }
@@ -120,6 +130,7 @@ function initSearchAndSort() {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         searchQuery = e.target.value.trim().toLowerCase();
+        visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on new search
         applyFilters();
       }, 200);
     });
@@ -129,6 +140,7 @@ function initSearchAndSort() {
   if (sortSelect) {
     sortSelect.addEventListener("change", (e) => {
       currentSort = e.target.value;
+      visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on sort
       sortCompaniesDOM(currentSort);
     });
   }
@@ -137,8 +149,8 @@ function initSearchAndSort() {
 // Main Filter Logic: Category, Search & Favorites
 function applyFilters() {
   const companyCards = document.querySelectorAll(".company-card");
-  let visibleCompaniesCount = 0;
   let visibleQuestionsCount = 0;
+  currentMatchedCards = [];
 
   const isFilteringCategory = currentCategory.toLowerCase() !== "all";
 
@@ -191,6 +203,8 @@ function applyFilters() {
         // Requirement: If category is selected, matching company and rounds automatically expand, but answers remain in collapse mode!
         if (isFilteringCategory || searchQuery) {
           roundBlock.classList.add("expanded");
+        } else if (!isCompaniesExpanded) {
+          roundBlock.classList.remove("expanded");
         }
       } else {
         roundBlock.style.display = "none";
@@ -198,72 +212,176 @@ function applyFilters() {
     });
 
     if (companyHasMatches) {
-      companyCard.style.display = "";
-      visibleCompaniesCount++;
+      currentMatchedCards.push(companyCard);
       if (isFilteringCategory || searchQuery) {
         companyCard.classList.add("expanded");
+      } else if (!isCompaniesExpanded) {
+        companyCard.classList.remove("expanded");
       }
     } else {
       companyCard.style.display = "none";
     }
   });
 
+  // If specific category is selected, reflect expanded state on toggle button
+  if (isFilteringCategory || searchQuery) {
+    isCompaniesExpanded = true;
+    updateCompaniesToggleBtnUI();
+  }
+
   // Update empty state if needed
   const emptyState = document.getElementById("qbEmptyState");
   if (emptyState) {
-    emptyState.style.display = visibleCompaniesCount === 0 ? "block" : "none";
+    emptyState.style.display = currentMatchedCards.length === 0 ? "block" : "none";
+  }
+
+  // Render first visibleCompaniesLimit (10 by default)
+  renderVisibleCompanyCards();
+}
+
+// Progressive Chunked Reveal: Displays 10 listings at a time
+function renderVisibleCompanyCards() {
+  currentMatchedCards.forEach((card, idx) => {
+    if (idx < visibleCompaniesLimit) {
+      card.style.display = "";
+      if (isCompaniesExpanded) {
+        card.classList.add("expanded");
+        card.querySelectorAll(".round-block").forEach(r => {
+          if (r.style.display !== "none") r.classList.add("expanded");
+        });
+      }
+      if (isAnswersExpanded) {
+        card.querySelectorAll(".question-item").forEach(q => {
+          if (q.style.display !== "none") q.classList.add("expanded");
+        });
+      }
+    } else {
+      card.style.display = "none";
+    }
+  });
+
+  // Handle Load More Button display
+  const loadMoreWrap = document.getElementById("qbLoadMoreWrap");
+  if (loadMoreWrap) {
+    if (currentMatchedCards.length > visibleCompaniesLimit) {
+      loadMoreWrap.style.display = "flex";
+    } else {
+      loadMoreWrap.style.display = "none";
+    }
   }
 }
 
-// Global Accordion Expand / Collapse Buttons
+// Initialize Load More Button handler
+function initLoadMore() {
+  const loadMoreBtn = document.getElementById("qbLoadMoreBtn");
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", () => {
+      visibleCompaniesLimit += PAGE_CHUNK;
+      renderVisibleCompanyCards();
+      showToast(`Loaded ${Math.min(visibleCompaniesLimit, currentMatchedCards.length)} of ${currentMatchedCards.length} companies`, "info");
+    });
+  }
+}
+
+// UI State Updater for Companies Toggle Button
+function updateCompaniesToggleBtnUI() {
+  const btn = document.getElementById("toggleAllCompaniesBtn");
+  const text = document.getElementById("toggleAllCompaniesText");
+  const icon = document.getElementById("toggleAllCompaniesIcon");
+  if (!btn) return;
+
+  if (isCompaniesExpanded) {
+    btn.classList.add("active");
+    btn.title = "Collapse all companies & rounds";
+    if (text) text.textContent = "Collapse All";
+    if (icon) icon.className = "fa-solid fa-down-left-and-up-right-to-center";
+  } else {
+    btn.classList.remove("active");
+    btn.title = "Expand all company & round containers";
+    if (text) text.textContent = "Expand All";
+    if (icon) icon.className = "fa-solid fa-up-right-and-down-left-from-center";
+  }
+}
+
+// UI State Updater for Answers Toggle Button
+function updateAnswersToggleBtnUI() {
+  const btn = document.getElementById("toggleAllAnswersBtn");
+  const text = document.getElementById("toggleAllAnswersText");
+  const icon = document.getElementById("toggleAllAnswersIcon");
+  if (!btn) return;
+
+  if (isAnswersExpanded) {
+    btn.classList.add("active");
+    btn.title = "Collapse all answers";
+    if (text) text.textContent = "Collapse Answers";
+    if (icon) icon.className = "fa-solid fa-eye-slash";
+  } else {
+    btn.classList.remove("active");
+    btn.title = "Expand answers for all questions";
+    if (text) text.textContent = "Expand Answers";
+    if (icon) icon.className = "fa-solid fa-eye";
+  }
+}
+
+// Global Accordion Expand / Collapse Buttons (2 buttons with 4 functionalities)
 function initGlobalAccordions() {
-  const expandAllBtn = document.getElementById("expandAllCompaniesBtn");
-  const collapseAllBtn = document.getElementById("collapseAllCompaniesBtn");
-  const expandAllAnswersBtn = document.getElementById("expandAllAnswersBtn");
-  const collapseAllAnswersBtn = document.getElementById("collapseAllAnswersBtn");
+  const toggleCompaniesBtn = document.getElementById("toggleAllCompaniesBtn");
+  const toggleAnswersBtn = document.getElementById("toggleAllAnswersBtn");
 
-  // Expand all companies and rounds, but keep answers collapsed
-  if (expandAllBtn) {
-    expandAllBtn.addEventListener("click", () => {
-      document.querySelectorAll(".company-card").forEach(c => c.classList.add("expanded"));
-      document.querySelectorAll(".round-block").forEach(r => r.classList.add("expanded"));
-      expandAllBtn.classList.add("active");
-      collapseAllBtn?.classList.remove("active");
-      showToast("All companies & rounds expanded", "info");
+  // Button 1: Toggle Expand All / Collapse All Companies & Rounds
+  if (toggleCompaniesBtn) {
+    toggleCompaniesBtn.addEventListener("click", () => {
+      isCompaniesExpanded = !isCompaniesExpanded;
+      if (isCompaniesExpanded) {
+        // Expand visible companies and rounds
+        document.querySelectorAll(".company-card").forEach(c => {
+          if (c.style.display !== "none") c.classList.add("expanded");
+        });
+        document.querySelectorAll(".round-block").forEach(r => {
+          if (r.style.display !== "none") r.classList.add("expanded");
+        });
+        showToast("All companies & rounds expanded", "info");
+      } else {
+        // Collapse all companies and rounds
+        document.querySelectorAll(".company-card").forEach(c => c.classList.remove("expanded"));
+        document.querySelectorAll(".round-block").forEach(r => r.classList.remove("expanded"));
+        // If answers were also expanded, collapse them and reset answers toggle
+        if (isAnswersExpanded) {
+          document.querySelectorAll(".question-item").forEach(q => q.classList.remove("expanded"));
+          isAnswersExpanded = false;
+          updateAnswersToggleBtnUI();
+        }
+        showToast("All companies & rounds collapsed", "info");
+      }
+      updateCompaniesToggleBtnUI();
     });
   }
 
-  // Collapse all companies and rounds
-  if (collapseAllBtn) {
-    collapseAllBtn.addEventListener("click", () => {
-      document.querySelectorAll(".company-card").forEach(c => c.classList.remove("expanded"));
-      document.querySelectorAll(".round-block").forEach(r => r.classList.remove("expanded"));
-      collapseAllBtn.classList.add("active");
-      expandAllBtn?.classList.remove("active");
-      showToast("All companies & rounds collapsed", "info");
-    });
-  }
-
-  // Separate button to expand all answers at once
-  if (expandAllAnswersBtn) {
-    expandAllAnswersBtn.addEventListener("click", () => {
-      // Also expand company and round containers so answers are immediately visible
-      document.querySelectorAll(".company-card").forEach(c => c.classList.add("expanded"));
-      document.querySelectorAll(".round-block").forEach(r => r.classList.add("expanded"));
-      document.querySelectorAll(".question-item").forEach(q => q.classList.add("expanded"));
-      expandAllAnswersBtn.classList.add("active");
-      collapseAllAnswersBtn?.classList.remove("active");
-      showToast("All answers expanded", "success");
-    });
-  }
-
-  // Separate button to collapse all answers at once
-  if (collapseAllAnswersBtn) {
-    collapseAllAnswersBtn.addEventListener("click", () => {
-      document.querySelectorAll(".question-item").forEach(q => q.classList.remove("expanded"));
-      collapseAllAnswersBtn.classList.add("active");
-      expandAllAnswersBtn?.classList.remove("active");
-      showToast("All answers collapsed", "info");
+  // Button 2: Toggle Expand Answers / Collapse Answers
+  if (toggleAnswersBtn) {
+    toggleAnswersBtn.addEventListener("click", () => {
+      isAnswersExpanded = !isAnswersExpanded;
+      if (isAnswersExpanded) {
+        // Expand answers for all visible questions, and also expand company & round containers so answers are immediately visible
+        document.querySelectorAll(".company-card").forEach(c => {
+          if (c.style.display !== "none") c.classList.add("expanded");
+        });
+        document.querySelectorAll(".round-block").forEach(r => {
+          if (r.style.display !== "none") r.classList.add("expanded");
+        });
+        document.querySelectorAll(".question-item").forEach(q => {
+          if (q.style.display !== "none") q.classList.add("expanded");
+        });
+        // Reflect that companies are now expanded
+        isCompaniesExpanded = true;
+        updateCompaniesToggleBtnUI();
+        showToast("All answers expanded", "success");
+      } else {
+        // Collapse all answers
+        document.querySelectorAll(".question-item").forEach(q => q.classList.remove("expanded"));
+        showToast("All answers collapsed", "info");
+      }
+      updateAnswersToggleBtnUI();
     });
   }
 }
@@ -396,6 +514,7 @@ function sortCompaniesDOM(sortMode) {
   });
 
   cards.forEach(card => container.appendChild(card));
+  applyFilters();
 }
 
 // Calendar Pop-Up Modal Logic
@@ -528,6 +647,14 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
   }
 
   if (targetCard) {
+    // Ensure targetCard is visible even if beyond current page chunk (Update 21)
+    const targetIdx = currentMatchedCards.indexOf(targetCard);
+    if (targetIdx >= visibleCompaniesLimit) {
+      visibleCompaniesLimit = Math.ceil((targetIdx + 1) / PAGE_CHUNK) * PAGE_CHUNK;
+      renderVisibleCompanyCards();
+    }
+    targetCard.style.display = "";
+
     // Expand company card
     targetCard.classList.add("expanded");
 

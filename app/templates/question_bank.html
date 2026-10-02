@@ -76,18 +76,51 @@
 
   <!-- Main Content Body with Left Margin Separation from Vertical Dock -->
   <div class="qb-content-body">
-    <!-- Top Interview Calendar Trigger Card (Reverted to Original Stat Card Size & Style) -->
-    <div class="qb-calendar-card-wrap">
-      <div class="stat-card stat-card-interactive qb-calendar-stat-card" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
-        <div class="stat-icon indigo" style="background:#eef2ff; color:var(--primary);">
-          <i class="fa-regular fa-calendar-days"></i>
+    <!-- Top Section: Calendar Column + Controls Column Side-by-Side -->
+    <div class="qb-top-toolbar">
+      <!-- Left Column: Calendar Stat Card (Untouched) -->
+      <div class="qb-calendar-card-wrap">
+        <div class="stat-card stat-card-interactive qb-calendar-stat-card" id="calendarTriggerBtn" title="Click to view Interview Dates Calendar by Month">
+          <div class="stat-icon indigo" style="background:#eef2ff; color:var(--primary);">
+            <i class="fa-regular fa-calendar-days"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Interview Calendar</span>
+            <span class="stat-value" style="font-size:1.15rem; display:flex; align-items:center; gap:0.35rem;">
+              Calendar <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; color:var(--primary);"></i>
+            </span>
+            <span class="stat-desc">Month-wise Dates</span>
+          </div>
         </div>
-        <div class="stat-info">
-          <span class="stat-label">Interview Calendar</span>
-          <span class="stat-value" style="font-size:1.15rem; display:flex; align-items:center; gap:0.35rem;">
-            Calendar <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; color:var(--primary);"></i>
-          </span>
-          <span class="stat-desc">Month-wise Dates</span>
+      </div>
+
+      <!-- Right Column: Controls Column in Same Row as Search Bar -->
+      <div class="qb-controls-col">
+        <div class="qb-controls-row">
+          <div class="search-input-group">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="qbSearchInput" class="search-input" placeholder="Search company, round, topic, question or answer..." value="{{ search_query }}">
+          </div>
+
+          <select id="qbSortSelect" class="sort-select" title="Sort listing">
+            <option value="recent">Sort: Most Recent (Default)</option>
+            <option value="name_asc">Company Name (A - Z)</option>
+            <option value="name_desc">Company Name (Z - A)</option>
+            <option value="most_questions">Most Questions</option>
+            <option value="date">Interview Date</option>
+          </select>
+
+          <!-- Button 1: Toggle Expand/Collapse All Companies & Rounds -->
+          <button type="button" class="btn btn-secondary qb-toggle-btn" id="toggleAllCompaniesBtn" title="Expand all company & round containers">
+            <i class="fa-solid fa-up-right-and-down-left-from-center" id="toggleAllCompaniesIcon"></i>
+            <span id="toggleAllCompaniesText">Expand All</span>
+          </button>
+
+          <!-- Button 2: Toggle Expand/Collapse All Answers -->
+          <button type="button" class="btn btn-secondary qb-toggle-btn" id="toggleAllAnswersBtn" title="Expand answers for all questions">
+            <i class="fa-solid fa-eye" id="toggleAllAnswersIcon"></i>
+            <span id="toggleAllAnswersText">Expand Answers</span>
+          </button>
         </div>
       </div>
     </div>
@@ -106,49 +139,6 @@
         <span class="pill-count">{{ cat.count }}</span>
       </button>
       {% endfor %}
-    </section>
-
-    <!-- Controls Bar: Search, Sort, Expand/Collapse Buttons -->
-    <section class="controls-bar">
-      <!-- Live Search Box -->
-      <div class="search-input-group">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input type="text" id="qbSearchInput" class="search-input" placeholder="Search company, round, topic, question or answer..." value="{{ search_query }}">
-      </div>
-
-      <!-- Sort Dropdown -->
-      <select id="qbSortSelect" class="sort-select" title="Sort listing">
-        <option value="recent">Sort: Most Recent (Default)</option>
-        <option value="name_asc">Company Name (A - Z)</option>
-        <option value="name_desc">Company Name (Z - A)</option>
-        <option value="most_questions">Most Questions</option>
-        <option value="date">Interview Date</option>
-      </select>
-
-      <!-- Action Controls -->
-      <div class="action-buttons-group">
-        <!-- Expand / Collapse All Companies -->
-        <button type="button" class="btn btn-secondary qb-toggle-btn" id="expandAllCompaniesBtn" title="Expand all company & round containers">
-          <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-          <span>Expand All</span>
-        </button>
-
-        <button type="button" class="btn btn-secondary qb-toggle-btn" id="collapseAllCompaniesBtn" title="Collapse all companies & rounds">
-          <i class="fa-solid fa-down-left-and-up-right-to-center"></i>
-          <span>Collapse All</span>
-        </button>
-
-        <!-- Separate Button: Expand / Collapse All Answers -->
-        <button type="button" class="btn btn-secondary qb-toggle-btn" id="expandAllAnswersBtn" title="Expand answers for all questions">
-          <i class="fa-solid fa-eye"></i>
-          <span>Expand Answers</span>
-        </button>
-
-        <button type="button" class="btn btn-secondary qb-toggle-btn" id="collapseAllAnswersBtn" title="Collapse all answers">
-          <i class="fa-solid fa-eye-slash"></i>
-          <span>Hide Answers</span>
-        </button>
-      </div>
     </section>
 
 <!-- Empty State Filter Warning (Hidden by default) -->
@@ -282,6 +272,15 @@
     </div>
   </article>
   {% endfor %}
+  </div><!-- end companyListContainer -->
+
+  <!-- Load More Button (Loads another 10 companies when clicked) -->
+  <div class="qb-load-more-wrap" id="qbLoadMoreWrap" style="display:none;">
+    <button type="button" class="qb-load-more-btn" id="qbLoadMoreBtn" title="Load more company listings">
+      <span>Load more</span>
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
+  </div>
   </div><!-- end qb-content-body -->
 </div><!-- end qb-page-layout -->
 
