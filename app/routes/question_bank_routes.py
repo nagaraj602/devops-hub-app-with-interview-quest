@@ -68,7 +68,8 @@ async def question_bank_view(request: Request, category: Optional[str] = "All", 
             "category_pills": data["category_pills"],
             "calendar_events": data["calendar_events"],
             "selected_category": category,
-            "search_query": search
+            "search_query": search,
+            "is_companies_expanded": not is_default
         }
     )
 

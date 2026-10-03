@@ -40,6 +40,8 @@ function initQuestionBank() {
   initLoadMore();
   initQuestionToggles();
   initCalendarModal();
+  updateCompaniesToggleBtnUI();
+  updateAnswersToggleBtnUI();
 }
 
 // Favorites / Bookmarks Manager
@@ -94,6 +96,9 @@ function initCategoryPills() {
     pills.forEach(p => {
       p.classList.toggle("active", (p.getAttribute("data-category") || "").toLowerCase() === urlCat.toLowerCase());
     });
+    if (urlCat.toLowerCase() !== "all") {
+      isCompaniesExpanded = true;
+    }
   }
 
   pills.forEach(pill => {
@@ -103,6 +108,19 @@ function initCategoryPills() {
       currentCategory = pill.getAttribute("data-category") || "All";
       showFavoritesOnly = false;
       favCard?.classList.remove("active-favorite-filter");
+
+      const isCategoryAll = currentCategory.toLowerCase() === "all";
+      if (isCategoryAll) {
+        // Returning to Category 'All': restore clean collapsed state by default
+        isCompaniesExpanded = false;
+        userManualCompaniesExpanded = false;
+      } else {
+        // Specific category selected: auto-expand all companies and rounds to reveal questions
+        isCompaniesExpanded = true;
+        userManualCompaniesExpanded = false;
+      }
+      updateCompaniesToggleBtnUI();
+
       applyFilters(true);
     });
   });
@@ -117,6 +135,8 @@ function initCategoryPills() {
         favCard.classList.add("active-favorite-filter");
         pills.forEach(p => p.classList.remove("active"));
         showToast("Filtering bookmarked questions", "info");
+        isCompaniesExpanded = true;
+        userManualCompaniesExpanded = false;
       } else {
         // Toggle off / release from favorites: return to All
         favCard.classList.remove("active-favorite-filter");
@@ -125,7 +145,10 @@ function initCategoryPills() {
         const allPill = document.querySelector('.category-pill[data-category="All"]');
         if (allPill) allPill.classList.add("active");
         showToast("Showing all questions", "info");
+        isCompaniesExpanded = false;
+        userManualCompaniesExpanded = false;
       }
+      updateCompaniesToggleBtnUI();
       applyFilters(true);
     });
   }
@@ -140,6 +163,14 @@ function initSearchAndSort() {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         searchQuery = e.target.value.trim().toLowerCase();
+        if (searchQuery) {
+          isCompaniesExpanded = true;
+          userManualCompaniesExpanded = false;
+        } else if (currentCategory.toLowerCase() === "all") {
+          isCompaniesExpanded = false;
+          userManualCompaniesExpanded = false;
+        }
+        updateCompaniesToggleBtnUI();
         applyFilters(false);
       }, 250);
     });
@@ -278,7 +309,7 @@ function applyFilters(showLoading = false) {
     search: searchQuery,
     sort_by: currentSort,
     favorites: showFavoritesOnly ? userFavorites.join(",") : "",
-    is_companies_expanded: (isCompaniesExpanded || isFilteringCategory || hasSearch) ? "true" : "false",
+    is_companies_expanded: isCompaniesExpanded ? "true" : "false",
     is_answers_expanded: isAnswersExpanded ? "true" : "false"
   });
 
@@ -300,14 +331,7 @@ function applyFilters(showLoading = false) {
           loadMoreWrap.style.display = data.has_more ? "flex" : "none";
         }
 
-        if (isFilteringCategory || hasSearch) {
-          isCompaniesExpanded = true;
-          updateCompaniesToggleBtnUI();
-        } else if (!userManualCompaniesExpanded) {
-          isCompaniesExpanded = false;
-          updateCompaniesToggleBtnUI();
-        }
-
+        updateCompaniesToggleBtnUI();
         updateFavoriteIconsInDOM();
       }
     })
@@ -336,9 +360,6 @@ function initLoadMore() {
       const currentCards = container ? container.querySelectorAll(".company-card") : [];
       const offset = currentCards.length;
 
-      const isFilteringCategory = currentCategory.toLowerCase() !== "all";
-      const hasSearch = Boolean(searchQuery && searchQuery.trim());
-
       const params = new URLSearchParams({
         offset: String(offset),
         limit: String(PAGE_CHUNK),
@@ -346,7 +367,7 @@ function initLoadMore() {
         search: searchQuery,
         sort_by: currentSort,
         favorites: showFavoritesOnly ? userFavorites.join(",") : "",
-        is_companies_expanded: (isCompaniesExpanded || isFilteringCategory || hasSearch) ? "true" : "false",
+        is_companies_expanded: isCompaniesExpanded ? "true" : "false",
         is_answers_expanded: isAnswersExpanded ? "true" : "false"
       });
 
@@ -360,7 +381,7 @@ function initLoadMore() {
             const totalMatched = data.total_matched || newTotalCards;
 
             // Apply active expand states to new elements
-            if (isCompaniesExpanded || isFilteringCategory || hasSearch) {
+            if (isCompaniesExpanded) {
               container.querySelectorAll(".company-card").forEach(c => c.classList.add("expanded"));
               container.querySelectorAll(".round-block").forEach(r => r.classList.add("expanded"));
             }
@@ -828,6 +849,9 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
 window.resetToAllCompanies = function() {
   currentCategory = "All";
   searchQuery = "";
+  isCompaniesExpanded = false;
+  userManualCompaniesExpanded = false;
+  updateCompaniesToggleBtnUI();
   const sInput = document.getElementById("qbSearchInput");
   if (sInput) sInput.value = "";
   document.querySelectorAll(".category-pill").forEach(p => {

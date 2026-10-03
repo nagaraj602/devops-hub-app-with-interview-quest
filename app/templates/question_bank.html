@@ -142,9 +142,9 @@
           </div>
 
           <!-- 3. Button 1: Toggle Expand/Collapse All Companies & Rounds -->
-          <button type="button" class="btn btn-secondary qb-toggle-btn" id="toggleAllCompaniesBtn" title="Expand all company & round containers">
-            <i class="fa-solid fa-up-right-and-down-left-from-center" id="toggleAllCompaniesIcon"></i>
-            <span id="toggleAllCompaniesText">Expand All</span>
+          <button type="button" class="btn btn-secondary qb-toggle-btn{% if is_companies_expanded %} active{% endif %}" id="toggleAllCompaniesBtn" title="{% if is_companies_expanded %}Collapse all companies & rounds{% else %}Expand all company & round containers{% endif %}">
+            <i class="fa-solid {% if is_companies_expanded %}fa-down-left-and-up-right-to-center{% else %}fa-up-right-and-down-left-from-center{% endif %}" id="toggleAllCompaniesIcon"></i>
+            <span id="toggleAllCompaniesText">{% if is_companies_expanded %}Collapse All{% else %}Expand All{% endif %}</span>
           </button>
 
           <!-- 4. Button 2: Toggle Expand/Collapse All Answers -->

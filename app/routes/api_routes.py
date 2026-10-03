@@ -78,7 +78,7 @@ async def get_question_bank_chunk(
     search: Optional[str] = "",
     sort_by: Optional[str] = "recent",
     favorites: Optional[str] = "",
-    is_companies_expanded: Optional[bool] = False,
+    is_companies_expanded: Optional[bool] = Query(None),
     is_answers_expanded: Optional[bool] = False,
     target_company: Optional[str] = None
 ):
@@ -95,9 +95,12 @@ async def get_question_bank_chunk(
     chunk = filtered[offset : offset + limit]
     has_more = (offset + len(chunk)) < total_matched
 
-    # Auto-expand company/round accordions if category or search filter is active
+    # Auto-expand company/round accordions if category/search active, unless explicitly specified by client
     is_filtering = bool((category and category.strip().lower() not in ("all", "")) or (search and search.strip()))
-    auto_expand_companies = bool(is_companies_expanded or is_filtering)
+    if is_companies_expanded is not None:
+        auto_expand_companies = bool(is_companies_expanded)
+    else:
+        auto_expand_companies = bool(is_filtering)
 
     template = request.app.state.templates.get_template("partials/company_cards.html")
     html_content = template.render({
