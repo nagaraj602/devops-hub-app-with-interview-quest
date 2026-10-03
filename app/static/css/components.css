@@ -201,11 +201,18 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--border-light);
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: #0f172a;
   background-color: #ffffff;
+  color-scheme: light;
   outline: none;
   cursor: pointer;
   font-weight: 500;
+}
+
+.sort-select option {
+  background-color: #ffffff;
+  color: #0f172a;
+  color-scheme: light;
 }
 
 .action-buttons-group {

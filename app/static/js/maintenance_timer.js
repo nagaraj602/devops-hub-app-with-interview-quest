@@ -1,8 +1,8 @@
 /**
  * ==============================================================================
  *  Cost Optimization Shutdown Controller
- *  Active from 10:30 PM IST (30:00 min countdown) to 11:00 PM IST (Shutdown)
- *  Offline Window: 11:00 PM IST to 6:00 AM IST (Auto-restart at 6:00 AM IST)
+ *  Active from 11:30 PM IST (30:00 min countdown) to 12:00 AM IST (Shutdown)
+ *  Offline Window: 12:00 AM IST to 5:30 AM IST (Auto-restart at 5:30 AM IST)
  * ==============================================================================
  */
 
@@ -68,7 +68,7 @@
           titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-circle-info"></i> Cost Optimization</span> <strong>Website Shutdown Notice</strong>';
         }
         if (descEl) {
-          descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
+          descEl.innerHTML = 'This website is getting shutdown for cost optimization (12:00 AM to 5:30 AM). So it will come back at 5:30 am.';
         }
         
         if (testOverrideSeconds <= 300) {
@@ -80,7 +80,7 @@
           if (iconEl) iconEl.className = 'fa-solid fa-clock-rotate-left maintenance-pulse-icon';
         }
       } else {
-        if (clockEl) clockEl.textContent = '06:00 AM';
+        if (clockEl) clockEl.textContent = '05:30 AM';
         banner.classList.add('maintenance-offline');
         banner.classList.remove('imminent-shutdown');
         if (timerLabel) timerLabel.textContent = 'RETURNS AT';
@@ -89,7 +89,7 @@
           titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-moon"></i> Cost Optimization</span> <strong>Website Offline</strong>';
         }
         if (descEl) {
-          descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
+          descEl.innerHTML = 'This website is getting shutdown for cost optimization (12:00 AM to 5:30 AM). So it will come back at 5:30 am.';
         }
       }
       return;
@@ -100,16 +100,16 @@
     const minutes = istDate.getMinutes();
     const seconds = istDate.getSeconds();
 
-    // Check if within countdown window: 10:30 PM (22:30:00) to 10:59:59 PM (22:59:59)
-    const isCountdownActive = (hours === 22 && minutes >= 30);
+    // Check if within countdown window: 11:30 PM (23:30:00) to 11:59:59 PM (23:59:59)
+    const isCountdownActive = (hours === 23 && minutes >= 30);
 
-    // Check if within shutdown/maintenance window: 11:00 PM (23:00) to 5:59:59 AM (05:59:59)
-    const isMaintenanceWindow = (hours >= 23 || hours < 6);
+    // Check if within shutdown/maintenance window: 12:00 AM (00:00:00) to 5:29:59 AM (05:29:59)
+    const isMaintenanceWindow = (hours < 5 || (hours === 5 && minutes < 30));
 
     if (isCountdownActive) {
       banner.style.display = 'block';
 
-      // Remaining seconds until 23:00:00 IST
+      // Remaining seconds until 00:00:00 IST (12:00 AM midnight)
       const minutesRemaining = 59 - minutes;
       const secondsRemaining = 60 - seconds;
       const totalSecondsLeft = (minutesRemaining * 60) + secondsRemaining;
@@ -121,7 +121,7 @@
         titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-circle-info"></i> Cost Optimization</span> <strong>Website Shutdown Notice</strong>';
       }
       if (descEl) {
-        descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
+        descEl.innerHTML = 'This website is getting shutdown for cost optimization (12:00 AM to 5:30 AM). So it will come back at 5:30 am.';
       }
 
       // Imminent shutdown styling during the last 5 minutes
@@ -141,17 +141,17 @@
 
       if (iconEl) iconEl.className = 'fa-solid fa-moon maintenance-pulse-icon';
       if (timerLabel) timerLabel.textContent = 'RETURNS AT';
-      if (clockEl) clockEl.textContent = '06:00 AM';
+      if (clockEl) clockEl.textContent = '05:30 AM';
 
       if (titleEl) {
         titleEl.innerHTML = '<span class="badge-notice"><i class="fa-solid fa-moon"></i> Cost Optimization</span> <strong>Website Offline</strong>';
       }
       if (descEl) {
-        descEl.innerHTML = 'This website is getting shutdown for cost optimization. So it will come back at 6 am.';
+        descEl.innerHTML = 'This website is getting shutdown for cost optimization (12:00 AM to 5:30 AM). So it will come back at 5:30 am.';
       }
 
     } else {
-      // Normal operating hours (6:00 AM to 10:29:59 PM IST)
+      // Normal operating hours (5:30 AM to 11:29:59 PM IST)
       banner.style.display = 'none';
       banner.classList.remove('imminent-shutdown', 'maintenance-offline');
     }

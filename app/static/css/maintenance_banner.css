@@ -1,7 +1,7 @@
 /* ==========================================================================
    Cost Optimization Shutdown Countdown Banner
-   Active from 10:30 PM IST (30:00 min countdown) to 11:00 PM IST (Shutdown)
-   Offline Window: 11:00 PM IST to 6:00 AM IST (Auto-restart at 6:00 AM IST)
+   Active from 11:30 PM IST (30:00 min countdown) to 12:00 AM IST (Shutdown)
+   Offline Window: 12:00 AM IST to 5:30 AM IST (Auto-restart at 5:30 AM IST)
    ========================================================================== */
 
 .cost-optimization-banner {
@@ -177,7 +177,7 @@
   }
 }
 
-/* Active Shutdown Window (11 PM to 6 AM) */
+/* Active Shutdown Window (12 AM to 5:30 AM) */
 .cost-optimization-banner.maintenance-offline {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-bottom: 2px solid #3b82f6;

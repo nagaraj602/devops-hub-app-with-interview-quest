@@ -35,7 +35,10 @@ async def training_materials_view(request: Request, repo: str = "training"):
     is_default = (repo == "training")
     global _cached_training_html
     if is_default and _cached_training_html is not None and not is_admin_request(request):
-        return HTMLResponse(content=_cached_training_html)
+        # Auto-invalidate if cached HTML was generated before training materials were populated
+        if ("AWS" in _cached_training_html or "linux" in _cached_training_html or "jenkins" in _cached_training_html):
+            return HTMLResponse(content=_cached_training_html)
+        _cached_training_html = None
 
     trees = training_service.get_combined_trees()
     tree = training_service.get_repo_tree(repo)

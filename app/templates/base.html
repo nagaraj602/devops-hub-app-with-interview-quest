@@ -16,22 +16,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Modular Feature CSS -->
-  <link rel="stylesheet" href="/static/css/theme.css">
-  <link rel="stylesheet" href="/static/css/layout.css">
-  <link rel="stylesheet" href="/static/css/components.css">
-  <link rel="stylesheet" href="/static/css/maintenance_banner.css">
+  <link rel="stylesheet" href="/static/css/theme.css?v=1.0.15.6">
+  <link rel="stylesheet" href="/static/css/layout.css?v=1.0.15.6">
+  <link rel="stylesheet" href="/static/css/components.css?v=1.0.15.6">
+  <link rel="stylesheet" href="/static/css/maintenance_banner.css?v=1.0.15.6">
   {% if active_page == 'question_bank' %}
-  <link rel="stylesheet" href="/static/css/question_bank.css">
+  <link rel="stylesheet" href="/static/css/question_bank.css?v=1.0.15.6">
   {% elif active_page == 'project' %}
-  <link rel="stylesheet" href="/static/css/project.css">
+  <link rel="stylesheet" href="/static/css/project.css?v=1.0.15.6">
   {% elif active_page == 'training' %}
-  <link rel="stylesheet" href="/static/css/training.css">
+  <link rel="stylesheet" href="/static/css/training.css?v=1.0.15.6">
   {% elif active_page == 'cheatsheet' %}
-  <link rel="stylesheet" href="/static/css/cheatsheet.css">
+  <link rel="stylesheet" href="/static/css/cheatsheet.css?v=1.0.15.6">
   {% elif active_page == 'sync' or active_page == 'app_logs' %}
-  <link rel="stylesheet" href="/static/css/sync.css">
+  <link rel="stylesheet" href="/static/css/sync.css?v=1.0.15.6">
   {% elif active_page == 'admin' %}
-  <link rel="stylesheet" href="/static/css/admin.css">
+  <link rel="stylesheet" href="/static/css/admin.css?v=1.0.15.6">
   {% endif %}
 
   {% if active_page == 'training' %}
@@ -58,7 +58,7 @@
           <strong>Website Shutdown Notice</strong>
         </div>
         <div class="maintenance-desc" id="maintenance-desc">
-          This website is getting shutdown for cost optimization. So it will come back at 6 am.
+          This website is getting shutdown for cost optimization (12:00 AM to 5:30 AM). So it will come back at 5:30 am.
         </div>
       </div>
       <div class="maintenance-timer-card">
@@ -322,10 +322,10 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Common Script -->
-  <script src="/static/js/common.js" defer></script>
-  <script src="/static/js/maintenance_timer.js" defer></script>
+  <script src="/static/js/common.js?v=1.0.15.6" defer></script>
+  <script src="/static/js/maintenance_timer.js?v=1.0.15.6" defer></script>
   {% if active_page == 'question_bank' %}
-  <script src="/static/js/question_bank.js" defer></script>
+  <script src="/static/js/question_bank.js?v=1.0.15.6" defer></script>
   {% elif active_page == 'project' %}
   <script src="/static/js/project.js" defer></script>
   {% elif active_page == 'training' %}

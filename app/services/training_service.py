@@ -28,7 +28,18 @@ class TrainingService:
     def get_combined_trees(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
         """Returns folder trees for both default repositories (cached in-memory for instant loading)."""
         if self._cached_combined_trees is not None and not force_refresh:
-            return self._cached_combined_trees
+            # Auto-healing: If cached ArtisanTek tree has empty children but files exist on disk, re-scan
+            needs_rescan = False
+            for t in self._cached_combined_trees:
+                if t.get("repo_id") == "training" and not t.get("children"):
+                    try:
+                        if self.training_dir.exists() and any(self.training_dir.iterdir()):
+                            needs_rescan = True
+                            break
+                    except Exception:
+                        pass
+            if not needs_rescan:
+                return self._cached_combined_trees
 
         trees = []
 
@@ -60,7 +71,14 @@ class TrainingService:
     def get_repo_tree(self, repo_id: str, force_refresh: bool = False) -> Dict[str, Any]:
         """Builds hierarchical folder/file tree for a repository (cached in-memory)."""
         if not force_refresh and repo_id in self._cached_repo_trees:
-            return self._cached_repo_trees[repo_id]
+            cached = self._cached_repo_trees[repo_id]
+            try:
+                if repo_id == "training" and not cached.get("children") and self.training_dir.exists() and any(self.training_dir.iterdir()):
+                    pass  # Re-scan
+                else:
+                    return cached
+            except Exception:
+                return cached
 
         if repo_id == "training":
             root_dir = self.training_dir

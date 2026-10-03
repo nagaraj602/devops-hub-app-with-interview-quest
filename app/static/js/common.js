@@ -128,8 +128,8 @@ function fallbackCopyText(text, successMsg) {
   document.body.removeChild(textArea);
 }
 
-// Toast Notifications System
-function showToast(message, type = "info") {
+// Toast Notifications System (Single toast at a time, exactly 4 sec duration)
+function showToast(message, type = "info", duration = 4000) {
   let container = document.getElementById("toastContainer");
   if (!container) {
     container = document.createElement("div");
@@ -137,6 +137,9 @@ function showToast(message, type = "info") {
     container.className = "toast-container";
     document.body.appendChild(container);
   }
+
+  // Clear existing toasts so multiple messages don't stack up
+  container.innerHTML = "";
 
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
@@ -156,7 +159,7 @@ function showToast(message, type = "info") {
     setTimeout(() => {
       if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 250);
-  }, 2800);
+  }, duration);
 }
 
 // Global Copy Buttons Initialization

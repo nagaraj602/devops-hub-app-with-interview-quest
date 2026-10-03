@@ -14,6 +14,7 @@ from app.config import (
 )
 from app.services.question_bank_service import question_bank_service
 from app.services.cheatsheet_service import cheatsheet_service
+from app.services.training_service import training_service
 
 class GitSyncManager:
     """
@@ -159,6 +160,8 @@ class GitSyncManager:
         # 4. Force refresh in-memory and pickle caches
         data = question_bank_service.get_data(force_refresh=True)
         cheatsheet_service.get_data(force_refresh=True)
+        training_service.invalidate_cache()
+        training_service.get_combined_trees(force_refresh=True)
 
         total_q = data["stats"]["total_questions"]
         total_c = data["stats"]["total_companies"]
@@ -203,6 +206,10 @@ class GitSyncManager:
                 shutil.copytree(item, dest, dirs_exist_ok=True)
             else:
                 shutil.copy2(item, dest)
+
+        # Force refresh in-memory tree cache and invalidate cached HTML
+        training_service.invalidate_cache()
+        training_service.get_combined_trees(force_refresh=True)
 
         return {
             "status": "success",

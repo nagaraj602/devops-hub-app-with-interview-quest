@@ -3,6 +3,7 @@
    ============================================================================== */
 
 :root {
+  color-scheme: light;
   /* Smooth White Color Palette */
   --bg-main: #ffffff;
   --bg-subtle: #f8fafc;
@@ -49,8 +50,8 @@
   /* Font Settings (Customizable by user in real-time) */
   --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-family-code: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-  --base-font-size: 15px;
-  --line-height-base: 1.6;
+  --base-font-size: 13.8px;
+  --line-height-base: 1.55;
 }
 
 /* User font setting classes */
@@ -65,20 +66,20 @@ body.font-serif {
 }
 
 body.size-sm {
-  --base-font-size: 13.5px;
-  --line-height-base: 1.5;
+  --base-font-size: 12.2px;
+  --line-height-base: 1.48;
 }
 body.size-md {
-  --base-font-size: 15px;
-  --line-height-base: 1.6;
+  --base-font-size: 13.8px;
+  --line-height-base: 1.55;
 }
 body.size-lg {
-  --base-font-size: 16.5px;
-  --line-height-base: 1.65;
+  --base-font-size: 15.2px;
+  --line-height-base: 1.6;
 }
 body.size-xl {
-  --base-font-size: 18px;
-  --line-height-base: 1.7;
+  --base-font-size: 16.8px;
+  --line-height-base: 1.65;
 }
 
 /* Base Reset & Smooth White Styling */
@@ -89,6 +90,7 @@ body.size-xl {
 }
 
 html {
+  color-scheme: light;
   font-size: var(--base-font-size);
   scroll-behavior: smooth;
   background-color: var(--bg-main);
@@ -96,6 +98,7 @@ html {
 }
 
 body {
+  color-scheme: light;
   font-family: var(--font-family-base);
   font-size: 1rem;
   line-height: var(--line-height-base);

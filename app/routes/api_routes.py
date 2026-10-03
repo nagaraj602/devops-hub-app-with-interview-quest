@@ -34,8 +34,8 @@ async def get_maintenance_status():
     minutes = now_ist.minute
     seconds = now_ist.second
     
-    is_countdown = (hours == 22 and minutes >= 30)
-    is_offline = (hours >= 23 or hours < 6)
+    is_countdown = (hours == 23 and minutes >= 30)
+    is_offline = (hours < 5 or (hours == 5 and minutes < 30))
     
     seconds_remaining = 0
     if is_countdown:
@@ -47,9 +47,9 @@ async def get_maintenance_status():
         "is_countdown_active": is_countdown,
         "is_offline_window": is_offline,
         "seconds_until_shutdown": seconds_remaining,
-        "shutdown_time": "23:00:00 IST (11:00 PM)",
-        "startup_time": "06:00:00 IST (06:00 AM)",
-        "message": "This website is getting shutdown for cost optimization. So it will come back at 6 am."
+        "shutdown_time": "00:00:00 IST (12:00 AM)",
+        "startup_time": "05:30:00 IST (05:30 AM)",
+        "message": "This website is getting shutdown for cost optimization (12:00 AM to 5:30 AM). So it will come back at 5:30 am."
     }
 
 @router.get("/questions")
@@ -134,16 +134,16 @@ async def get_calendar_events():
     return data["calendar_events"]
 
 @router.get("/training/trees")
-async def get_combined_training_trees():
-    return training_service.get_combined_trees()
+async def get_combined_training_trees(refresh: bool = False):
+    return training_service.get_combined_trees(force_refresh=refresh)
 
 @router.get("/training/search")
 async def search_training_files(q: str = Query(..., min_length=2), repo: Optional[str] = None):
     return training_service.search_files(q, repo)
 
 @router.get("/training/tree/{repo_id}")
-async def get_training_tree(repo_id: str):
-    return training_service.get_repo_tree(repo_id)
+async def get_training_tree(repo_id: str, refresh: bool = False):
+    return training_service.get_repo_tree(repo_id, force_refresh=refresh)
 
 @router.get("/training/file")
 async def get_training_file(repo_id: str, path: str):

@@ -85,7 +85,7 @@
             <i class="fa-regular fa-calendar-days"></i>
           </div>
           <div class="stat-info">
-            <span class="stat-label">Interview Calendar</span>
+            <span class="stat-label">INTERVIEW</span>
             <span class="stat-value" style="font-size:1.15rem; display:flex; align-items:center; gap:0.35rem;">
               Calendar <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem; color:var(--primary);"></i>
             </span>
@@ -94,29 +94,31 @@
         </div>
       </div>
 
-      <!-- Right Column: Controls Column in Same Row as Search Bar -->
+      <!-- Right Column: Controls in ONE Line (Search, Sort, Expand All, Expand Answers) in Middle of Calendar Space -->
       <div class="qb-controls-col">
         <div class="qb-controls-row">
-          <div class="search-input-group">
+          <!-- 1. Search Bar (Reduced to Half Size) -->
+          <div class="search-input-group qb-search-group">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="qbSearchInput" class="search-input" placeholder="Search company, round, topic, question or answer..." value="{{ search_query }}">
+            <input type="text" id="qbSearchInput" class="search-input qb-search-input" placeholder="Search..." value="{{ search_query }}">
           </div>
 
-          <select id="qbSortSelect" class="sort-select" title="Sort listing">
-            <option value="recent">Sort: Most Recent (Default)</option>
-            <option value="name_asc">Company Name (A - Z)</option>
-            <option value="name_desc">Company Name (Z - A)</option>
-            <option value="most_questions">Most Questions</option>
-            <option value="date">Interview Date</option>
+          <!-- 2. Sort Select -->
+          <select id="qbSortSelect" class="sort-select qb-sort-select" title="Sort listing" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">
+            <option value="recent" selected style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Sort: Most Recent</option>
+            <option value="name_asc" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Company Name (A - Z)</option>
+            <option value="name_desc" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Company Name (Z - A)</option>
+            <option value="most_questions" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Most Questions</option>
+            <option value="date" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Interview Date</option>
           </select>
 
-          <!-- Button 1: Toggle Expand/Collapse All Companies & Rounds -->
+          <!-- 3. Button 1: Toggle Expand/Collapse All Companies & Rounds -->
           <button type="button" class="btn btn-secondary qb-toggle-btn" id="toggleAllCompaniesBtn" title="Expand all company & round containers">
             <i class="fa-solid fa-up-right-and-down-left-from-center" id="toggleAllCompaniesIcon"></i>
             <span id="toggleAllCompaniesText">Expand All</span>
           </button>
 
-          <!-- Button 2: Toggle Expand/Collapse All Answers -->
+          <!-- 4. Button 2: Toggle Expand/Collapse All Answers -->
           <button type="button" class="btn btn-secondary qb-toggle-btn" id="toggleAllAnswersBtn" title="Expand answers for all questions">
             <i class="fa-solid fa-eye" id="toggleAllAnswersIcon"></i>
             <span id="toggleAllAnswersText">Expand Answers</span>
@@ -153,6 +155,7 @@
   {% for company in companies %}
   <article class="company-card" 
            id="comp_{{ loop.index }}"
+           {% if loop.index > 10 %}style="display:none;"{% endif %}
            data-company-name="{{ company.company_name }}"
            data-company-date="{{ company.latest_date }}"
            data-total-questions="{{ company.total_questions }}"
@@ -274,12 +277,12 @@
   {% endfor %}
   </div><!-- end companyListContainer -->
 
-  <!-- Load More Button (Loads another 10 companies when clicked) -->
-  <div class="qb-load-more-wrap" id="qbLoadMoreWrap" style="display:none;">
-    <button type="button" class="qb-load-more-btn" id="qbLoadMoreBtn" title="Load more company listings">
-      <span>Load more</span>
+  <!-- Load More Link (No button outline, clean text with dropdown chevron, no underline) -->
+  <div class="qb-load-more-wrap" id="qbLoadMoreWrap" {% if companies|length <= 10 %}style="display:none;"{% else %}style="display:flex;"{% endif %}>
+    <div class="qb-load-more-btn" id="qbLoadMoreBtn" role="button" tabindex="0" title="Load more company listings" style="text-decoration: none !important;">
+      <span style="text-decoration: none !important;">Load more...</span>
       <i class="fa-solid fa-chevron-down"></i>
-    </button>
+    </div>
   </div>
   </div><!-- end qb-content-body -->
 </div><!-- end qb-page-layout -->

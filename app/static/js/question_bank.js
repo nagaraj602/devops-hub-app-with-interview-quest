@@ -37,6 +37,7 @@ function initQuestionBank() {
   initLoadMore();
   initQuestionToggles();
   initCalendarModal();
+  applyFilters();
 }
 
 // Favorites / Bookmarks Manager
@@ -146,13 +147,32 @@ function initSearchAndSort() {
   }
 }
 
-// Main Filter Logic: Category, Search & Favorites
+// Main Filter Logic: Category, Search & Favorites (High Performance, Instant Page Load)
 function applyFilters() {
   const companyCards = document.querySelectorAll(".company-card");
   let visibleQuestionsCount = 0;
   currentMatchedCards = [];
 
   const isFilteringCategory = currentCategory.toLowerCase() !== "all";
+
+  // Fast path: Default state (No category filter, no search query, no favorites filter)
+  // Executes in <1ms without traversing 1,200+ question nodes
+  if (!isFilteringCategory && !searchQuery && !showFavoritesOnly) {
+    companyCards.forEach(companyCard => {
+      companyCard.style.display = "";
+      if (!isCompaniesExpanded) {
+        companyCard.classList.remove("expanded");
+        companyCard.querySelectorAll(".round-block.expanded").forEach(r => r.classList.remove("expanded"));
+      }
+      companyCard.querySelectorAll(".round-block[style*='none']").forEach(r => r.style.display = "");
+      companyCard.querySelectorAll(".question-item[style*='none']").forEach(q => q.style.display = "");
+    });
+    currentMatchedCards = Array.from(companyCards);
+    const emptyState = document.getElementById("qbEmptyState");
+    if (emptyState) emptyState.style.display = "none";
+    renderVisibleCompanyCards();
+    return;
+  }
 
   companyCards.forEach(companyCard => {
     const cName = (companyCard.getAttribute("data-company-name") || "").toLowerCase();
@@ -168,8 +188,6 @@ function applyFilters() {
       questionItems.forEach(qItem => {
         const qId = qItem.id;
         const qCat = (qItem.getAttribute("data-category") || "").toLowerCase();
-        const qText = (qItem.querySelector(".question-text")?.textContent || "").toLowerCase();
-        const aText = (qItem.querySelector(".answer-markdown")?.textContent || "").toLowerCase();
 
         // 1. Category Check
         const matchCategory = !isFilteringCategory || 
@@ -180,13 +198,15 @@ function applyFilters() {
         // 2. Favorites Check
         const matchFav = !showFavoritesOnly || userFavorites.includes(qId);
 
-        // 3. Search Query Check
-        const matchSearch = !searchQuery ||
-          cName.includes(searchQuery) ||
-          rName.includes(searchQuery) ||
-          qText.includes(searchQuery) ||
-          aText.includes(searchQuery) ||
-          qCat.includes(searchQuery);
+        // 3. Search Query Check (Lazy short-circuit: avoids extracting heavy answer markdown unless necessary)
+        let matchSearch = true;
+        if (searchQuery) {
+          matchSearch = cName.includes(searchQuery) ||
+            rName.includes(searchQuery) ||
+            qCat.includes(searchQuery) ||
+            (qItem.querySelector(".question-text")?.textContent || "").toLowerCase().includes(searchQuery) ||
+            (qItem.querySelector(".answer-markdown")?.textContent || "").toLowerCase().includes(searchQuery);
+        }
 
         if (matchCategory && matchFav && matchSearch) {
           qItem.style.display = "";
@@ -271,14 +291,24 @@ function renderVisibleCompanyCards() {
   }
 }
 
-// Initialize Load More Button handler
+// Initialize Load More Button handler (Shows notification for exactly 4 sec)
 function initLoadMore() {
   const loadMoreBtn = document.getElementById("qbLoadMoreBtn");
   if (loadMoreBtn) {
-    loadMoreBtn.addEventListener("click", () => {
+    const handleLoadMore = () => {
       visibleCompaniesLimit += PAGE_CHUNK;
       renderVisibleCompanyCards();
-      showToast(`Loaded ${Math.min(visibleCompaniesLimit, currentMatchedCards.length)} of ${currentMatchedCards.length} companies`, "info");
+      const currentCount = Math.min(visibleCompaniesLimit, currentMatchedCards.length);
+      const totalCount = currentMatchedCards.length;
+      showToast(`Loaded ${currentCount} of ${totalCount} companies`, "info", 4000);
+    };
+
+    loadMoreBtn.addEventListener("click", handleLoadMore);
+    loadMoreBtn.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleLoadMore();
+      }
     });
   }
 }
@@ -513,7 +543,9 @@ function sortCompaniesDOM(sortMode) {
     }
   });
 
-  cards.forEach(card => container.appendChild(card));
+  const fragment = document.createDocumentFragment();
+  cards.forEach(card => fragment.appendChild(card));
+  container.appendChild(fragment);
   applyFilters();
 }
 
