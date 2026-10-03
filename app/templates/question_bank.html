@@ -103,14 +103,43 @@
             <input type="text" id="qbSearchInput" class="search-input qb-search-input" placeholder="Search..." value="{{ search_query }}">
           </div>
 
-          <!-- 2. Sort Select -->
-          <select id="qbSortSelect" class="sort-select qb-sort-select" title="Sort listing" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">
-            <option value="recent" selected style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Sort: Most Recent</option>
-            <option value="name_asc" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Company Name (A - Z)</option>
-            <option value="name_desc" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Company Name (Z - A)</option>
-            <option value="most_questions" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Most Questions</option>
-            <option value="date" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">Interview Date</option>
-          </select>
+          <!-- 2. Sort Dropdown (Pure White Background, Zero-lag, No OS Black Popup) -->
+          <div class="custom-sort-wrapper" id="qbCustomSortWrapper">
+            <button type="button" class="custom-sort-btn" id="qbSortDropdownBtn" aria-haspopup="listbox" aria-expanded="false" title="Sort listing">
+              <span class="custom-sort-label" id="qbSortLabel">Sort: Most Recent</span>
+              <i class="fa-solid fa-chevron-down custom-sort-arrow" id="qbSortArrow"></i>
+            </button>
+            <div class="custom-sort-menu" id="qbSortMenu" role="listbox" style="display: none;">
+              <div class="custom-sort-option active" role="option" data-value="recent">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Sort: Most Recent</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="name_asc">
+                <i class="fa-solid fa-arrow-down-a-z"></i>
+                <span>Company Name (A - Z)</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="name_desc">
+                <i class="fa-solid fa-arrow-up-z-a"></i>
+                <span>Company Name (Z - A)</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="most_questions">
+                <i class="fa-solid fa-arrow-down-wide-short"></i>
+                <span>Most Questions</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="date">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Interview Date</span>
+              </div>
+            </div>
+            <!-- Programmatic compatibility select element -->
+            <select id="qbSortSelect" style="display:none;" aria-hidden="true" tabindex="-1">
+              <option value="recent" selected>Sort: Most Recent</option>
+              <option value="name_asc">Company Name (A - Z)</option>
+              <option value="name_desc">Company Name (Z - A)</option>
+              <option value="most_questions">Most Questions</option>
+              <option value="date">Interview Date</option>
+            </select>
+          </div>
 
           <!-- 3. Button 1: Toggle Expand/Collapse All Companies & Rounds -->
           <button type="button" class="btn btn-secondary qb-toggle-btn" id="toggleAllCompaniesBtn" title="Expand all company & round containers">

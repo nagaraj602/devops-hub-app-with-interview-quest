@@ -50,6 +50,8 @@ This document serves as the continuous, human-readable system log persisted dire
 | 2026-10-03 15:45:00 | Release v1.0.15 | Sort Dropdown Light-Scheme Fix & Instant Filter Performance Optimization | Removed redundant '(Default)' text from Sort option, added light color-scheme to prevent dark/blank popup rendering across all OS/browser themes, and added fast-path lazy evaluation in applyFilters (0ms execution time, completely eliminating 2-3s main-thread freeze on dropdown load) | Antigravity Assistant |
 | 2026-10-03 16:10:00 | Release v1.0.15 | ArtisanTek Training Materials Sync & In-Memory Tree Auto-Healing | Baked ArtisanTek curriculum (AWS, Jenkins, Kubernetes, Linux modules) directly into container content directory, hooked training_service.invalidate_cache() into sync_training_repo and sync_notes_repo, and added auto-healing re-scan logic to prevent stale empty-tree caching | Antigravity Assistant |
 | 2026-10-03 18:35:00 | Release v1.0.16 | Question Bank Chunking, Partials Modularization, Dynamic Mermaid & Sync Cache | Modularized question bank company cards into Jinja partial, implemented server-side filter and chunk pagination API with calendar auto-fetch banner, lazy-loaded Mermaid.js dynamically on demand, and added 30s TTL in-memory caching for sync and audit log views | Antigravity Assistant |
+| 2026-10-03 19:15:00 | Release v1.0.16 | Custom Sort Dropdown Component & White Background Loading State | Replaced native OS select with pure-HTML custom dropdown component (eliminating Windows Chromium OS popup delay and black blank rectangle), added instant white background loading card with animated spinner during question bank sorting and filtering, and bumped static assets to v1.0.16.1 | Antigravity Assistant |
+
 
 
 

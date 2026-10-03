@@ -35,6 +35,7 @@ function initQuestionBank() {
   updateFavoriteIconsInDOM();
   initCategoryPills();
   initSearchAndSort();
+  initCustomSortDropdown();
   initGlobalAccordions();
   initLoadMore();
   initQuestionToggles();
@@ -77,7 +78,7 @@ function toggleFavorite(qId, e) {
   }
 
   if (showFavoritesOnly) {
-    applyFilters();
+    applyFilters(true);
   }
 }
 
@@ -102,7 +103,7 @@ function initCategoryPills() {
       currentCategory = pill.getAttribute("data-category") || "All";
       showFavoritesOnly = false;
       favCard?.classList.remove("active-favorite-filter");
-      applyFilters();
+      applyFilters(true);
     });
   });
 
@@ -125,7 +126,7 @@ function initCategoryPills() {
         if (allPill) allPill.classList.add("active");
         showToast("Showing all questions", "info");
       }
-      applyFilters();
+      applyFilters(true);
     });
   }
 }
@@ -139,7 +140,7 @@ function initSearchAndSort() {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         searchQuery = e.target.value.trim().toLowerCase();
-        applyFilters();
+        applyFilters(false);
       }, 250);
     });
   }
@@ -148,7 +149,80 @@ function initSearchAndSort() {
   if (sortSelect) {
     sortSelect.addEventListener("change", (e) => {
       currentSort = e.target.value;
-      applyFilters();
+      applyFilters(true);
+    });
+  }
+}
+
+// Custom Sort Dropdown Handler (Zero-lag, 100% white theme, no OS black box)
+function initCustomSortDropdown() {
+  const wrapper = document.getElementById("qbCustomSortWrapper");
+  const btn = document.getElementById("qbSortDropdownBtn");
+  const menu = document.getElementById("qbSortMenu");
+  const label = document.getElementById("qbSortLabel");
+  const arrow = document.getElementById("qbSortArrow");
+  const hiddenSelect = document.getElementById("qbSortSelect");
+
+  if (!wrapper || !btn || !menu) return;
+
+  const toggleDropdown = (show) => {
+    const isOpen = show !== undefined ? show : !wrapper.classList.contains("open");
+    wrapper.classList.toggle("open", isOpen);
+    menu.style.display = isOpen ? "block" : "none";
+    btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  };
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleDropdown();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!wrapper.contains(e.target)) {
+      toggleDropdown(false);
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && wrapper.classList.contains("open")) {
+      toggleDropdown(false);
+      btn.focus();
+    }
+  });
+
+  const options = menu.querySelectorAll(".custom-sort-option");
+  options.forEach(opt => {
+    opt.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const val = opt.getAttribute("data-value");
+      const optText = opt.querySelector("span")?.textContent || opt.textContent.trim();
+
+      options.forEach(o => o.classList.remove("active"));
+      opt.classList.add("active");
+
+      if (label) label.textContent = optText;
+      if (hiddenSelect) hiddenSelect.value = val;
+      currentSort = val;
+
+      toggleDropdown(false);
+
+      if (arrow) arrow.className = "fa-solid fa-spinner fa-spin custom-sort-arrow";
+      applyFilters(true);
+    });
+  });
+
+  if (hiddenSelect) {
+    hiddenSelect.addEventListener("change", (e) => {
+      const val = e.target.value;
+      currentSort = val;
+      const matchingOpt = menu.querySelector(`.custom-sort-option[data-value="${val}"]`);
+      if (matchingOpt) {
+        options.forEach(o => o.classList.remove("active"));
+        matchingOpt.classList.add("active");
+        if (label) label.textContent = matchingOpt.querySelector("span")?.textContent || matchingOpt.textContent.trim();
+      }
+      if (arrow) arrow.className = "fa-solid fa-spinner fa-spin custom-sort-arrow";
+      applyFilters(true);
     });
   }
 }
@@ -170,16 +244,29 @@ function updateFavoriteIconsInDOM() {
 }
 
 // Main Filter Logic: Category, Search & Favorites via Server Chunking
-function applyFilters() {
+function applyFilters(showLoading = false) {
   const container = document.getElementById("companyListContainer");
   const emptyState = document.getElementById("qbEmptyState");
   const loadMoreWrap = document.getElementById("qbLoadMoreWrap");
+  const arrow = document.getElementById("qbSortArrow");
   if (!container) return;
 
   if (filterAbortController) {
     filterAbortController.abort();
   }
   filterAbortController = new AbortController();
+
+  if (showLoading) {
+    if (emptyState) emptyState.style.display = "none";
+    if (loadMoreWrap) loadMoreWrap.style.display = "none";
+    container.innerHTML = `
+      <div class="qb-loading-card">
+        <div class="qb-loading-spinner"></div>
+        <div class="qb-loading-title">Loading & Sorting Question Bank...</div>
+        <div class="qb-loading-desc">Organizing companies and interview questions</div>
+      </div>
+    `;
+  }
 
   const isFilteringCategory = currentCategory.toLowerCase() !== "all";
   const hasSearch = Boolean(searchQuery && searchQuery.trim());
@@ -198,6 +285,7 @@ function applyFilters() {
   fetch(`/api/question-bank/chunk?${params.toString()}`, { signal: filterAbortController.signal })
     .then(res => res.json())
     .then(data => {
+      if (arrow) arrow.className = "fa-solid fa-chevron-down custom-sort-arrow";
       if (!data) return;
 
       if (data.total_matched === 0) {
@@ -225,6 +313,7 @@ function applyFilters() {
     })
     .catch(err => {
       if (err.name !== "AbortError") {
+        if (arrow) arrow.className = "fa-solid fa-chevron-down custom-sort-arrow";
         console.error("Filter request error:", err);
       }
     });
@@ -744,7 +833,7 @@ window.resetToAllCompanies = function() {
   document.querySelectorAll(".category-pill").forEach(p => {
     p.classList.toggle("active", p.dataset.category === "All");
   });
-  applyFilters();
+  applyFilters(true);
 };
 
 function renderCalendarView(year, month) {
