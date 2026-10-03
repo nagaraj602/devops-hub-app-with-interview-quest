@@ -130,13 +130,13 @@
     <!-- Category Filter Pills Bar -->
     <section class="category-filter-wrap">
       <!-- All Category Pill -->
-      <button type="button" class="category-pill active" data-category="All">
+      <button type="button" class="category-pill{% if not selected_category or selected_category == 'All' %} active{% endif %}" data-category="All">
         <span>All</span>
         <span class="pill-count">{{ stats.total_questions }}</span>
       </button>
 
       {% for cat in category_pills %}
-      <button type="button" class="category-pill" data-category="{{ cat.name }}">
+      <button type="button" class="category-pill{% if selected_category == cat.name %} active{% endif %}" data-category="{{ cat.name }}">
         <span>{{ cat.name }}</span>
         <span class="pill-count">{{ cat.count }}</span>
       </button>
@@ -152,133 +152,11 @@
 
 <!-- Companies Accordion List Container -->
 <div class="company-list" id="companyListContainer">
-  {% for company in companies %}
-  <article class="company-card" 
-           id="comp_{{ loop.index }}"
-           {% if loop.index > 10 %}style="display:none;"{% endif %}
-           data-company-name="{{ company.company_name }}"
-           data-company-date="{{ company.latest_date }}"
-           data-total-questions="{{ company.total_questions }}"
-           data-timestamp="{{ company.timestamp }}"
-           data-file-order="{{ company.file_order }}"
-           data-is-nagaraj="{{ 'true' if company.is_nagaraj_interview else 'false' }}">
-    
-    <!-- Company Card Header (Collapsed by Default) -->
-    <div class="company-header">
-      <div class="company-title-area">
-        <div class="company-avatar">
-          <i class="fa-solid fa-building"></i>
-        </div>
-        <div class="company-details">
-          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-            <h2 class="company-name">{{ company.company_name }}</h2>
-          </div>
-          <div class="company-meta-tags">
-            {% if company.is_nagaraj_interview %}
-            <!-- Special Marker Badge for Nagaraj's Interview -->
-            <span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:700;">
-              <i class="fa-solid fa-star" style="color:#d97706;"></i> Nagaraj's Interview
-            </span>
-            {% endif %}
-            <!-- Total Questions -->
-            <span class="badge badge-blue">
-              <i class="fa-solid fa-circle-question"></i>
-              {{ company.total_questions }} Questions
-            </span>
-            <!-- Total Rounds -->
-            <span class="badge badge-purple">
-              <i class="fa-solid fa-layer-group"></i>
-              {{ company.rounds|length }} Rounds
-            </span>
-            <!-- Date -->
-            <span class="badge badge-gray">
-              <i class="fa-regular fa-clock"></i>
-              {{ company.latest_date }}
-            </span>
-            <!-- Top Categories -->
-            {% for cat in company.categories[:3] %}
-            <span class="badge badge-green">{{ cat }}</span>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <div class="company-header-actions">
-        <span class="toggle-icon">
-          <i class="fa-solid fa-chevron-down"></i>
-        </span>
-      </div>
-    </div>
-
-    <!-- Company Body: Rounds & Questions -->
-    <div class="company-body">
-      {% for round in company.rounds %}
-      <div class="round-block" data-round-name="{{ round.round_name }}" data-round-date="{{ round.date }}">
-        <!-- Round Header -->
-        <div class="round-header">
-          <div class="round-title-group">
-            <i class="fa-solid fa-code-branch" style="color:var(--primary); font-size:0.85rem;"></i>
-            <span class="round-name">{{ round.round_name }}</span>
-            <span class="round-date">• {{ round.date }}</span>
-            <span class="badge badge-blue" style="font-size:0.7rem;">{{ round.questions|length }} Qs</span>
-          </div>
-          <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
-            <i class="fa-solid fa-chevron-down"></i>
-          </span>
-        </div>
-
-        <!-- Questions in this Round -->
-        <div class="round-body">
-          {% for q in round.questions %}
-          <div class="question-item" id="{{ q.id }}" data-category="{{ q.category }}">
-            <!-- Question Title Header -->
-            <div class="question-header">
-              <div class="question-title-wrap">
-                <div class="question-meta-row">
-                  <span class="question-cat-pill">{{ q.category }}</span>
-                  {% if q.is_sub_q %}
-                  <span class="badge badge-amber" style="font-size:0.68rem;">Follow-up</span>
-                  {% endif %}
-                </div>
-                <div class="question-text">{{ q.question }}</div>
-              </div>
-
-              <div class="question-actions">
-                <!-- Bookmark Button -->
-                <button type="button" class="action-icon-btn fav-btn" data-qid="{{ q.id }}" onclick="toggleFavorite('{{ q.id }}', event)" title="Bookmark Question">
-                  <i class="fa-regular fa-star"></i>
-                </button>
-                <!-- Copy Question Text -->
-                <button type="button" class="action-icon-btn copy-q-btn" onclick="copyQuestionText('{{ q.id }}', event)" title="Copy Question text">
-                  <i class="fa-regular fa-copy"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Answer Drawer (Collapsed by default, expand answers button expands) -->
-            <div class="answer-body">
-              <div class="answer-header-bar">
-                <span><i class="fa-solid fa-circle-check" style="color:var(--success); margin-right:0.35rem;"></i> Verified Production Answer</span>
-                <button type="button" class="copy-btn copy-ans-btn" onclick="copyAnswerText('{{ q.id }}', event)">
-                  <i class="fa-regular fa-copy"></i> Copy Answer
-                </button>
-              </div>
-              <div class="answer-markdown">
-                {{ q.answer_html|default(q.answer)|safe }}
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </article>
-  {% endfor %}
-  </div><!-- end companyListContainer -->
+  {% include "partials/company_cards.html" %}
+</div><!-- end companyListContainer -->
 
   <!-- Load More Link (No button outline, clean text with dropdown chevron, no underline) -->
-  <div class="qb-load-more-wrap" id="qbLoadMoreWrap" {% if companies|length <= 10 %}style="display:none;"{% else %}style="display:flex;"{% endif %}>
+  <div class="qb-load-more-wrap" id="qbLoadMoreWrap" {% if total_companies_count|default(companies|length) <= 10 %}style="display:none;"{% else %}style="display:flex;"{% endif %}>
     <div class="qb-load-more-btn" id="qbLoadMoreBtn" role="button" tabindex="0" title="Load more company listings" style="text-decoration: none !important;">
       <span style="text-decoration: none !important;">Load more...</span>
       <i class="fa-solid fa-chevron-down"></i>

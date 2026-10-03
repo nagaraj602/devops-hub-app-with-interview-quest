@@ -470,4 +470,98 @@ class QuestionBankService:
 
         push_q()
 
+    def filter_companies(
+        self,
+        category: Optional[str] = "All",
+        search: Optional[str] = "",
+        sort_by: Optional[str] = "recent",
+        favorites: Optional[List[str]] = None,
+        target_company: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        data = self.get_data()
+        companies = data.get("companies", [])
+
+        # 1. Target company lookup (e.g. from calendar direct link)
+        if target_company and target_company.strip():
+            t_name = target_company.strip().lower()
+            matching_comp = [c for c in companies if c.get("company_name", "").strip().lower() == t_name]
+            if not matching_comp:
+                matching_comp = [c for c in companies if t_name in c.get("company_name", "").strip().lower()]
+            if matching_comp:
+                return matching_comp
+
+        fav_set = set(favorites) if favorites else None
+        is_filtering_cat = bool(category and category.strip().lower() not in ("all", ""))
+        clean_cat = category.strip().lower() if is_filtering_cat else ""
+        s = search.strip().lower() if (search and search.strip()) else ""
+
+        # If no filtering active, just sort the companies
+        if not is_filtering_cat and not s and not fav_set:
+            result = list(companies)
+        else:
+            result = []
+            for comp in companies:
+                c_name = comp.get("company_name", "").lower()
+                is_nagaraj_comp = comp.get("is_nagaraj_interview", False)
+                comp_name_matches = bool(s and s in c_name)
+
+                matching_rounds = []
+                for r in comp.get("rounds", []):
+                    r_name = r.get("round_name", "").lower()
+                    round_name_matches = bool(s and s in r_name)
+
+                    matching_qs = []
+                    for q in r.get("questions", []):
+                        q_id = q.get("id", "")
+                        q_cat = q.get("category", "").lower()
+                        is_nagaraj_q = q.get("is_nagaraj", False)
+
+                        # Category match
+                        if is_filtering_cat:
+                            if clean_cat == "nagaraj's interview":
+                                if not (is_nagaraj_comp or is_nagaraj_q or q_cat == "nagaraj's interview"):
+                                    continue
+                            elif q_cat != clean_cat:
+                                continue
+
+                        # Favorites match
+                        if fav_set is not None:
+                            if q_id not in fav_set:
+                                continue
+
+                        # Search match
+                        if s:
+                            q_text = q.get("question", "").lower()
+                            q_ans = q.get("answer", "").lower()
+                            if not (comp_name_matches or round_name_matches or s in q_cat or s in q_text or s in q_ans):
+                                continue
+
+                        matching_qs.append(q)
+
+                    if matching_qs:
+                        r_copy = dict(r)
+                        r_copy["questions"] = matching_qs
+                        matching_rounds.append(r_copy)
+
+                if matching_rounds:
+                    c_copy = dict(comp)
+                    c_copy["rounds"] = matching_rounds
+                    c_copy["total_questions"] = sum(len(r["questions"]) for r in matching_rounds)
+                    result.append(c_copy)
+
+        # 2. Sorting
+        if sort_by == "name_asc":
+            result.sort(key=lambda c: c.get("company_name", "").lower())
+        elif sort_by == "name_desc":
+            result.sort(key=lambda c: c.get("company_name", "").lower(), reverse=True)
+        elif sort_by == "most_questions":
+            result.sort(key=lambda c: c.get("total_questions", 0), reverse=True)
+        elif sort_by == "date":
+            result.sort(key=lambda c: c.get("timestamp", 0.0), reverse=True)
+        else:  # "recent"
+            result.sort(key=lambda c: (c.get("file_order", 0.0), c.get("timestamp", 0.0), c.get("company_name", "").lower()), reverse=True)
+
+        return result
+
 question_bank_service = QuestionBankService()
+

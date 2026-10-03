@@ -8,12 +8,13 @@ let searchQuery = "";
 let showFavoritesOnly = false;
 let userFavorites = JSON.parse(localStorage.getItem("devops_hub_favorites") || "[]");
 
-// Update 21: Toggle states and pagination (Load More chunking)
+// Toggle states and progressive chunking
 let isCompaniesExpanded = false;
+let userManualCompaniesExpanded = false;
 let isAnswersExpanded = false;
-let visibleCompaniesLimit = 10;
 const PAGE_CHUNK = 10;
-let currentMatchedCards = [];
+let isChunkLoading = false;
+let filterAbortController = null;
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
@@ -31,13 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initQuestionBank() {
   updateFavoritesCountUI();
+  updateFavoriteIconsInDOM();
   initCategoryPills();
   initSearchAndSort();
   initGlobalAccordions();
   initLoadMore();
   initQuestionToggles();
   initCalendarModal();
-  applyFilters();
 }
 
 // Favorites / Bookmarks Manager
@@ -85,6 +86,15 @@ function initCategoryPills() {
   const pills = document.querySelectorAll(".category-pill");
   const favCard = document.getElementById("statCardFavorites");
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCat = urlParams.get("category");
+  if (urlCat) {
+    currentCategory = urlCat;
+    pills.forEach(p => {
+      p.classList.toggle("active", (p.getAttribute("data-category") || "").toLowerCase() === urlCat.toLowerCase());
+    });
+  }
+
   pills.forEach(pill => {
     pill.addEventListener("click", () => {
       pills.forEach(p => p.classList.remove("active"));
@@ -92,7 +102,6 @@ function initCategoryPills() {
       currentCategory = pill.getAttribute("data-category") || "All";
       showFavoritesOnly = false;
       favCard?.classList.remove("active-favorite-filter");
-      visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on filter change
       applyFilters();
     });
   });
@@ -116,7 +125,6 @@ function initCategoryPills() {
         if (allPill) allPill.classList.add("active");
         showToast("Showing all questions", "info");
       }
-      visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on favorites toggle
       applyFilters();
     });
   }
@@ -131,9 +139,8 @@ function initSearchAndSort() {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         searchQuery = e.target.value.trim().toLowerCase();
-        visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on new search
         applyFilters();
-      }, 200);
+      }, 250);
     });
   }
 
@@ -141,166 +148,157 @@ function initSearchAndSort() {
   if (sortSelect) {
     sortSelect.addEventListener("change", (e) => {
       currentSort = e.target.value;
-      visibleCompaniesLimit = PAGE_CHUNK; // Reset to 10 on sort
-      sortCompaniesDOM(currentSort);
+      applyFilters();
     });
   }
 }
 
-// Main Filter Logic: Category, Search & Favorites (High Performance, Instant Page Load)
+function updateFavoriteIconsInDOM() {
+  document.querySelectorAll(".fav-btn").forEach(btn => {
+    const qId = btn.getAttribute("data-qid");
+    const isFav = userFavorites.includes(qId);
+    btn.classList.toggle("favorite-active", isFav);
+    const icon = btn.querySelector("i");
+    if (icon) {
+      icon.className = isFav ? "fa-solid fa-star" : "fa-regular fa-star";
+    }
+    const questionCard = document.getElementById(qId);
+    if (questionCard) {
+      questionCard.classList.toggle("favorite", isFav);
+    }
+  });
+}
+
+// Main Filter Logic: Category, Search & Favorites via Server Chunking
 function applyFilters() {
-  const companyCards = document.querySelectorAll(".company-card");
-  let visibleQuestionsCount = 0;
-  currentMatchedCards = [];
+  const container = document.getElementById("companyListContainer");
+  const emptyState = document.getElementById("qbEmptyState");
+  const loadMoreWrap = document.getElementById("qbLoadMoreWrap");
+  if (!container) return;
+
+  if (filterAbortController) {
+    filterAbortController.abort();
+  }
+  filterAbortController = new AbortController();
 
   const isFilteringCategory = currentCategory.toLowerCase() !== "all";
+  const hasSearch = Boolean(searchQuery && searchQuery.trim());
 
-  // Fast path: Default state (No category filter, no search query, no favorites filter)
-  // Executes in <1ms without traversing 1,200+ question nodes
-  if (!isFilteringCategory && !searchQuery && !showFavoritesOnly) {
-    companyCards.forEach(companyCard => {
-      companyCard.style.display = "";
-      if (!isCompaniesExpanded) {
-        companyCard.classList.remove("expanded");
-        companyCard.querySelectorAll(".round-block.expanded").forEach(r => r.classList.remove("expanded"));
-      }
-      companyCard.querySelectorAll(".round-block[style*='none']").forEach(r => r.style.display = "");
-      companyCard.querySelectorAll(".question-item[style*='none']").forEach(q => q.style.display = "");
-    });
-    currentMatchedCards = Array.from(companyCards);
-    const emptyState = document.getElementById("qbEmptyState");
-    if (emptyState) emptyState.style.display = "none";
-    renderVisibleCompanyCards();
-    return;
-  }
+  const params = new URLSearchParams({
+    offset: "0",
+    limit: String(PAGE_CHUNK),
+    category: currentCategory,
+    search: searchQuery,
+    sort_by: currentSort,
+    favorites: showFavoritesOnly ? userFavorites.join(",") : "",
+    is_companies_expanded: (isCompaniesExpanded || isFilteringCategory || hasSearch) ? "true" : "false",
+    is_answers_expanded: isAnswersExpanded ? "true" : "false"
+  });
 
-  companyCards.forEach(companyCard => {
-    const cName = (companyCard.getAttribute("data-company-name") || "").toLowerCase();
-    const isNagarajComp = companyCard.getAttribute("data-is-nagaraj") === "true";
-    const roundBlocks = companyCard.querySelectorAll(".round-block");
-    let companyHasMatches = false;
+  fetch(`/api/question-bank/chunk?${params.toString()}`, { signal: filterAbortController.signal })
+    .then(res => res.json())
+    .then(data => {
+      if (!data) return;
 
-    roundBlocks.forEach(roundBlock => {
-      const rName = (roundBlock.getAttribute("data-round-name") || "").toLowerCase();
-      const questionItems = roundBlock.querySelectorAll(".question-item");
-      let roundHasMatches = false;
-
-      questionItems.forEach(qItem => {
-        const qId = qItem.id;
-        const qCat = (qItem.getAttribute("data-category") || "").toLowerCase();
-
-        // 1. Category Check
-        const matchCategory = !isFilteringCategory || 
-          (currentCategory.toLowerCase() === "nagaraj's interview" 
-            ? (isNagarajComp || qCat === "nagaraj's interview")
-            : qCat === currentCategory.toLowerCase());
-
-        // 2. Favorites Check
-        const matchFav = !showFavoritesOnly || userFavorites.includes(qId);
-
-        // 3. Search Query Check (Lazy short-circuit: avoids extracting heavy answer markdown unless necessary)
-        let matchSearch = true;
-        if (searchQuery) {
-          matchSearch = cName.includes(searchQuery) ||
-            rName.includes(searchQuery) ||
-            qCat.includes(searchQuery) ||
-            (qItem.querySelector(".question-text")?.textContent || "").toLowerCase().includes(searchQuery) ||
-            (qItem.querySelector(".answer-markdown")?.textContent || "").toLowerCase().includes(searchQuery);
-        }
-
-        if (matchCategory && matchFav && matchSearch) {
-          qItem.style.display = "";
-          roundHasMatches = true;
-          companyHasMatches = true;
-          visibleQuestionsCount++;
-        } else {
-          qItem.style.display = "none";
-        }
-      });
-
-      if (roundHasMatches) {
-        roundBlock.style.display = "";
-        // Requirement: If category is selected, matching company and rounds automatically expand, but answers remain in collapse mode!
-        if (isFilteringCategory || searchQuery) {
-          roundBlock.classList.add("expanded");
-        } else if (!isCompaniesExpanded) {
-          roundBlock.classList.remove("expanded");
-        }
+      if (data.total_matched === 0) {
+        container.innerHTML = "";
+        if (emptyState) emptyState.style.display = "block";
+        if (loadMoreWrap) loadMoreWrap.style.display = "none";
       } else {
-        roundBlock.style.display = "none";
+        if (emptyState) emptyState.style.display = "none";
+        container.innerHTML = data.html;
+
+        if (loadMoreWrap) {
+          loadMoreWrap.style.display = data.has_more ? "flex" : "none";
+        }
+
+        if (isFilteringCategory || hasSearch) {
+          isCompaniesExpanded = true;
+          updateCompaniesToggleBtnUI();
+        } else if (!userManualCompaniesExpanded) {
+          isCompaniesExpanded = false;
+          updateCompaniesToggleBtnUI();
+        }
+
+        updateFavoriteIconsInDOM();
+      }
+    })
+    .catch(err => {
+      if (err.name !== "AbortError") {
+        console.error("Filter request error:", err);
       }
     });
-
-    if (companyHasMatches) {
-      currentMatchedCards.push(companyCard);
-      if (isFilteringCategory || searchQuery) {
-        companyCard.classList.add("expanded");
-      } else if (!isCompaniesExpanded) {
-        companyCard.classList.remove("expanded");
-      }
-    } else {
-      companyCard.style.display = "none";
-    }
-  });
-
-  // If specific category is selected, reflect expanded state on toggle button
-  if (isFilteringCategory || searchQuery) {
-    isCompaniesExpanded = true;
-    updateCompaniesToggleBtnUI();
-  }
-
-  // Update empty state if needed
-  const emptyState = document.getElementById("qbEmptyState");
-  if (emptyState) {
-    emptyState.style.display = currentMatchedCards.length === 0 ? "block" : "none";
-  }
-
-  // Render first visibleCompaniesLimit (10 by default)
-  renderVisibleCompanyCards();
 }
 
-// Progressive Chunked Reveal: Displays 10 listings at a time
-function renderVisibleCompanyCards() {
-  currentMatchedCards.forEach((card, idx) => {
-    if (idx < visibleCompaniesLimit) {
-      card.style.display = "";
-      if (isCompaniesExpanded) {
-        card.classList.add("expanded");
-        card.querySelectorAll(".round-block").forEach(r => {
-          if (r.style.display !== "none") r.classList.add("expanded");
-        });
-      }
-      if (isAnswersExpanded) {
-        card.querySelectorAll(".question-item").forEach(q => {
-          if (q.style.display !== "none") q.classList.add("expanded");
-        });
-      }
-    } else {
-      card.style.display = "none";
-    }
-  });
-
-  // Handle Load More Button display
-  const loadMoreWrap = document.getElementById("qbLoadMoreWrap");
-  if (loadMoreWrap) {
-    if (currentMatchedCards.length > visibleCompaniesLimit) {
-      loadMoreWrap.style.display = "flex";
-    } else {
-      loadMoreWrap.style.display = "none";
-    }
-  }
-}
-
-// Initialize Load More Button handler (Shows notification for exactly 4 sec)
+// Progressive Chunked Reveal: Displays 10 listings at a time via Server Endpoint
 function initLoadMore() {
   const loadMoreBtn = document.getElementById("qbLoadMoreBtn");
   if (loadMoreBtn) {
     const handleLoadMore = () => {
-      visibleCompaniesLimit += PAGE_CHUNK;
-      renderVisibleCompanyCards();
-      const currentCount = Math.min(visibleCompaniesLimit, currentMatchedCards.length);
-      const totalCount = currentMatchedCards.length;
-      showToast(`Loaded ${currentCount} of ${totalCount} companies`, "info", 4000);
+      if (isChunkLoading) return;
+      isChunkLoading = true;
+
+      const loadMoreSpan = loadMoreBtn.querySelector("span");
+      const loadMoreIcon = loadMoreBtn.querySelector("i");
+      if (loadMoreSpan) loadMoreSpan.textContent = "Loading...";
+      if (loadMoreIcon) loadMoreIcon.className = "fa-solid fa-spinner fa-spin";
+
+      const container = document.getElementById("companyListContainer");
+      const currentCards = container ? container.querySelectorAll(".company-card") : [];
+      const offset = currentCards.length;
+
+      const isFilteringCategory = currentCategory.toLowerCase() !== "all";
+      const hasSearch = Boolean(searchQuery && searchQuery.trim());
+
+      const params = new URLSearchParams({
+        offset: String(offset),
+        limit: String(PAGE_CHUNK),
+        category: currentCategory,
+        search: searchQuery,
+        sort_by: currentSort,
+        favorites: showFavoritesOnly ? userFavorites.join(",") : "",
+        is_companies_expanded: (isCompaniesExpanded || isFilteringCategory || hasSearch) ? "true" : "false",
+        is_answers_expanded: isAnswersExpanded ? "true" : "false"
+      });
+
+      fetch(`/api/question-bank/chunk?${params.toString()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.html && container) {
+            container.insertAdjacentHTML("beforeend", data.html);
+
+            const newTotalCards = container.querySelectorAll(".company-card").length;
+            const totalMatched = data.total_matched || newTotalCards;
+
+            // Apply active expand states to new elements
+            if (isCompaniesExpanded || isFilteringCategory || hasSearch) {
+              container.querySelectorAll(".company-card").forEach(c => c.classList.add("expanded"));
+              container.querySelectorAll(".round-block").forEach(r => r.classList.add("expanded"));
+            }
+            if (isAnswersExpanded) {
+              container.querySelectorAll(".question-item").forEach(q => q.classList.add("expanded"));
+            }
+
+            updateFavoriteIconsInDOM();
+
+            // 4-second notification toast
+            showToast(`Loaded ${newTotalCards} of ${totalMatched} companies`, "info", 4000);
+
+            const loadMoreWrap = document.getElementById("qbLoadMoreWrap");
+            if (loadMoreWrap) {
+              loadMoreWrap.style.display = data.has_more ? "flex" : "none";
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Error loading company chunk:", err);
+          showToast("Failed to load more companies", "error");
+        })
+        .finally(() => {
+          isChunkLoading = false;
+          if (loadMoreSpan) loadMoreSpan.textContent = "Load more...";
+          if (loadMoreIcon) loadMoreIcon.className = "fa-solid fa-chevron-down";
+        });
     };
 
     loadMoreBtn.addEventListener("click", handleLoadMore);
@@ -362,6 +360,7 @@ function initGlobalAccordions() {
   if (toggleCompaniesBtn) {
     toggleCompaniesBtn.addEventListener("click", () => {
       isCompaniesExpanded = !isCompaniesExpanded;
+      userManualCompaniesExpanded = isCompaniesExpanded;
       if (isCompaniesExpanded) {
         // Expand visible companies and rounds
         document.querySelectorAll(".company-card").forEach(c => {
@@ -510,44 +509,7 @@ function initQuestionToggles() {
   });
 }
 
-// Sorting Companies in DOM
-function sortCompaniesDOM(sortMode) {
-  const container = document.getElementById("companyListContainer");
-  if (!container) return;
 
-  const cards = Array.from(container.querySelectorAll(".company-card"));
-
-  cards.sort((a, b) => {
-    const aName = (a.getAttribute("data-company-name") || "").toLowerCase();
-    const bName = (b.getAttribute("data-company-name") || "").toLowerCase();
-    const aOrder = parseFloat(a.getAttribute("data-file-order") || "0");
-    const bOrder = parseFloat(b.getAttribute("data-file-order") || "0");
-    const aTime = parseFloat(a.getAttribute("data-timestamp") || "0");
-    const bTime = parseFloat(b.getAttribute("data-timestamp") || "0");
-    const aQs = parseInt(a.getAttribute("data-total-questions") || "0");
-    const bQs = parseInt(b.getAttribute("data-total-questions") || "0");
-
-    if (sortMode === "name_asc") {
-      return aName.localeCompare(bName);
-    } else if (sortMode === "name_desc") {
-      return bName.localeCompare(aName);
-    } else if (sortMode === "most_questions") {
-      return bQs - aQs;
-    } else if (sortMode === "date") {
-      return bTime - aTime;
-    } else {
-      // Default: Recent (file order first, then timestamp, then name)
-      if (bOrder !== aOrder) return bOrder - aOrder;
-      if (bTime !== aTime) return bTime - aTime;
-      return aName.localeCompare(bName);
-    }
-  });
-
-  const fragment = document.createDocumentFragment();
-  cards.forEach(card => fragment.appendChild(card));
-  container.appendChild(fragment);
-  applyFilters();
-}
 
 // Calendar Pop-Up Modal Logic
 const initialCalDate = new Date();
@@ -653,44 +615,36 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
   const favDock = document.getElementById("statCardFavorites");
   if (favDock) favDock.classList.remove("active-favorite-filter");
 
-  // 4. Apply filters to show all company cards
-  applyFilters();
+  // 4. Locate company helper
+  const findCompanyInDOM = () => {
+    const compCards = Array.from(document.querySelectorAll(".company-card"));
+    const query = (companyName || "").trim().toLowerCase();
+    const cleanEventDate = (eventDate || "").trim().split(" ")[0].toLowerCase();
 
-  // 5. Locate the company card (prioritizing matching event date if provided)
-  const compCards = Array.from(document.querySelectorAll(".company-card"));
-  const query = (companyName || "").trim().toLowerCase();
-  const cleanEventDate = (eventDate || "").trim().split(" ")[0].toLowerCase();
-
-  let targetCard = null;
-  if (cleanEventDate) {
-    targetCard = compCards.find(c => {
-      const cName = (c.dataset.companyName || "").trim().toLowerCase();
-      const cDate = (c.dataset.companyDate || "").trim().toLowerCase();
-      const nameMatch = cName === query || cName.includes(query) || query.includes(cName);
-      const dateMatch = cDate.includes(cleanEventDate) || cleanEventDate.includes(cDate);
-      return nameMatch && dateMatch;
-    });
-  }
-  if (!targetCard) {
-    targetCard = compCards.find(c => {
-      const cName = (c.dataset.companyName || "").trim().toLowerCase();
-      return cName === query || cName.includes(query) || query.includes(cName);
-    });
-  }
-
-  if (targetCard) {
-    // Ensure targetCard is visible even if beyond current page chunk (Update 21)
-    const targetIdx = currentMatchedCards.indexOf(targetCard);
-    if (targetIdx >= visibleCompaniesLimit) {
-      visibleCompaniesLimit = Math.ceil((targetIdx + 1) / PAGE_CHUNK) * PAGE_CHUNK;
-      renderVisibleCompanyCards();
+    let foundCard = null;
+    if (cleanEventDate) {
+      foundCard = compCards.find(c => {
+        const cName = (c.dataset.companyName || "").trim().toLowerCase();
+        const cDate = (c.dataset.companyDate || "").trim().toLowerCase();
+        const nameMatch = cName === query || cName.includes(query) || query.includes(cName);
+        const dateMatch = cDate.includes(cleanEventDate) || cleanEventDate.includes(cDate);
+        return nameMatch && dateMatch;
+      });
     }
-    targetCard.style.display = "";
+    if (!foundCard) {
+      foundCard = compCards.find(c => {
+        const cName = (c.dataset.companyName || "").trim().toLowerCase();
+        return cName === query || cName.includes(query) || query.includes(cName);
+      });
+    }
+    return foundCard;
+  };
 
-    // Expand company card
+  const expandAndScroll = (targetCard) => {
+    targetCard.style.display = "";
     targetCard.classList.add("expanded");
 
-    // Locate the specific round inside the company card
+    const cleanEventDate = (eventDate || "").trim().split(" ")[0].toLowerCase();
     const roundBlocks = Array.from(targetCard.querySelectorAll(".round-block"));
     const qRound = (roundName || "").trim().toLowerCase();
     const normQ = qRound.replace(/^level\s*/, "l");
@@ -717,18 +671,13 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
 
     if (targetRound) {
       targetRound.classList.add("expanded");
-
-      // Scroll smoothly directly to the round block in question bank list
       setTimeout(() => {
         targetRound.scrollIntoView({ behavior: "smooth", block: "center" });
-
-        // Trigger attractive glow/pulse animation
         targetRound.classList.add("highlight-pulse");
         setTimeout(() => {
           targetRound.classList.remove("highlight-pulse");
         }, 2200);
       }, 150);
-
       showToast(`Opened ${companyName} • ${roundName}`, "success");
     } else {
       setTimeout(() => {
@@ -736,10 +685,67 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
       }, 150);
       showToast(`Opened ${companyName}`, "info");
     }
-  } else {
-    showToast(`Company "${companyName}" not found in list`, "warning");
+  };
+
+  let targetCard = findCompanyInDOM();
+  if (targetCard) {
+    expandAndScroll(targetCard);
+    return;
   }
+
+  // If target company card is not in current DOM chunk, fetch it directly from server
+  fetch(`/api/question-bank/chunk?target_company=${encodeURIComponent(companyName)}&offset=0&limit=10`)
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById("companyListContainer");
+      if (data && data.html && container) {
+        const bannerHtml = `
+          <div class="calendar-target-notice" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:var(--radius-md); padding:0.65rem 1.1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <span style="font-size:0.86rem; color:#1e40af; font-weight:600;">
+              <i class="fa-regular fa-calendar-check" style="margin-right:0.35rem; color:var(--primary);"></i>
+              Showing interview for <strong>${escapeHtml(companyName)}</strong> from Calendar
+            </span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="resetToAllCompanies()" style="font-size:0.78rem; padding:0.25rem 0.65rem;">
+              <i class="fa-solid fa-list"></i> View All Companies
+            </button>
+          </div>
+        `;
+        container.innerHTML = bannerHtml + data.html;
+        const loadMoreWrap = document.getElementById("qbLoadMoreWrap");
+        if (loadMoreWrap) {
+          loadMoreWrap.style.display = data.has_more ? "flex" : "none";
+        }
+        updateFavoriteIconsInDOM();
+        let loadedTarget = findCompanyInDOM();
+        if (!loadedTarget) {
+          const compCards = Array.from(container.querySelectorAll(".company-card"));
+          if (compCards.length > 0) loadedTarget = compCards[0];
+        }
+        if (loadedTarget) {
+          expandAndScroll(loadedTarget);
+        } else {
+          showToast(`Company "${companyName}" not found in list`, "warning");
+        }
+      } else {
+        showToast(`Company "${companyName}" not found in list`, "warning");
+      }
+    })
+    .catch(err => {
+      console.error("Error opening round:", err);
+      showToast(`Company "${companyName}" not found in list`, "warning");
+    });
 }
+
+window.resetToAllCompanies = function() {
+  currentCategory = "All";
+  searchQuery = "";
+  const sInput = document.getElementById("qbSearchInput");
+  if (sInput) sInput.value = "";
+  document.querySelectorAll(".category-pill").forEach(p => {
+    p.classList.toggle("active", p.dataset.category === "All");
+  });
+  applyFilters();
+};
 
 function renderCalendarView(year, month) {
   const titleElem = document.getElementById("calendarMonthTitle");

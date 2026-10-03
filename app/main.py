@@ -46,19 +46,22 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="DevOps Knowledge Portal & Interview Hub",
     description="Universal DevOps Interview Questions, Project Architecture, Training Materials & Command Cheatsheets",
-    version="1.0.15",
+    version="1.0.16",
     lifespan=lifespan
 )
 
 # 1. GZip Compression Middleware (High Performance: Compresses responses > 500 bytes by ~90%)
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
-# 2. Static Asset Caching Middleware (Immediate refresh during development & verification)
+# 2. Static Asset Caching Middleware (High-Performance browser caching for fast page navigation)
 class StaticCacheMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response: Response = await call_next(request)
         if request.url.path.startswith("/static/"):
-            response.headers["Cache-Control"] = "no-cache, must-revalidate, max-age=0"
+            if request.query_params.get("v"):
+                response.headers["Cache-Control"] = "public, max-age=604800, immutable"
+            else:
+                response.headers["Cache-Control"] = "public, max-age=86400"
         return response
 
 app.add_middleware(StaticCacheMiddleware)

@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
-from typing import Optional
+from typing import Optional, List
 from app.services.question_bank_service import question_bank_service
 from app.services.training_service import training_service
 from app.services.cheatsheet_service import cheatsheet_service
@@ -58,74 +58,63 @@ async def get_questions(
     search: Optional[str] = "",
     sort_by: Optional[str] = "recent"
 ):
+    companies = question_bank_service.filter_companies(category=category, search=search, sort_by=sort_by)
     data = question_bank_service.get_data()
-    companies = data["companies"]
-
-    # Filter by category
-    if category and category.lower() != "all":
-        filtered = []
-        for comp in companies:
-            matching_rounds = []
-            for r in comp["rounds"]:
-                matching_qs = [q for q in r["questions"] if q["category"].lower() == category.lower()]
-                if matching_qs:
-                    r_copy = dict(r)
-                    r_copy["questions"] = matching_qs
-                    matching_rounds.append(r_copy)
-            if matching_rounds:
-                c_copy = dict(comp)
-                c_copy["rounds"] = matching_rounds
-                c_copy["total_questions"] = sum(len(r["questions"]) for r in matching_rounds)
-                filtered.append(c_copy)
-        companies = filtered
-
-    # Filter by search
-    if search:
-        s = search.lower().strip()
-        search_filtered = []
-        for comp in companies:
-            comp_match = s in comp["company_name"].lower()
-            matching_rounds = []
-            for r in comp["rounds"]:
-                round_match = s in r["round_name"].lower()
-                matching_qs = []
-                for q in r["questions"]:
-                    if (
-                        comp_match or
-                        round_match or
-                        s in q["question"].lower() or
-                        s in q["answer"].lower() or
-                        s in q["category"].lower()
-                    ):
-                        matching_qs.append(q)
-                if matching_qs:
-                    r_copy = dict(r)
-                    r_copy["questions"] = matching_qs
-                    matching_rounds.append(r_copy)
-            if matching_rounds:
-                c_copy = dict(comp)
-                c_copy["rounds"] = matching_rounds
-                c_copy["total_questions"] = sum(len(r["questions"]) for r in matching_rounds)
-                search_filtered.append(c_copy)
-        companies = search_filtered
-
-    # Sorting
-    if sort_by == "name_asc":
-        companies.sort(key=lambda c: c["company_name"].lower())
-    elif sort_by == "name_desc":
-        companies.sort(key=lambda c: c["company_name"].lower(), reverse=True)
-    elif sort_by == "most_questions":
-        companies.sort(key=lambda c: c["total_questions"], reverse=True)
-    elif sort_by == "date":
-        companies.sort(key=lambda c: c.get("timestamp", 0.0), reverse=True)
-    else:  # recent
-        companies.sort(key=lambda c: (c.get("file_order", 0.0), c.get("timestamp", 0.0), c["company_name"].lower()), reverse=True)
 
     return {
         "companies": companies,
         "count": len(companies),
-        "total_questions": sum(c["total_questions"] for c in companies),
+        "total_questions": sum(c.get("total_questions", 0) for c in companies),
         "stats": data["stats"]
+    }
+
+@router.get("/question-bank/chunk")
+@router.get("/companies/chunk")
+async def get_question_bank_chunk(
+    request: Request,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=50),
+    category: Optional[str] = "All",
+    search: Optional[str] = "",
+    sort_by: Optional[str] = "recent",
+    favorites: Optional[str] = "",
+    is_companies_expanded: Optional[bool] = False,
+    is_answers_expanded: Optional[bool] = False,
+    target_company: Optional[str] = None
+):
+    fav_list = [f.strip() for f in favorites.split(",") if f.strip()] if favorites else None
+    filtered = question_bank_service.filter_companies(
+        category=category,
+        search=search,
+        sort_by=sort_by,
+        favorites=fav_list,
+        target_company=target_company
+    )
+
+    total_matched = len(filtered)
+    chunk = filtered[offset : offset + limit]
+    has_more = (offset + len(chunk)) < total_matched
+
+    # Auto-expand company/round accordions if category or search filter is active
+    is_filtering = bool((category and category.strip().lower() not in ("all", "")) or (search and search.strip()))
+    auto_expand_companies = bool(is_companies_expanded or is_filtering)
+
+    template = request.app.state.templates.get_template("partials/company_cards.html")
+    html_content = template.render({
+        "request": request,
+        "companies": chunk,
+        "start_index": offset + 1,
+        "is_companies_expanded": auto_expand_companies,
+        "is_answers_expanded": bool(is_answers_expanded)
+    })
+
+    return {
+        "html": html_content,
+        "offset": offset,
+        "limit": limit,
+        "count": len(chunk),
+        "total_matched": total_matched,
+        "has_more": has_more
     }
 
 @router.get("/calendar")
@@ -187,11 +176,23 @@ async def get_cheatsheet(category: Optional[str] = "all", search: Optional[str] 
 
 @router.post("/sync/{repo_id}")
 async def trigger_sync(repo_id: str):
-    return sync_service.sync_repository(repo_id)
+    res = sync_service.sync_repository(repo_id)
+    try:
+        from app.routes.sync_routes import invalidate_sync_views_cache
+        invalidate_sync_views_cache()
+    except Exception:
+        pass
+    return res
 
 @router.post("/sync-all")
 async def trigger_sync_all():
-    return sync_service.sync_all()
+    res = sync_service.sync_all()
+    try:
+        from app.routes.sync_routes import invalidate_sync_views_cache
+        invalidate_sync_views_cache()
+    except Exception:
+        pass
+    return res
 
 @router.get("/logs")
 async def get_logs(limit: int = 50):

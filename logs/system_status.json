@@ -4,15 +4,15 @@
   "base_os": "Ubuntu 24.04 LTS",
   "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
   "stats": {
-    "total_questions": 1269,
-    "total_companies": 52,
-    "total_rounds": 70,
+    "total_questions": 1636,
+    "total_companies": 62,
+    "total_rounds": 94,
     "tech_categories": 18
   },
-  "last_synced": "2026-10-03 16:15:00",
+  "last_synced": "2026-10-03 19:00:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "admin_port": 9256,
-  "last_event": "Release v1.0.15 - Native 90% scale typography, expanded margins, instant sort dropdown with light-scheme, load more text link without underline, and ArtisanTek training sync fix"
+  "last_event": "Release v1.0.16 - Chunked Question Bank rendering, partial template modularization, dynamic Mermaid.js loading, and sync view HTML caching"
 }

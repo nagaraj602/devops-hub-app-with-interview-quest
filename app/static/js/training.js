@@ -240,27 +240,61 @@ function postProcessMarkdownContent(contentBody, repoId, filePath) {
 }
 
 // ------------------------------------------------------------------------------
-// Mermaid.js Flowchart Renderer
+// Mermaid.js Flowchart Renderer (Lazy Loaded on Demand for Low-Spec Performance)
 // ------------------------------------------------------------------------------
-function renderMermaidDiagrams() {
+let mermaidScriptPromise = null;
+
+function loadMermaidDynamically() {
   if (window.mermaid) {
-    try {
-      mermaid.initialize({
-        startOnLoad: true,
-        theme: "default",
-        securityLevel: "loose"
-      });
-      mermaid.run({
-        nodes: document.querySelectorAll(".mermaid")
-      }).then(() => {
-        bindContentImagesForLightbox();
-      }).catch(err => {
-        console.warn("Mermaid run error:", err);
-      });
-    } catch (e) {
-      console.warn("Mermaid render error:", e);
-    }
+    return Promise.resolve(window.mermaid);
   }
+  if (mermaidScriptPromise) {
+    return mermaidScriptPromise;
+  }
+  mermaidScriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.mermaid) {
+        try {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: "default",
+            securityLevel: "loose"
+          });
+        } catch (e) {
+          console.warn("Mermaid init error:", e);
+        }
+        resolve(window.mermaid);
+      } else {
+        reject(new Error("Mermaid not available on window"));
+      }
+    };
+    script.onerror = (err) => {
+      mermaidScriptPromise = null;
+      reject(err);
+    };
+    document.head.appendChild(script);
+  });
+  return mermaidScriptPromise;
+}
+
+function renderMermaidDiagrams() {
+  const mermaidNodes = document.querySelectorAll(".mermaid");
+  if (!mermaidNodes || mermaidNodes.length === 0) return;
+
+  loadMermaidDynamically().then(m => {
+    m.run({
+      nodes: mermaidNodes
+    }).then(() => {
+      bindContentImagesForLightbox();
+    }).catch(err => {
+      console.warn("Mermaid run error:", err);
+    });
+  }).catch(err => {
+    console.warn("Failed to dynamically load Mermaid:", err);
+  });
 }
 
 // ------------------------------------------------------------------------------

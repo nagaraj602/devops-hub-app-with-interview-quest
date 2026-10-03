@@ -56,6 +56,12 @@ class GitStorageService:
         except Exception:
             pass
 
+        try:
+            from app.routes.sync_routes import invalidate_sync_views_cache
+            invalidate_sync_views_cache()
+        except Exception:
+            pass
+
     def get_audit_logs(self, limit: int = 50) -> List[Dict[str, str]]:
         """Reads and parses audit log entries from logs/audit_log.md in reverse chronological order."""
         if not self.audit_log_path.exists():

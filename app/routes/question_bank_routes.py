@@ -47,13 +47,23 @@ async def question_bank_view(request: Request, category: Optional[str] = "All", 
         return HTMLResponse(content=_cached_default_html)
 
     data = question_bank_service.get_data()
+    if is_default:
+        all_companies = data["companies"]
+        initial_companies = all_companies[:10]
+        total_count = len(all_companies)
+    else:
+        filtered = question_bank_service.filter_companies(category=category, search=search)
+        initial_companies = filtered[:10]
+        total_count = len(filtered)
+
     template_response = request.app.state.templates.TemplateResponse(
         request=request,
         name="question_bank.html",
         context={
             "page_title": "Question Bank",
             "active_page": "question_bank",
-            "companies": data["companies"],
+            "companies": initial_companies,
+            "total_companies_count": total_count,
             "stats": data["stats"],
             "category_pills": data["category_pills"],
             "calendar_events": data["calendar_events"],
