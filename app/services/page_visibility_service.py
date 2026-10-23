@@ -22,6 +22,14 @@ DEFAULT_PAGES: Dict[str, Dict[str, Any]] = {
         "icon": "fa-diagram-project",
         "description": "E-Commerce Marketplace Risk Detection Platform, microservices architecture, and EKS sizing."
     },
+    "qa_questions": {
+        "key": "qa_questions",
+        "name": "QA Questions",
+        "route": "/qa-questions",
+        "is_published": True,
+        "icon": "fa-clipboard-question",
+        "description": "ArtisanTek live instructor Q&A sessions across Hitish, Sai, Aditya, Zubair, Roopa, Krishna, and curriculum archives."
+    },
     "training": {
         "key": "training",
         "name": "Training Materials",

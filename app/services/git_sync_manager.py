@@ -7,12 +7,14 @@ from app.config import (
     DEFAULT_REPOS,
     CONTENT_DIR,
     INTERVIEW_QUESTIONS_DIR,
+    QA_SESSIONS_DIR,
     CHEATSHEET_DIR,
     NOTES_DIR,
     TRAINING_MATERIALS_DIR,
     BASE_DIR
 )
 from app.services.question_bank_service import question_bank_service
+from app.services.qa_service import qa_service
 from app.services.cheatsheet_service import cheatsheet_service
 from app.services.training_service import training_service
 
@@ -166,8 +168,17 @@ class GitSyncManager:
             if src_f.is_dir():
                 shutil.copytree(src_f, target_notes_dir / folder, dirs_exist_ok=True)
 
-        # 4. Force refresh in-memory and pickle caches
+        # 4. Sync ArtisanTek QA Sessions
+        source_qa_dir = self.notes_repo_dir / "ArtisanTek QA Sessions"
+        target_qa_dir = Path(QA_SESSIONS_DIR)
+        target_qa_dir.mkdir(parents=True, exist_ok=True)
+        if source_qa_dir.is_dir():
+            for f in source_qa_dir.glob("*.md"):
+                shutil.copy2(f, target_qa_dir / f.name)
+
+        # 5. Force refresh in-memory and pickle caches
         data = question_bank_service.get_data(force_refresh=True)
+        qa_data = qa_service.get_data(force_refresh=True)
         cheatsheet_service.get_data(force_refresh=True)
         training_service.invalidate_cache()
         training_service.get_combined_trees(force_refresh=True)

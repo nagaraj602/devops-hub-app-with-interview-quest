@@ -5,6 +5,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   initAdminToggles();
   initAdminAuthForm();
+  initAdminLogout();
 });
 
 function initAdminToggles() {
@@ -50,8 +51,6 @@ async function setPageVisibility(pageKey, isPublished, cardEl) {
       showToast(data.message || "Page visibility updated!", "success");
     } else if (response.status === 403) {
       showToast(data.message || "Please unlock with admin passphrase first.", "warning");
-      const authModal = document.getElementById("adminAuthModal");
-      if (authModal) openModal("adminAuthModal");
     } else {
       showToast(data.message || "Failed to update visibility.", "danger");
     }
@@ -136,7 +135,7 @@ function initAdminAuthForm() {
         showToast("Access granted. Controls unlocked!", "success");
         setTimeout(() => {
           window.location.reload();
-        }, 500);
+        }, 300);
       } else {
         showToast(res.message || "Invalid passphrase", "danger");
       }
@@ -144,17 +143,50 @@ function initAdminAuthForm() {
       showToast("Authentication request failed", "danger");
     }
   });
+}
 
+function initAdminLogout() {
   const logoutBtn = document.getElementById("adminLogoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await fetch("/api/admin/logout", { method: "POST" });
-        showToast("Logged out of admin console", "info");
-        setTimeout(() => { window.location.reload(); }, 500);
-      } catch (err) {
-        window.location.reload();
-      }
-    });
-  }
+  if (!logoutBtn) return;
+
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch (err) {
+      console.warn("Logout error:", err);
+    }
+    // Delete cookie on document level
+    document.cookie = "devops_hub_admin_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "devops_hub_admin_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    window.location.href = "/admin/logout";
+  });
+}
+
+function showToast(message, type = "info") {
+  const container = document.getElementById("toastContainer") || document.body;
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #1e293b;
+    color: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 0.88rem;
+    z-index: 99999;
+  `;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transition = "opacity 0.2s ease";
+    setTimeout(() => toast.remove(), 200);
+  }, 2500);
 }

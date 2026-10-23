@@ -24,9 +24,9 @@
         <span>Host: <strong>{{ host_header }}</strong></span>
       </div>
       {% if is_authenticated %}
-      <button type="button" class="btn btn-sm btn-secondary" id="adminLogoutBtn" title="Lock Admin Session">
+      <a href="/admin/logout" class="btn btn-sm btn-secondary" id="adminLogoutBtn" title="Lock Admin Session">
         <i class="fa-solid fa-arrow-right-from-bracket"></i> Lock Session
-      </button>
+      </a>
       {% endif %}
     </div>
   </div>
@@ -81,9 +81,6 @@
         <i class="fa-solid fa-unlock" style="margin-right:0.4rem;"></i> Unlock Controls
       </button>
     </form>
-    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:1rem;">
-      Default passphrase: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">devops-admin-2026</code> (Configurable via <code>ADMIN_PASSWORD</code>)
-    </div>
   </div>
   {% else %}
 

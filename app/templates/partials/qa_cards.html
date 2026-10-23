@@ -1,0 +1,145 @@
+{% for inst in instructors %}
+<article class="qa-instructor-card{% if is_sessions_expanded %} expanded{% endif %}" 
+         id="inst_{{ inst.id }}"
+         data-instructor-id="{{ inst.id }}"
+         data-instructor-name="{{ inst.name }}"
+         data-total-questions="{{ inst.total_questions }}"
+         data-order="{{ inst.order }}">
+
+  <!-- Instructor Card Header (Collapsible) -->
+  <div class="qa-instructor-header">
+    <div class="qa-title-area">
+      <div class="qa-avatar" style="width:42px; min-width:42px; max-width:42px; height:42px; min-height:42px; max-height:42px; border-radius:8px; background:{{ inst.avatar_bg|default('#f1f5f9') }}; display:flex; align-items:center; justify-content:center; flex-shrink:0; border:1px solid var(--border-light); box-shadow:0 1px 2px rgba(0,0,0,0.04); font-weight:700; font-size:0.85rem; color:{{ inst.avatar_color|default('var(--primary)') }};">
+        {{ inst.avatar_text }}
+      </div>
+      <div class="qa-details">
+        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          <h2 class="qa-inst-name">{{ inst.name }}</h2>
+          <span class="qa-class-badge" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); background:var(--bg-subtle, #f8fafc); padding:2px 8px; border-radius:4px; border:1px solid var(--border-light);">
+            {{ inst.classes }}
+          </span>
+        </div>
+        <div class="qa-meta-tags">
+          <span class="badge badge-blue">
+            <i class="fa-solid fa-circle-question"></i>
+            {{ inst.total_questions }} Questions
+          </span>
+          <span class="badge badge-purple">
+            <i class="fa-solid fa-layer-group"></i>
+            {{ inst.sessions|length }} Sessions
+          </span>
+          <span class="badge badge-gray">
+            <i class="fa-regular fa-clock"></i>
+            {{ inst.latest_date }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="qa-header-actions">
+      <span class="toggle-icon">
+        <i class="fa-solid fa-chevron-down"></i>
+      </span>
+    </div>
+  </div>
+
+  <!-- Instructor Body: Sessions & Questions -->
+  <div class="qa-instructor-body">
+    {% for sess in inst.sessions %}
+    {% set answered_count = sess.questions|selectattr('has_answer')|list|length %}
+    <div class="qa-session-block{% if is_sessions_expanded %} expanded{% endif %}" 
+         data-session-name="{{ sess.session_name }}" 
+         data-session-date="{{ sess.date }}"
+         data-session-id="{{ sess.session_id }}">
+
+      <!-- Session Header -->
+      <div class="qa-session-header">
+        <div class="qa-session-title-group">
+          <i class="fa-regular fa-calendar-check" style="color:var(--primary); font-size:0.85rem;"></i>
+          <span class="qa-session-name">{{ sess.session_name }}</span>
+          {% if sess.date != sess.session_name and sess.date != 'Core Curriculum' %}
+          <span class="qa-session-date">• {{ sess.date }}</span>
+          {% endif %}
+          <span class="badge badge-blue" style="font-size:0.7rem;">{{ sess.questions|length }} Qs</span>
+          {% if answered_count > 0 %}
+          <span class="badge badge-green" style="font-size:0.7rem;">{{ answered_count }} with Answers</span>
+          {% endif %}
+        </div>
+        <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
+          <i class="fa-solid fa-chevron-down"></i>
+        </span>
+      </div>
+
+      <!-- Questions List in this Session -->
+      <div class="qa-session-body">
+        {% for q in sess.questions %}
+        <div class="qa-question-item{% if is_answers_expanded and q.has_answer %} expanded{% endif %}{% if q.has_answer %} has-answer{% endif %}" 
+             id="{{ q.id }}" 
+             data-has-answer="{{ 'true' if q.has_answer else 'false' }}">
+
+          <!-- Question Header Bar (Clickable if has answer) -->
+          <div class="qa-question-header{% if q.has_answer %} clickable{% endif %}">
+            <div class="qa-question-title-wrap">
+              <div class="qa-question-meta-row">
+                {% if q.topic %}
+                <span class="qa-topic-pill">{{ q.topic }}</span>
+                {% endif %}
+                <span class="qa-inst-pill">{{ q.instructor }}</span>
+                <span class="qa-date-pill">{{ q.session_date }}</span>
+                {% if q.has_answer %}
+                <span class="badge badge-green" style="font-size:0.68rem;">
+                  <i class="fa-solid fa-check"></i> Answer Included
+                </span>
+                {% else %}
+                <span class="badge badge-gray" style="font-size:0.68rem;">
+                  <i class="fa-regular fa-circle-question"></i> Question Only
+                </span>
+                {% endif %}
+              </div>
+              <div class="qa-question-text">
+                <span class="qa-q-num">{{ loop.index }}.</span>
+                <span class="qa-q-content">{{ q.question }}</span>
+              </div>
+            </div>
+
+            <div class="qa-question-actions">
+              <!-- Bookmark Question -->
+              <button type="button" class="action-icon-btn qa-fav-btn" data-qid="{{ q.id }}" onclick="toggleQAFavorite('{{ q.id }}', event)" title="Bookmark Question">
+                <i class="fa-regular fa-star"></i>
+              </button>
+              <!-- Copy Question Text -->
+              <button type="button" class="action-icon-btn copy-q-btn" onclick="copyQAQuestionText('{{ q.id }}', event)" title="Copy Question text">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+              <!-- Dropdown Chevron Icon (ONLY if question has answer) -->
+              {% if q.has_answer %}
+              <span class="qa-q-toggle-icon" title="Click to expand/collapse Instructor Answer">
+                <i class="fa-solid fa-chevron-down"></i>
+              </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Answer Drawer (ONLY rendered if q.has_answer, hidden by default until clicked) -->
+          {% if q.has_answer %}
+          <div class="qa-answer-body">
+            <div class="qa-answer-header-bar">
+              <span><i class="fa-solid fa-graduation-cap" style="color:var(--primary); margin-right:0.35rem;"></i> Instructor Guidance & Solution</span>
+              <button type="button" class="copy-btn copy-ans-btn" onclick="copyQAAnswerText('{{ q.id }}', event)">
+                <i class="fa-regular fa-copy"></i> Copy Solution
+              </button>
+            </div>
+            <div class="qa-answer-markdown answer-markdown">
+              {{ q.answer_html|default(q.answer)|safe }}
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</article>
+{% endfor %}

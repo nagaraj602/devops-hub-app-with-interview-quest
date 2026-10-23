@@ -11,6 +11,8 @@
 
 /* Company Card */
 .company-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 100px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
@@ -318,6 +320,8 @@
 
 /* Question Item */
 .question-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 52px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   background-color: #ffffff;

@@ -1,19 +1,32 @@
 import hmac
 import hashlib
+import binascii
 from fastapi import APIRouter, Request, Response, Form, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
 
-from app.config import ADMIN_PORT, PORT, ADMIN_PASSWORD
+from app.config import ADMIN_PORT, PORT, ADMIN_PASSWORD, ADMIN_PASSWORD_HASH, ADMIN_PASSWORD_SALT
 from app.services.page_visibility_service import page_visibility_service
 
 router = APIRouter()
 
 COOKIE_NAME = "devops_hub_admin_auth"
 
+def verify_admin_password(password: str) -> bool:
+    if not password:
+        return False
+    # Check PBKDF2 hash (100,000 iterations with salt)
+    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), ADMIN_PASSWORD_SALT, 100000)
+    computed_hex = binascii.hexlify(key).decode('utf-8')
+    if hmac.compare_digest(computed_hex, ADMIN_PASSWORD_HASH):
+        return True
+    if ADMIN_PASSWORD and hmac.compare_digest(password, ADMIN_PASSWORD):
+        return True
+    return False
+
 def _get_expected_auth_token() -> str:
-    return hashlib.sha256(ADMIN_PASSWORD.encode()).hexdigest()
+    return hashlib.sha256((ADMIN_PASSWORD_HASH + "_devops_admin_session").encode()).hexdigest()
 
 def is_admin_server_request(request: Request) -> bool:
     """
@@ -63,15 +76,11 @@ def is_admin_request(request: Request) -> bool:
     """
     Determines whether a request comes from an authenticated admin on the dedicated admin domain/port.
     Admin access is strictly forbidden and unavailable on the public portal (port 8926).
+    Authentication requires a valid session token cookie or token header/query.
     """
     # Admin privileges can only be exercised on the dedicated admin port / admin domain
     if not is_admin_server_request(request):
         return False
-
-    # Localhost or 127.0.0.1 on the dedicated admin port is automatically authorized
-    host_header = (request.headers.get("host") or "").lower()
-    if "localhost" in host_header or "127.0.0.1" in host_header:
-        return True
 
     # 1. Check HTTP cookie
     cookie_val = request.cookies.get(COOKIE_NAME)
@@ -80,7 +89,7 @@ def is_admin_request(request: Request) -> bool:
 
     # 2. Check query parameter token or header
     param_token = request.query_params.get("token") or request.headers.get("X-Admin-Token")
-    if param_token and (param_token == ADMIN_PASSWORD or hmac.compare_digest(param_token, _get_expected_auth_token())):
+    if param_token and (verify_admin_password(param_token) or hmac.compare_digest(param_token, _get_expected_auth_token())):
         return True
 
     return False
@@ -119,7 +128,7 @@ async def admin_portal_view(request: Request):
         context={
             "page_title": "Admin Portal — Menu & Page Publisher",
             "active_page": "admin",
-            "is_admin": True,
+            "is_admin": is_auth,
             "is_authenticated": is_auth,
             "pages": pages_list,
             "total_pages": len(pages_list),
@@ -165,7 +174,7 @@ async def admin_login(request: Request, response: Response):
     except Exception:
         password = ""
 
-    if password == ADMIN_PASSWORD:
+    if verify_admin_password(password):
         token = _get_expected_auth_token()
         res = JSONResponse({"status": "success", "message": "Authentication successful. Controls unlocked."})
         res.set_cookie(
@@ -173,19 +182,27 @@ async def admin_login(request: Request, response: Response):
             value=token,
             max_age=86400 * 30,  # 30 days
             httponly=True,
-            samesite="lax"
+            samesite="lax",
+            path="/"
         )
         return res
     else:
         return JSONResponse({"status": "error", "message": "Invalid administrator passphrase."}, status_code=401)
 
+@router.get("/admin/logout")
+@router.get("/logout")
 @router.post("/api/admin/logout")
 async def admin_logout(request: Request, response: Response):
     if not is_admin_server_request(request):
         raise HTTPException(status_code=404, detail="Not Found")
 
-    res = JSONResponse({"status": "success", "message": "Logged out successfully."})
-    res.delete_cookie(COOKIE_NAME)
+    if request.method == "GET":
+        res = RedirectResponse(url="/", status_code=303)
+    else:
+        res = JSONResponse({"status": "success", "message": "Logged out successfully."})
+
+    res.delete_cookie(key=COOKIE_NAME, path="/")
+    res.delete_cookie(key=COOKIE_NAME)
     return res
 
 @router.post("/api/admin/toggle-visibility")

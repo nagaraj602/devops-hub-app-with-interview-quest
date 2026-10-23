@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="qb-page-layout qa-page-layout">
+  <!-- Vertical Quick Stats Dock (Floating on Left Side with hover flyouts) -->
+  <aside class="qb-vertical-stat-dock" id="qaVerticalStatDock" aria-label="QA Quick statistics dock">
+    <!-- 1. Total Instructors -->
+    <div class="stat-dock-item" data-stat="instructors" title="Instructors">
+      <div class="dock-icon-bubble blue">
+        <i class="fa-solid fa-chalkboard-user"></i>
+      </div>
+      <div class="stat-flyout">
+        <div class="flyout-icon blue">
+          <i class="fa-solid fa-chalkboard-user"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">Instructors</span>
+          <span class="flyout-val">{{ stats.total_instructors }}</span>
+          <span class="flyout-sub">ArtisanTek Faculty</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. QA Sessions -->
+    <div class="stat-dock-item" data-stat="sessions" title="QA Sessions">
+      <div class="dock-icon-bubble purple">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div class="stat-flyout">
+        <div class="flyout-icon purple">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">QA Sessions</span>
+          <span class="flyout-val">{{ stats.total_sessions }}</span>
+          <span class="flyout-sub">Live Classes & Topics</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Total Questions -->
+    <div class="stat-dock-item" data-stat="questions" title="Total Questions">
+      <div class="dock-icon-bubble emerald">
+        <i class="fa-solid fa-circle-question"></i>
+      </div>
+      <div class="stat-flyout">
+        <div class="flyout-icon emerald">
+          <i class="fa-solid fa-circle-question"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">Total Questions</span>
+          <span class="flyout-val">{{ stats.total_questions }}</span>
+          <span class="flyout-sub">Real Class Q&A</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Answered Questions -->
+    <div class="stat-dock-item" data-stat="answered" title="With Instructor Answers">
+      <div class="dock-icon-bubble indigo">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="stat-flyout">
+        <div class="flyout-icon indigo">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">With Answers</span>
+          <span class="flyout-val">{{ stats.answered_questions }}</span>
+          <span class="flyout-sub">Verified Guidance</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. My Favorites (Interactive Bookmark Counter) -->
+    <div class="stat-dock-item stat-dock-interactive" id="qaStatCardFavorites" data-stat="favorites" title="My Bookmarked QA Questions (Click to filter)">
+      <div class="dock-icon-bubble rose">
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <div class="stat-flyout">
+        <div class="flyout-icon rose">
+          <i class="fa-solid fa-star"></i>
+        </div>
+        <div class="flyout-details">
+          <span class="flyout-label">My Bookmarks</span>
+          <span class="flyout-val" id="qaStatFavoritesCount">0</span>
+          <span class="flyout-sub">Saved • Click to Filter</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Body with Left Margin Separation from Vertical Dock -->
+  <div class="qb-content-body">
+    <!-- Top Section: Info Card Column + Controls Column Side-by-Side -->
+    <div class="qb-top-toolbar">
+      <!-- Left Column: QA Summary Stat Card -->
+      <div class="qb-calendar-card-wrap">
+        <div class="stat-card qb-calendar-stat-card" style="cursor:default;" title="ArtisanTek Instructor QA Sessions">
+          <div class="stat-icon indigo" style="background:#eef2ff; color:var(--primary);">
+            <i class="fa-solid fa-chalkboard-user"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">QA SESSIONS</span>
+            <span class="stat-value" style="font-size:1.15rem; display:flex; align-items:center; gap:0.35rem;">
+              ArtisanTek Live
+            </span>
+            <span class="stat-desc">Instructor Class Questions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Controls in ONE Line (Search, Sort, Expand Sessions, Expand Answers) -->
+      <div class="qb-controls-col">
+        <div class="qb-controls-row">
+          <!-- 1. Search Bar -->
+          <div class="search-input-group qb-search-group">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="qaSearchInput" class="search-input qb-search-input" placeholder="Search QA questions, answers, topics..." value="{{ search_query }}">
+          </div>
+
+          <!-- 2. Sort Dropdown -->
+          <div class="custom-sort-wrapper" id="qaCustomSortWrapper">
+            <button type="button" class="custom-sort-btn" id="qaSortDropdownBtn" aria-haspopup="listbox" aria-expanded="false" title="Sort listing">
+              <span class="custom-sort-label" id="qaSortLabel">Sort: Instructor Order</span>
+              <i class="fa-solid fa-chevron-down custom-sort-arrow" id="qaSortArrow"></i>
+            </button>
+            <div class="custom-sort-menu" id="qaSortMenu" role="listbox" style="display: none;">
+              <div class="custom-sort-option active" role="option" data-value="default">
+                <i class="fa-solid fa-arrow-down-1-9"></i>
+                <span>Sort: Instructor Order</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="recent">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Session Date (Newest First)</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="oldest">
+                <i class="fa-solid fa-calendar"></i>
+                <span>Session Date (Oldest First)</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="most_questions">
+                <i class="fa-solid fa-arrow-down-wide-short"></i>
+                <span>Most Questions</span>
+              </div>
+              <div class="custom-sort-option" role="option" data-value="name_asc">
+                <i class="fa-solid fa-arrow-down-a-z"></i>
+                <span>Instructor Name (A - Z)</span>
+              </div>
+            </div>
+            <select id="qaSortSelect" style="display:none;" aria-hidden="true" tabindex="-1">
+              <option value="default" selected>Sort: Instructor Order</option>
+              <option value="recent">Session Date (Newest First)</option>
+              <option value="oldest">Session Date (Oldest First)</option>
+              <option value="most_questions">Most Questions</option>
+              <option value="name_asc">Instructor Name (A - Z)</option>
+            </select>
+          </div>
+
+          <!-- 3. Button 1: Toggle Expand/Collapse All Sessions -->
+          <button type="button" class="btn btn-secondary qb-toggle-btn{% if is_sessions_expanded %} active{% endif %}" id="toggleAllQASessionsBtn" title="Expand or collapse all instructor sessions">
+            <i class="fa-solid {% if is_sessions_expanded %}fa-down-left-and-up-right-to-center{% else %}fa-up-right-and-down-left-from-center{% endif %}" id="toggleAllQASessionsIcon"></i>
+            <span id="toggleAllQASessionsText">{% if is_sessions_expanded %}Collapse Sessions{% else %}Expand Sessions{% endif %}</span>
+          </button>
+
+          <!-- 4. Button 2: Toggle Expand/Collapse All Answers -->
+          <button type="button" class="btn btn-secondary qb-toggle-btn" id="toggleAllQAAnswersBtn" title="Expand or collapse answers for all answered questions">
+            <i class="fa-solid fa-eye" id="toggleAllQAAnswersIcon"></i>
+            <span id="toggleAllQAAnswersText">Expand Answers</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructor Filter Pills Bar -->
+    <section class="category-filter-wrap qa-filter-wrap">
+      {% for pill in instructor_pills %}
+      <button type="button" class="category-pill qa-pill{% if (not selected_instructor and pill.id == 'All') or selected_instructor == pill.id %} active{% endif %}" data-instructor="{{ pill.id }}">
+        <span>{{ pill.name }}</span>
+        <span class="pill-count">{{ pill.count }}</span>
+      </button>
+      {% endfor %}
+    </section>
+
+    <!-- Empty State Filter Warning (Hidden by default) -->
+    <div class="empty-state" id="qaEmptyState" style="display: none; text-align: center; padding: 3rem 1.5rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border-color); margin-top: 1rem;">
+      <div class="empty-state-icon" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem;">
+        <i class="fa-solid fa-clipboard-question"></i>
+      </div>
+      <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;" id="qaEmptyTitle">No QA Questions Found</h3>
+      <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem;" id="qaEmptyDesc">
+        No questions match the current instructor filter or search query. Try clearing your search term.
+      </p>
+      <button type="button" class="btn btn-primary" onclick="resetQAFilters()" style="display:inline-flex; align-items:center; gap:0.5rem;">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>Reset Filters</span>
+      </button>
+    </div>
+
+    <!-- Main QA Cards Container -->
+    <div class="company-list qa-list" id="qaListContainer" data-initial-count="{{ instructors|length }}">
+      {% include "partials/qa_cards.html" %}
+    </div>
+
+    <!-- Progressive Chunk Loading & Infinite Scroll Trigger -->
+    <div class="qb-load-more-wrap" id="qaLoadMoreWrap" style="{% if not has_more %}display:none;{% endif %} text-align:center; padding: 2rem 0;">
+      <button type="button" class="btn btn-secondary qb-load-more-btn" id="qaLoadMoreBtn" onclick="loadNextQAChunk()">
+        <i class="fa-solid fa-arrow-down" id="qaLoadMoreIcon"></i>
+        <span id="qaLoadMoreText">Load More Instructors</span>
+      </button>
+      <div class="qb-loading-indicator" id="qaLoadingIndicator" style="display:none; align-items:center; justify-content:center; gap:0.5rem; color:var(--text-muted); font-size:0.9rem;">
+        <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i>
+        <span>Loading additional QA sessions...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+<!-- Specific QA Page JS -->
+<script src="/static/js/qa_questions.js?v=1.0.7"></script>
+
+{% endblock %}

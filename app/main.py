@@ -14,6 +14,7 @@ from starlette.responses import Response
 from app.config import PORT, ADMIN_PORT, HOST, APP_DIR, BASE_DIR
 from app.routes.question_bank_routes import router as question_bank_router
 from app.routes.project_routes import router as project_router
+from app.routes.qa_routes import router as qa_router
 from app.routes.training_routes import router as training_router
 from app.routes.cheatsheet_routes import router as cheatsheet_router
 from app.routes.sync_routes import router as sync_router
@@ -26,12 +27,14 @@ from app.services.page_visibility_service import page_visibility_service
 async def lifespan(app: FastAPI):
     try:
         from app.services.question_bank_service import question_bank_service
+        from app.services.qa_service import qa_service
         from app.services.cheatsheet_service import cheatsheet_service
         from app.services.project_service import project_service
         from app.services.training_service import training_service
         from app.services.sync_service import sync_service
         # Pre-warm all data caches in memory
         question_bank_service.get_data()
+        qa_service.get_data()
         cheatsheet_service.get_data()
         project_service.get_project_data()
         training_service.get_combined_trees()
@@ -46,7 +49,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="DevOps Knowledge Portal & Interview Hub",
     description="Universal DevOps Interview Questions, Project Architecture, Training Materials & Command Cheatsheets",
-    version="1.0.19",
+    version="1.0.20",
     lifespan=lifespan
 )
 
@@ -130,6 +133,7 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 # Include Modular Feature Routers
 app.include_router(question_bank_router)
 app.include_router(project_router)
+app.include_router(qa_router)
 app.include_router(training_router)
 app.include_router(cheatsheet_router)
 app.include_router(sync_router)
