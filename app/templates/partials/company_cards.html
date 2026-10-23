@@ -11,12 +11,36 @@
   <!-- Company Card Header (Collapsed by Default) -->
   <div class="company-header">
     <div class="company-title-area">
-      <div class="company-avatar">
-        <i class="fa-solid fa-building"></i>
+      <div class="company-avatar" style="width:42px; min-width:42px; max-width:42px; height:42px; min-height:42px; max-height:42px; border-radius:8px; background:{{ company.avatar_bg|default('#ffffff') }}; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; border:1px solid var(--border-light); box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        {% if company.is_guide %}
+          <i class="{{ company.guide_icon|default('fa-solid fa-terminal') }}" style="color: {{ company.avatar_color|default('var(--primary)') }}; font-size:1.05rem;"></i>
+        {% elif company.logo_url %}
+          <img src="{{ company.logo_url }}?v=1.0.19.7" 
+               alt="{{ company.company_name }}" 
+               class="company-logo-img" 
+               width="28" 
+               height="28" 
+               loading="lazy" 
+               decoding="async" 
+               style="width:28px; height:28px; max-width:28px; max-height:28px; object-fit:contain; display:block; margin:auto;" 
+               onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="company-avatar-fallback" style="display:none; width:100%; height:100%; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem; color:{{ company.avatar_color|default('var(--primary)') }};">
+            {{ company.initials|default('CO') }}
+          </div>
+        {% else %}
+          <div class="company-avatar-fallback" style="display:flex; width:100%; height:100%; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem; color:{{ company.avatar_color|default('var(--primary)') }};">
+            {{ company.initials|default('CO') }}
+          </div>
+        {% endif %}
       </div>
       <div class="company-details">
-        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
           <h2 class="company-name">{{ company.company_name }}</h2>
+          {% if not is_group_by_company and sort_by != 'group_by_company' and company.rounds and company.rounds[0].round_name and not company.is_guide %}
+          <span class="company-round-level" style="font-size:0.95rem; font-weight:500; color:var(--text-muted); opacity:0.9; user-select:text;">
+            {{ company.rounds[0].round_name }}
+          </span>
+          {% endif %}
         </div>
         <div class="company-meta-tags">
           {% if company.is_nagaraj_interview %}

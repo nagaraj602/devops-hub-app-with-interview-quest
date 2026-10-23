@@ -107,6 +107,8 @@ async def get_question_bank_chunk(
         "request": request,
         "companies": chunk,
         "start_index": offset + 1,
+        "sort_by": sort_by,
+        "is_group_by_company": (sort_by == "group_by_company"),
         "is_companies_expanded": auto_expand_companies,
         "is_answers_expanded": bool(is_answers_expanded)
     })

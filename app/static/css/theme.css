@@ -65,21 +65,25 @@ body.font-serif {
   --font-family-base: "Georgia", Cambria, "Times New Roman", Times, serif;
 }
 
-body.size-sm {
-  --base-font-size: 12.2px;
+html.size-sm, body.size-sm {
+  --base-font-size: 13px;
+  font-size: 13px !important;
   --line-height-base: 1.48;
 }
-body.size-md {
-  --base-font-size: 13.8px;
+html.size-md, body.size-md {
+  --base-font-size: 15px;
+  font-size: 15px !important;
   --line-height-base: 1.55;
 }
-body.size-lg {
-  --base-font-size: 15.2px;
-  --line-height-base: 1.6;
+html.size-lg, body.size-lg {
+  --base-font-size: 17.5px;
+  font-size: 17.5px !important;
+  --line-height-base: 1.62;
 }
-body.size-xl {
-  --base-font-size: 16.8px;
-  --line-height-base: 1.65;
+html.size-xl, body.size-xl {
+  --base-font-size: 20px;
+  font-size: 20px !important;
+  --line-height-base: 1.7;
 }
 
 /* Base Reset & Smooth White Styling */

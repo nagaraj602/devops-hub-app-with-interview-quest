@@ -56,17 +56,49 @@
 }
 
 .company-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-md);
-  background: #f1f5f9;
-  border: 1px solid var(--border-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-light) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   color: var(--primary);
-  font-size: 1.2rem;
-  flex-shrink: 0;
+  font-size: 1.05rem;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  position: relative !important;
+}
+
+.company-logo-img {
+  width: 28px !important;
+  height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: auto !important;
+  transition: transform 0.2s ease;
+}
+
+.company-card:hover .company-logo-img {
+  transform: scale(1.08);
+}
+
+.company-avatar-fallback {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: -0.5px;
 }
 
 .company-details {
@@ -86,6 +118,16 @@
   user-select: text !important;
   -webkit-user-select: text !important;
   cursor: text !important;
+}
+
+.company-round-level {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
+  white-space: nowrap;
 }
 
 .company-meta-tags {
@@ -1477,4 +1519,39 @@
   transform: scale(1.18);
   background-color: #ffe4e6 !important;
 }
+
+/* ==============================================================================
+   Typography & Font Size Dynamic Scaling for Question Bank Content
+   ============================================================================== */
+body.size-sm .question-text { font-size: 0.88rem !important; }
+body.size-sm .answer-markdown { font-size: 0.86rem !important; }
+body.size-sm .answer-markdown pre { font-size: 0.8rem !important; }
+body.size-sm .company-name { font-size: 1.02rem !important; }
+body.size-sm .company-round-level { font-size: 0.88rem !important; }
+body.size-sm .round-name { font-size: 0.82rem !important; }
+
+body.size-md .question-text { font-size: 0.95rem !important; }
+body.size-md .answer-markdown { font-size: 0.92rem !important; }
+body.size-md .answer-markdown pre { font-size: 0.86rem !important; }
+body.size-md .company-name { font-size: 1.1rem !important; }
+body.size-md .company-round-level { font-size: 0.95rem !important; }
+body.size-md .round-name { font-size: 0.86rem !important; }
+
+body.size-lg .question-text { font-size: 1.12rem !important; line-height: 1.55 !important; }
+body.size-lg .answer-markdown { font-size: 1.05rem !important; line-height: 1.75 !important; }
+body.size-lg .answer-markdown pre { font-size: 0.94rem !important; }
+body.size-lg .answer-markdown code { font-size: 0.92em !important; }
+body.size-lg .company-name { font-size: 1.22rem !important; }
+body.size-lg .company-round-level { font-size: 1.05rem !important; }
+body.size-lg .round-name { font-size: 0.96rem !important; }
+
+body.size-xl .question-text { font-size: 1.28rem !important; line-height: 1.65 !important; }
+body.size-xl .answer-markdown { font-size: 1.18rem !important; line-height: 1.85 !important; }
+body.size-xl .answer-markdown pre { font-size: 1.02rem !important; }
+body.size-xl .answer-markdown code { font-size: 0.96em !important; }
+body.size-xl .company-name { font-size: 1.34rem !important; }
+body.size-xl .company-round-level { font-size: 1.15rem !important; }
+body.size-xl .round-name { font-size: 1.06rem !important; }
+body.size-xl .badge { font-size: 0.82rem !important; }
+
 

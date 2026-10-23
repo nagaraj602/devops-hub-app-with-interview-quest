@@ -19,7 +19,12 @@ page_visibility_service.add_on_change_callback(invalidate_qb_html_cache)
 
 @router.get("/", response_class=HTMLResponse)
 @router.get("/question-bank", response_class=HTMLResponse)
-async def question_bank_view(request: Request, category: Optional[str] = "All", search: Optional[str] = ""):
+async def question_bank_view(
+    request: Request,
+    category: Optional[str] = "All",
+    search: Optional[str] = "",
+    sort_by: Optional[str] = "recent"
+):
     # 1. On dedicated admin port (9256) / admin domain, '/' loads the Admin Dashboard directly
     if request.url.path == "/" and is_admin_server_request(request):
         return await admin_portal_view(request)
@@ -41,10 +46,13 @@ async def question_bank_view(request: Request, category: Optional[str] = "All", 
         )
 
     global _cached_default_html
-    is_default = (category in (None, "All", "")) and (not search or not search.strip())
+    is_default = (category in (None, "All", "")) and (not search or not search.strip()) and (sort_by in (None, "recent"))
 
     if is_default and _cached_default_html is not None:
-        return HTMLResponse(content=_cached_default_html)
+        return HTMLResponse(
+            content=_cached_default_html,
+            headers={"Cache-Control": "private, max-age=120, stale-while-revalidate=300"}
+        )
 
     data = question_bank_service.get_data()
     if is_default:
@@ -52,7 +60,7 @@ async def question_bank_view(request: Request, category: Optional[str] = "All", 
         initial_companies = all_companies[:10]
         total_count = len(all_companies)
     else:
-        filtered = question_bank_service.filter_companies(category=category, search=search)
+        filtered = question_bank_service.filter_companies(category=category, search=search, sort_by=sort_by)
         initial_companies = filtered[:10]
         total_count = len(filtered)
 
@@ -69,8 +77,11 @@ async def question_bank_view(request: Request, category: Optional[str] = "All", 
             "calendar_events": data["calendar_events"],
             "selected_category": category,
             "search_query": search,
+            "sort_by": sort_by,
+            "is_group_by_company": (sort_by == "group_by_company"),
             "is_companies_expanded": not is_default
-        }
+        },
+        headers={"Cache-Control": "private, max-age=120, stale-while-revalidate=300"}
     )
 
     if is_default:

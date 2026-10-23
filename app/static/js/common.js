@@ -15,7 +15,31 @@ document.addEventListener("DOMContentLoaded", () => {
   initFontSettings();
   initMobileDrawer();
   initGlobalCopyButtons();
+  initInstantPrefetch();
 });
+
+// Instant Navigation Prefetcher for 2-CPU Low Spec Systems
+function initInstantPrefetch() {
+  const prefetchedUrls = new Set();
+  const prefetch = (url) => {
+    if (!url || prefetchedUrls.has(url) || url.startsWith("#") || url.startsWith("javascript:")) return;
+    try {
+      const u = new URL(url, window.location.origin);
+      if (u.origin !== window.location.origin) return;
+      if (u.pathname === window.location.pathname) return;
+      prefetchedUrls.add(u.pathname);
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = u.pathname;
+      document.head.appendChild(link);
+    } catch (e) {}
+  };
+
+  document.querySelectorAll("a[href^='/']").forEach(a => {
+    a.addEventListener("mouseenter", () => prefetch(a.getAttribute("href")), { passive: true });
+    a.addEventListener("touchstart", () => prefetch(a.getAttribute("href")), { passive: true });
+  });
+}
 
 // Font Settings Manager
 function initFontSettings() {
@@ -44,14 +68,26 @@ function initFontSettings() {
 }
 
 function applyFontFamily(family) {
-  document.body.classList.remove("font-sans", "font-mono", "font-serif");
-  document.body.classList.add(`font-${family}`);
+  const families = ["font-sans", "font-mono", "font-serif"];
+  families.forEach(f => {
+    document.documentElement.classList.remove(f);
+    document.body.classList.remove(f);
+  });
+  const activeClass = `font-${family}`;
+  document.documentElement.classList.add(activeClass);
+  document.body.classList.add(activeClass);
   localStorage.setItem("devops_hub_font_family", family);
 }
 
 function applyFontSize(size) {
-  document.body.classList.remove("size-sm", "size-md", "size-lg", "size-xl");
-  document.body.classList.add(`size-${size}`);
+  const sizes = ["size-sm", "size-md", "size-lg", "size-xl"];
+  sizes.forEach(s => {
+    document.documentElement.classList.remove(s);
+    document.body.classList.remove(s);
+  });
+  const activeClass = `size-${size}`;
+  document.documentElement.classList.add(activeClass);
+  document.body.classList.add(activeClass);
   localStorage.setItem("devops_hub_font_size", size);
 }
 

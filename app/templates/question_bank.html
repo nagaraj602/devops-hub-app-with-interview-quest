@@ -114,6 +114,10 @@
                 <i class="fa-solid fa-clock-rotate-left"></i>
                 <span>Sort: Most Recent</span>
               </div>
+              <div class="custom-sort-option" role="option" data-value="group_by_company">
+                <i class="fa-solid fa-building-user"></i>
+                <span>Group by Company</span>
+              </div>
               <div class="custom-sort-option" role="option" data-value="name_asc">
                 <i class="fa-solid fa-arrow-down-a-z"></i>
                 <span>Company Name (A - Z)</span>
@@ -134,6 +138,7 @@
             <!-- Programmatic compatibility select element -->
             <select id="qbSortSelect" style="display:none;" aria-hidden="true" tabindex="-1">
               <option value="recent" selected>Sort: Most Recent</option>
+              <option value="group_by_company">Group by Company</option>
               <option value="name_asc">Company Name (A - Z)</option>
               <option value="name_desc">Company Name (Z - A)</option>
               <option value="most_questions">Most Questions</option>
@@ -193,6 +198,9 @@
   </div>
   </div><!-- end qb-content-body -->
 </div><!-- end qb-page-layout -->
+
+<!-- Embedded Calendar Events for Instant 0ms Load (Zero Network Delay for 2-CPU Low Spec Systems) -->
+<script id="preloadedCalendarEvents" type="application/json">{{ calendar_events | tojson | safe }}</script>
 
 <!-- Calendar Pop-Up Modal (Split Layout: Compact Calendar Grid + Prominent Side-by-Side Interview List) -->
 <div class="modal-overlay" id="calendarModal">

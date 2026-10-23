@@ -131,10 +131,19 @@ class GitSyncManager:
 
         copied_questions = 0
         if source_questions_dir.is_dir():
+            valid_names = set()
             for f in source_questions_dir.glob("*.md"):
                 dest = target_questions_dir / f.name
                 shutil.copy2(f, dest)
+                valid_names.add(f.name)
                 copied_questions += 1
+            # Remove deleted/combined files from target
+            for existing_f in target_questions_dir.glob("*.md"):
+                if existing_f.name not in valid_names:
+                    try:
+                        existing_f.unlink()
+                    except Exception:
+                        pass
 
         # 2. Sync commands_cheatsheet
         source_cheatsheets_dir = self.notes_repo_dir / "commands_cheatsheet"

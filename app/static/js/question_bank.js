@@ -15,6 +15,7 @@ let isAnswersExpanded = false;
 const PAGE_CHUNK = 10;
 let isChunkLoading = false;
 let filterAbortController = null;
+let cachedDefaultCardsHtml = "";
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
@@ -31,6 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initQuestionBank() {
+  const container = document.getElementById("companyListContainer");
+  if (container && currentCategory.toLowerCase() === "all" && !searchQuery && currentSort === "recent" && !showFavoritesOnly) {
+    cachedDefaultCardsHtml = container.innerHTML;
+  }
   updateFavoritesCountUI();
   updateFavoriteIconsInDOM();
   initCategoryPills();
@@ -290,13 +295,17 @@ function applyFilters(showLoading = false) {
   if (showLoading) {
     if (emptyState) emptyState.style.display = "none";
     if (loadMoreWrap) loadMoreWrap.style.display = "none";
-    container.innerHTML = `
-      <div class="qb-loading-card">
-        <div class="qb-loading-spinner"></div>
-        <div class="qb-loading-title">Loading & Sorting Question Bank...</div>
-        <div class="qb-loading-desc">Organizing companies and interview questions</div>
-      </div>
-    `;
+    if (!container.firstElementChild) {
+      container.innerHTML = `
+        <div class="qb-loading-card">
+          <div class="qb-loading-spinner"></div>
+          <div class="qb-loading-title">Loading & Sorting Question Bank...</div>
+          <div class="qb-loading-desc">Organizing companies and interview questions</div>
+        </div>
+      `;
+    } else {
+      container.style.opacity = "0.55";
+    }
   }
 
   const isFilteringCategory = currentCategory.toLowerCase() !== "all";
@@ -316,6 +325,7 @@ function applyFilters(showLoading = false) {
   fetch(`/api/question-bank/chunk?${params.toString()}`, { signal: filterAbortController.signal })
     .then(res => res.json())
     .then(data => {
+      container.style.opacity = "";
       if (arrow) arrow.className = "fa-solid fa-chevron-down custom-sort-arrow";
       if (!data) return;
 
@@ -336,6 +346,7 @@ function applyFilters(showLoading = false) {
       }
     })
     .catch(err => {
+      container.style.opacity = "";
       if (err.name !== "AbortError") {
         if (arrow) arrow.className = "fa-solid fa-chevron-down custom-sort-arrow";
         console.error("Filter request error:", err);
@@ -582,8 +593,8 @@ function initQuestionToggles() {
       return;
     }
 
-    // Allow user to freely select company name or round name text without accordion toggle interference
-    if (e.target.closest(".company-name") || e.target.closest(".round-name")) {
+    // Allow user to freely select company name, level name or round name text without accordion toggle interference
+    if (e.target.closest(".company-name") || e.target.closest(".company-round-level") || e.target.closest(".round-name")) {
       return;
     }
 
@@ -635,7 +646,18 @@ function initCalendarModal() {
     });
   }
 
-  // Load calendar events
+  // Preloaded JSON for 0ms network latency on 2-CPU low spec laptops
+  const preloadedScript = document.getElementById("preloadedCalendarEvents");
+  if (preloadedScript && preloadedScript.textContent) {
+    try {
+      calendarEventsData = JSON.parse(preloadedScript.textContent);
+      return;
+    } catch (e) {
+      console.warn("Failed parsing preloaded calendar events:", e);
+    }
+  }
+
+  // Fallback to fetch if preloaded tag was absent
   fetch("/api/calendar")
     .then(res => res.json())
     .then(data => {
@@ -809,6 +831,9 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
     .then(data => {
       const container = document.getElementById("companyListContainer");
       if (data && data.html && container) {
+        if (!cachedDefaultCardsHtml && currentCategory.toLowerCase() === "all" && !searchQuery && currentSort === "recent" && !showFavoritesOnly) {
+          cachedDefaultCardsHtml = container.innerHTML;
+        }
         const bannerHtml = `
           <div class="calendar-target-notice" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:var(--radius-md); padding:0.65rem 1.1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <span style="font-size:0.86rem; color:#1e40af; font-weight:600;">
@@ -857,7 +882,21 @@ window.resetToAllCompanies = function() {
   document.querySelectorAll(".category-pill").forEach(p => {
     p.classList.toggle("active", p.dataset.category === "All");
   });
-  applyFilters(true);
+
+  const container = document.getElementById("companyListContainer");
+  if (cachedDefaultCardsHtml && container && currentSort === "recent" && !showFavoritesOnly) {
+    if (filterAbortController) filterAbortController.abort();
+    const emptyState = document.getElementById("qbEmptyState");
+    if (emptyState) emptyState.style.display = "none";
+    container.style.opacity = "";
+    container.innerHTML = cachedDefaultCardsHtml;
+    const loadMoreWrap = document.getElementById("qbLoadMoreWrap");
+    if (loadMoreWrap) loadMoreWrap.style.display = "flex";
+    updateFavoriteIconsInDOM();
+    showToast("Restored all companies", "info");
+    return;
+  }
+  applyFilters(false);
 };
 
 function renderCalendarView(year, month) {
