@@ -9,6 +9,8 @@ services:
     ports:
       - "8926:8926"
       - "9256:9256"
+    volumes:
+      - ./logs:/app/logs
     environment:
       - PORT=8926
       - ADMIN_PORT=9256

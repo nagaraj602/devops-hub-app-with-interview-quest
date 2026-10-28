@@ -18,7 +18,7 @@ RESET="\033[0m"
 # Default configuration
 DEFAULT_IMAGE_NAME="nagarajkamath602/devops-hub-app-with-interview-quest"
 DEFAULT_TAG="latest"
-DEFAULT_VERSION="1.0.21"
+DEFAULT_VERSION="1.0.22"
 PORT="8926"
 ADMIN_PORT="9256"
 K8S_MANIFEST="k8s/all-in-one.yaml"
@@ -283,7 +283,10 @@ deploy_docker_run() {
     docker run -d \
         --name "$CONTAINER_NAME" \
         -p "$PORT:$PORT" \
+        -p "$ADMIN_PORT:$ADMIN_PORT" \
+        -v "$APP_DIR/logs:/app/logs" \
         -e PORT="$PORT" \
+        -e ADMIN_PORT="$ADMIN_PORT" \
         -e HOST="0.0.0.0" \
         --restart unless-stopped \
         "$IMAGE_TO_RUN"

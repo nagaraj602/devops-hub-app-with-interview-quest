@@ -116,7 +116,30 @@ class QuestionBankService:
             else:
                 self._parse_company_interview(fname, content, sessions_list, category_counts, is_nagaraj)
 
+        # Deduplicate identical sessions if identical rounds exist across consolidated and standalone files
+        seen_sessions = set()
+        deduped_sessions = []
+        for s in sessions_list:
+            r_name = s.get("rounds", [{}])[0].get("round_name", "") if s.get("rounds") else ""
+            key = (s.get("company_name", "").lower(), r_name.lower(), s.get("latest_date", ""))
+            if key in seen_sessions:
+                continue
+            seen_sessions.add(key)
+            deduped_sessions.append(s)
+        sessions_list = deduped_sessions
+
         companies_list = [s for s in sessions_list if s.get("total_questions", 0) > 0]
+
+        # Recompute category counts from finalized deduplicated sessions
+        recomputed_counts: Dict[str, int] = {}
+        for c in companies_list:
+            for r in c.get("rounds", []):
+                for q in r.get("questions", []):
+                    q_cat = q.get("category", "General")
+                    recomputed_counts[q_cat] = recomputed_counts.get(q_cat, 0) + 1
+                    if q.get("is_nagaraj"):
+                        recomputed_counts["Nagaraj's Interview"] = recomputed_counts.get("Nagaraj's Interview", 0) + 1
+        category_counts = recomputed_counts
 
         # Finalize rounds list & categories and populate calendar events
         for c in companies_list:
