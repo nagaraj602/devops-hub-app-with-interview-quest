@@ -13,6 +13,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "apexon": "apexon.com",
     "apty": "apty.io",
     "azentio": "azentio.com",
+    "betsol": "betsol.com",
     "bounteous": "bounteous.com",
     "capgemini": "capgemini.com",
     "cepegemini": "capgemini.com",
