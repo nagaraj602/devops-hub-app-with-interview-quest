@@ -71,6 +71,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "betsol": "/static/images/logos/betsol.png",
     "cognissolutions": "/static/images/logos/cognissolutions.png",
     "devon": "/static/images/logos/devon.png",
     "quantiphi": "/static/images/logos/quantiphi.png",
@@ -139,7 +140,7 @@ def get_company_logo_meta(company_name: str) -> Dict[str, Any]:
     initials = get_company_initials(company_name)
 
     safe_slug = re.sub(r'[^a-z0-9_]', '', norm.replace(' ', '_'))
-    local_logo = f"/static/images/logos/{safe_slug}.png"
+    local_logo = LOCAL_LOGOS.get(norm, f"/static/images/logos/{safe_slug}.png")
     domain = COMPANY_DOMAINS.get(norm)
     if not domain:
         clean_norm = re.sub(r'[^a-z0-9]', '', norm)
