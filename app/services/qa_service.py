@@ -139,8 +139,8 @@ INSTRUCTORS_CONFIG = [
     {
         "id": "hitish",
         "name": "Hitish",
-        "filename": "4.1. Hitish QA 59 to 87 class.md",
-        "classes": "Class 59 to 87",
+        "filename": "4.1. Hitish QA 59 to 88 class.md",
+        "classes": "Class 59 to 88",
         "avatar_text": "HI",
         "avatar_bg": "#eff6ff",
         "avatar_color": "#2563eb",
@@ -266,6 +266,12 @@ class QAService:
 
         for config in INSTRUCTORS_CONFIG:
             fpath = os.path.join(self.dir_path, config["filename"])
+            if not os.path.exists(fpath):
+                # Try finding any file starting with same prefix in dir_path
+                prefix = config["filename"].split("QA")[0].strip() if "QA" in config["filename"] else config["filename"][:5]
+                matches = [f for f in os.listdir(self.dir_path) if f.startswith(prefix) and f.endswith(".md")]
+                if matches:
+                    fpath = os.path.join(self.dir_path, matches[0])
             if not os.path.exists(fpath):
                 fallback = os.path.join("content", "repos", "notes", "ArtisanTek QA Sessions", config["filename"])
                 if os.path.exists(fallback):
