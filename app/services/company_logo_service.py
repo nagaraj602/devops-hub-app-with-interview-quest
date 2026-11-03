@@ -40,6 +40,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "ltts": "ltts.com",
     "metascope": "metascope.com",
     "mindteck": "mindteck.com",
+    "mobilution": "mobilutionit.com",
     "momentive software": "momentivesoftware.com",
     "mphasis": "mphasis.com",
     "mrisoftware": "mrisoftware.com",
