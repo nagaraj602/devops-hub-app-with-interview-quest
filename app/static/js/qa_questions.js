@@ -3,7 +3,7 @@
    ============================================================================== */
 
 let currentInstructor = "All";
-let currentQASort = "default";
+let currentQASort = "recent";
 let qaSearchQuery = "";
 let showQAFavoritesOnly = false;
 let userQAFavorites = JSON.parse(localStorage.getItem("devops_hub_qa_favorites") || "[]");
@@ -466,7 +466,7 @@ function resetQAFilters() {
   currentInstructor = "All";
   qaSearchQuery = "";
   showQAFavoritesOnly = false;
-  currentQASort = "default";
+  currentQASort = "recent";
 
   const searchInput = document.getElementById("qaSearchInput");
   if (searchInput) searchInput.value = "";
@@ -480,7 +480,13 @@ function resetQAFilters() {
   if (favCard) favCard.classList.remove("active");
 
   const sortLabel = document.getElementById("qaSortLabel");
-  if (sortLabel) sortLabel.textContent = "Sort: Instructor Order";
+  if (sortLabel) sortLabel.textContent = "Sort: Newest Date";
+
+  const sortOptions = document.querySelectorAll("#qaSortMenu .custom-sort-option");
+  sortOptions.forEach(o => o.classList.toggle("active", o.getAttribute("data-value") === "recent"));
+
+  const hiddenSelect = document.getElementById("qaSortSelect");
+  if (hiddenSelect) hiddenSelect.value = "recent";
 
   applyQAFilters(true);
 }

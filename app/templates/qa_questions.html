@@ -123,17 +123,13 @@
           <!-- 2. Sort Dropdown -->
           <div class="custom-sort-wrapper" id="qaCustomSortWrapper">
             <button type="button" class="custom-sort-btn" id="qaSortDropdownBtn" aria-haspopup="listbox" aria-expanded="false" title="Sort listing">
-              <span class="custom-sort-label" id="qaSortLabel">Sort: Instructor Order</span>
+              <span class="custom-sort-label" id="qaSortLabel">Sort: Newest Date</span>
               <i class="fa-solid fa-chevron-down custom-sort-arrow" id="qaSortArrow"></i>
             </button>
             <div class="custom-sort-menu" id="qaSortMenu" role="listbox" style="display: none;">
-              <div class="custom-sort-option active" role="option" data-value="default">
-                <i class="fa-solid fa-arrow-down-1-9"></i>
-                <span>Sort: Instructor Order</span>
-              </div>
-              <div class="custom-sort-option" role="option" data-value="recent">
+              <div class="custom-sort-option active" role="option" data-value="recent">
                 <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>Session Date (Newest First)</span>
+                <span>Sort: Newest Date</span>
               </div>
               <div class="custom-sort-option" role="option" data-value="oldest">
                 <i class="fa-solid fa-calendar"></i>
@@ -147,13 +143,17 @@
                 <i class="fa-solid fa-arrow-down-a-z"></i>
                 <span>Instructor Name (A - Z)</span>
               </div>
+              <div class="custom-sort-option" role="option" data-value="instructor_order">
+                <i class="fa-solid fa-arrow-down-1-9"></i>
+                <span>Instructor Order</span>
+              </div>
             </div>
             <select id="qaSortSelect" style="display:none;" aria-hidden="true" tabindex="-1">
-              <option value="default" selected>Sort: Instructor Order</option>
-              <option value="recent">Session Date (Newest First)</option>
+              <option value="recent" selected>Sort: Newest Date</option>
               <option value="oldest">Session Date (Oldest First)</option>
               <option value="most_questions">Most Questions</option>
               <option value="name_asc">Instructor Name (A - Z)</option>
+              <option value="instructor_order">Instructor Order</option>
             </select>
           </div>
 

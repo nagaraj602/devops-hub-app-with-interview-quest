@@ -291,8 +291,11 @@ class QAService:
                 for s in inst_obj["sessions"]:
                     total_answered += sum(1 for q in s.get("questions", []) if q.get("has_answer"))
 
-        # Order instructors strictly: Hitish -> Sai -> Aditya -> Zubair -> Roopa -> Krishna -> General Topics
-        instructors_data.sort(key=lambda x: x.get("order", 99))
+        # Order instructors by latest session timestamp (newest date first)
+        instructors_data.sort(
+            key=lambda x: (x.get("sessions", [{}])[0].get("timestamp", 0.0) if x.get("sessions") else 0.0),
+            reverse=True
+        )
 
         instructor_pills = [{"id": "All", "name": "All", "count": total_questions}]
         for inst in instructors_data:
@@ -1102,7 +1105,7 @@ class QAService:
         self,
         instructor: Optional[str] = "All",
         search: Optional[str] = "",
-        sort_by: Optional[str] = "default",
+        sort_by: Optional[str] = "recent",
         favorites: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         data = self.get_data()
@@ -1156,16 +1159,17 @@ class QAService:
                 filtered.append(i_copy)
 
         # Apply sorting
-        if sort_by == "recent":
-            filtered.sort(key=lambda x: (x.get("sessions", [{}])[0].get("timestamp", 0.0) if x.get("sessions") else 0.0), reverse=True)
-        elif sort_by == "oldest":
+        if sort_by == "oldest":
             filtered.sort(key=lambda x: (x.get("sessions", [{}])[0].get("timestamp", 0.0) if x.get("sessions") else 0.0))
         elif sort_by == "most_questions":
             filtered.sort(key=lambda x: x.get("total_questions", 0), reverse=True)
         elif sort_by == "name_asc":
             filtered.sort(key=lambda x: x.get("name", "").lower())
-        else:
+        elif sort_by == "instructor_order":
             filtered.sort(key=lambda x: x.get("order", 99))
+        else:
+            # Default to "recent" / newest session date first
+            filtered.sort(key=lambda x: (x.get("sessions", [{}])[0].get("timestamp", 0.0) if x.get("sessions") else 0.0), reverse=True)
 
         return filtered
 

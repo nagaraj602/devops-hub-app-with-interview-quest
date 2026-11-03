@@ -21,7 +21,7 @@ async def qa_questions_view(
     request: Request,
     instructor: Optional[str] = "All",
     search: Optional[str] = "",
-    sort_by: Optional[str] = "default"
+    sort_by: Optional[str] = "recent"
 ):
     if not page_visibility_service.is_page_published("qa_questions") and not is_admin_request(request):
         return request.app.state.templates.TemplateResponse(
@@ -38,7 +38,7 @@ async def qa_questions_view(
         )
 
     global _cached_default_qa_html
-    is_default = (instructor in (None, "All", "")) and (not search or not search.strip()) and (sort_by in (None, "default"))
+    is_default = (instructor in (None, "All", "")) and (not search or not search.strip()) and (sort_by in (None, "recent", "default"))
 
     if is_default and _cached_default_qa_html is not None:
         return HTMLResponse(
@@ -70,7 +70,7 @@ async def qa_questions_view(
             "instructor_pills": data.get("instructor_pills", []),
             "selected_instructor": instructor or "All",
             "search_query": search or "",
-            "sort_by": sort_by or "default",
+            "sort_by": sort_by or "recent",
             "total_matched": total_matched,
             "has_more": len(initial_chunk) < total_matched,
             "is_sessions_expanded": False,
@@ -93,7 +93,7 @@ async def get_qa_chunk(
     limit: int = Query(2, ge=1, le=20),
     instructor: Optional[str] = "All",
     search: Optional[str] = "",
-    sort_by: Optional[str] = "default",
+    sort_by: Optional[str] = "recent",
     favorites: Optional[str] = "",
     is_sessions_expanded: Optional[bool] = Query(None),
     is_answers_expanded: Optional[bool] = False
