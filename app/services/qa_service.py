@@ -116,7 +116,7 @@ def is_answer_start(s: str) -> bool:
         if cl.startswith(kw):
             return True
 
-    if re.match(r'^(?:\*\*)?(?:Ans|Answer|Suggestion)(?:\*\*)?\s*:\s*', cleaned, re.I):
+    if re.match(r'^(?:\*\*)?(?:Ans|Answer|Suggestion|Guidance)(?:\*\*)?\s*:\s*', cleaned, re.I):
         return True
     if re.match(r'^\*Ans\*:\s*', cleaned, re.I):
         return True
@@ -159,8 +159,8 @@ INSTRUCTORS_CONFIG = [
     {
         "id": "aditya",
         "name": "Aditya",
-        "filename": "5. Aditya QA 69 & 77 class.md",
-        "classes": "Class 69 & 77",
+        "filename": "5. Aditya QA 69, 77, 89, 91 class.md",
+        "classes": "Class 69, 77, 89, 91",
         "avatar_text": "AD",
         "avatar_bg": "#ecfdf5",
         "avatar_color": "#059669",
@@ -580,20 +580,22 @@ class QAService:
     def _parse_aditya(self, config: Dict[str, Any], content: str) -> Dict[str, Any]:
         lines = content.splitlines()
         sessions = []
-        curr_date = "18-Sep-2026"
+        curr_date = "General"
         curr_qs = []
         curr_q = ""
+        curr_ans = []
+        in_ans = False
+        curr_block_qs = []
         curr_topic = ""
         q_idx = 1
 
         def push_q():
-            nonlocal curr_q, q_idx, curr_topic
+            nonlocal curr_q, q_idx, curr_topic, curr_qs, curr_block_qs
             q_clean = clean_question_text(curr_q)
             if not q_clean:
                 curr_q = ""
                 return
-            # Aditya QA consists of rapid questions without provided solutions
-            curr_qs.append({
+            q_obj = {
                 "id": f"qa_aditya_{q_idx}",
                 "question": q_clean,
                 "answer": "",
@@ -602,13 +604,32 @@ class QAService:
                 "instructor": config["name"],
                 "session_date": curr_date,
                 "topic": curr_topic
-            })
+            }
+            curr_qs.append(q_obj)
+            curr_block_qs.append(q_obj)
             q_idx += 1
             curr_q = ""
 
+        def apply_block_ans():
+            nonlocal curr_ans, in_ans, curr_block_qs
+            ans_raw = "\n".join(curr_ans).strip()
+            ans_clean = clean_grammar_and_unescape(ans_raw)
+            has_ans = is_valid_answer_text(ans_clean)
+            if has_ans and curr_block_qs:
+                ans_html = render_md(ans_clean)
+                for q_obj in curr_block_qs:
+                    if not q_obj["has_answer"]:
+                        q_obj["answer"] = ans_clean
+                        q_obj["answer_html"] = ans_html
+                        q_obj["has_answer"] = True
+            curr_ans = []
+            in_ans = False
+            curr_block_qs = []
+
         def push_session():
-            nonlocal curr_qs, curr_date
+            nonlocal curr_qs, curr_date, sessions
             push_q()
+            apply_block_ans()
             if curr_qs:
                 sessions.append({
                     "session_id": f"aditya_{curr_date.replace('-', '_')}",
@@ -623,23 +644,67 @@ class QAService:
         for line in lines:
             s = clean_grammar_and_unescape(line)
             if not s:
+                if in_ans:
+                    curr_ans.append("")
                 continue
 
             m_d = re.match(r'^##\s*([0-9]{1,2}-[A-Za-z]+-[0-9]{4}):?', s)
             if m_d:
                 push_session()
                 curr_date = m_d.group(1).strip()
+                curr_topic = ""
+                continue
+
+            if is_answer_start(s):
+                push_q()
+                in_ans = True
+                curr_ans.append(s)
                 continue
 
             if s.startswith("**") and s.endswith("**") and len(s) > 4:
                 topic_title = s.strip('*').strip()
-                if "Candidate" not in topic_title:
+                if "Instructor" in topic_title:
+                    push_q()
+                    in_ans = True
+                    curr_ans.append(s)
+                    continue
+                if "Candidate" not in topic_title and "Questions Asked" not in topic_title:
+                    push_q()
+                    if in_ans:
+                        apply_block_ans()
                     curr_topic = topic_title
                 continue
 
-            if s.startswith("* "):
+            if re.match(r'^Candidate\s*\d+', s, re.I):
                 push_q()
-                curr_q = s[2:].strip()
+                if in_ans:
+                    apply_block_ans()
+                continue
+
+            if s.startswith("* ") or s.startswith("- "):
+                if is_answer_start(s[2:]):
+                    push_q()
+                    in_ans = True
+                    curr_ans.append(s)
+                    continue
+
+                if in_ans:
+                    if s.startswith("* **Question") or s.startswith("* Question:"):
+                        apply_block_ans()
+                        push_q()
+                        curr_q = s[2:].strip()
+                    else:
+                        curr_ans.append(s)
+                else:
+                    push_q()
+                    curr_q = s[2:].strip()
+            elif in_ans:
+                curr_ans.append(s)
+            elif s.startswith("Question:"):
+                if in_ans:
+                    apply_block_ans()
+                push_q()
+                curr_q = s[9:].strip()
 
         push_session()
         sessions.sort(key=lambda s: s.get("timestamp", 0.0), reverse=True)
