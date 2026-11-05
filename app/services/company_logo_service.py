@@ -75,6 +75,8 @@ COMPANY_DOMAINS: Dict[str, str] = {
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "highradius": "/static/images/logos/highradius.png",
+    "unidel": "/static/images/logos/unidel.png",
     "betsol": "/static/images/logos/betsol.png",
     "mobilution": "/static/images/logos/mobilution.png",
     "cognissolutions": "/static/images/logos/cognissolutions.png",
