@@ -4,15 +4,15 @@
   "base_os": "Ubuntu 24.04 LTS",
   "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
   "stats": {
-    "total_questions": 1784,
-    "total_companies": 62,
-    "total_rounds": 102,
+    "total_questions": 1841,
+    "total_companies": 64,
+    "total_rounds": 105,
     "tech_categories": 24
   },
-  "last_synced": "2026-11-03 13:45:44",
+  "last_synced": "2026-11-05 17:53:30",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "admin_port": 9256,
-  "last_event": "Release v1.0.29 - Set QA Default Sort to Newest Date & Dynamic Instructor Ordering"
+  "last_event": "Release v1.0.30 - Sync Synechron, Highradius & UNIDEL Q&As, Reset Discord intake template"
 }
