@@ -173,6 +173,13 @@ class GitSyncManager:
         target_qa_dir = Path(QA_SESSIONS_DIR)
         target_qa_dir.mkdir(parents=True, exist_ok=True)
         if source_qa_dir.is_dir():
+            source_qa_names = {f.name for f in source_qa_dir.glob("*.md")}
+            for old_qa in target_qa_dir.glob("*.md"):
+                if old_qa.name not in source_qa_names:
+                    try:
+                        old_qa.unlink()
+                    except Exception:
+                        pass
             for f in source_qa_dir.glob("*.md"):
                 shutil.copy2(f, target_qa_dir / f.name)
 

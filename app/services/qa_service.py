@@ -116,14 +116,16 @@ def is_answer_start(s: str) -> bool:
         'standards established by the instructor',
         'instructor answers provided to student queries',
         'instructor guidance provided', 'instructor guidance & recommendations',
-        'instructor guidance & provided model answer'
+        'instructor guidance & provided model answer',
+        'feedback', 'instructor\'s feedback', 'instructor feedback',
+        'feedback / guidance', 'feedback/guidance', 'feedback / advice', 'feedback/advice'
     ]
     cl = cleaned.lower().strip('*_ ')
     for kw in ans_keywords:
         if cl.startswith(kw):
             return True
 
-    if re.match(r'^(?:\*\*)?(?:Ans|Answer|Suggestion|Guidance)(?:\*\*)?\s*:\s*', cleaned, re.I):
+    if re.match(r'^(?:\*\*)?(?:Ans|Answer|Suggestion|Guidance|Feedback)(?:\*\*)?\s*:\s*', cleaned, re.I):
         return True
     if re.match(r'^\*Ans\*:\s*', cleaned, re.I):
         return True
@@ -166,8 +168,8 @@ INSTRUCTORS_CONFIG = [
     {
         "id": "aditya",
         "name": "Aditya",
-        "filename": "5. Aditya QA 69, 77, 89, 91 class.md",
-        "classes": "Class 69, 77, 89, 91",
+        "filename": "5. Aditya QA 69, 77, 89, 91-92 class.md",
+        "classes": "Class 69, 77, 89, 91-92",
         "avatar_text": "AD",
         "avatar_bg": "#ecfdf5",
         "avatar_color": "#059669",
