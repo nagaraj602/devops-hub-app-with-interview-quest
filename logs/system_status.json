@@ -4,15 +4,15 @@
   "base_os": "Ubuntu 24.04 LTS",
   "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
   "stats": {
-    "total_questions": 1841,
+    "total_questions": 1873,
     "total_companies": 64,
-    "total_rounds": 105,
+    "total_rounds": 106,
     "tech_categories": 24
   },
-  "last_synced": "2026-11-05 18:04:00",
+  "last_synced": "2026-11-06 18:40:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "admin_port": 9256,
-  "last_event": "Fix Highradius & UNIDEL company logo assets (v1.0.30)"
+  "last_event": "Merge Highradius Level 2 Q&As and sync Question Bank (v1.0.31)"
 }

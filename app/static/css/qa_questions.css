@@ -261,6 +261,41 @@
   transform: rotate(180deg);
 }
 
+.qa-header-actions,
+.qa-session-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.qa-download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, 6px);
+  color: #e11d48;
+  background: transparent;
+  border: 1px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: all 0.15s ease;
+}
+
+.qa-download-btn:hover {
+  background: #fff1f2;
+  color: #be123c;
+  border-color: #fecdd3;
+  transform: translateY(-1px);
+}
+
+.qa-download-btn:active {
+  transform: scale(0.92);
+}
+
 .qa-header-actions .toggle-icon i {
   transition: transform 0.2s ease;
 }

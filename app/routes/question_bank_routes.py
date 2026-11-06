@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response, PlainTextResponse
 from typing import Optional
+import re
 from app.services.question_bank_service import question_bank_service
 from app.services.page_visibility_service import page_visibility_service
 from app.routes.admin_routes import is_admin_request, is_admin_server_request, admin_portal_view
@@ -88,3 +89,90 @@ async def question_bank_view(
         _cached_default_html = template_response.body.decode("utf-8")
 
     return template_response
+
+@router.get("/api/question-bank/download-round")
+async def download_qb_round(
+    round_id: Optional[str] = Query(None, description="ID of the round to download"),
+    company_name: Optional[str] = Query(None, description="Company name"),
+    round_name: Optional[str] = Query(None, description="Round name"),
+    format: Optional[str] = Query("pdf", description="File format: pdf, md, html, or txt")
+):
+    round_info = question_bank_service.get_round(
+        round_id=round_id,
+        company_name=company_name,
+        round_name=round_name
+    )
+    if not round_info:
+        return PlainTextResponse("Round not found", status_code=404)
+
+    comp_name = round_info.get("company_name", "Company")
+    r_name = round_info.get("round_name", "Round")
+
+    safe_comp = re.sub(r'[^a-zA-Z0-9_\-]', '_', comp_name).strip('_')
+    safe_round = re.sub(r'[^a-zA-Z0-9_\-]', '_', r_name).strip('_')
+    base_name = f"{safe_comp}_{safe_round}_Questions"
+
+    fmt = (format or "pdf").lower().strip()
+
+    if fmt == "html" or fmt == "preview":
+        html_str = question_bank_service.generate_round_html(round_info)
+        return HTMLResponse(content=html_str)
+
+    if fmt == "md":
+        content = question_bank_service.generate_round_markdown(round_info)
+        headers = {
+            "Content-Disposition": f'attachment; filename="{base_name}.md"',
+            "Content-Type": "text/markdown; charset=utf-8"
+        }
+        return Response(content=content, media_type="text/markdown; charset=utf-8", headers=headers)
+
+    if fmt == "txt":
+        content = question_bank_service.generate_round_markdown(round_info)
+        headers = {
+            "Content-Disposition": f'attachment; filename="{base_name}.txt"',
+            "Content-Type": "text/plain; charset=utf-8"
+        }
+        return Response(content=content, media_type="text/plain; charset=utf-8", headers=headers)
+
+    # Default: PDF
+    pdf_bytes = question_bank_service.generate_round_pdf(round_info)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{base_name}.pdf"',
+        "Content-Type": "application/pdf"
+    }
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+
+@router.get("/api/question-bank/download-company")
+async def download_qb_company(
+    company_name: str = Query(..., description="Company name to download"),
+    format: Optional[str] = Query("pdf", description="File format: pdf, md, html, or txt")
+):
+    company = question_bank_service.get_company(company_name)
+    if not company:
+        return PlainTextResponse("Company not found", status_code=404)
+
+    comp_name = company.get("company_name", "Company")
+    safe_comp = re.sub(r'[^a-zA-Z0-9_\-]', '_', comp_name).strip('_')
+    base_name = f"{safe_comp}_All_Interview_Questions"
+
+    fmt = (format or "pdf").lower().strip()
+
+    if fmt == "html" or fmt == "preview":
+        html_str = question_bank_service.generate_company_html(company)
+        return HTMLResponse(content=html_str)
+
+    if fmt == "md":
+        content = question_bank_service.generate_company_markdown(company)
+        headers = {
+            "Content-Disposition": f'attachment; filename="{base_name}.md"',
+            "Content-Type": "text/markdown; charset=utf-8"
+        }
+        return Response(content=content, media_type="text/markdown; charset=utf-8", headers=headers)
+
+    # Default: PDF
+    pdf_bytes = question_bank_service.generate_company_pdf(company)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{base_name}.pdf"',
+        "Content-Type": "application/pdf"
+    }
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)

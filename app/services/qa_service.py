@@ -1,10 +1,17 @@
 import os
 import re
+import io
+import html
 import pickle
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Callable
 from pathlib import Path
 from app.config import QA_SESSIONS_DIR
+
+try:
+    from xhtml2pdf import pisa
+except ImportError:
+    pisa = None
 
 try:
     import markdown
@@ -390,14 +397,19 @@ class QAService:
             in_ans = False
             curr_block_qs = []
 
+        sess_seen_counts = {}
         def push_session():
             nonlocal curr_qs, curr_date, sessions
             push_q()
             apply_block_ans()
             if curr_qs:
+                base_id = f"hitish_{curr_date.replace('-', '_')}"
+                count = sess_seen_counts.get(base_id, 0) + 1
+                sess_seen_counts[base_id] = count
+                s_id = base_id if count == 1 else f"{base_id}_part{count}"
                 sessions.append({
-                    "session_id": f"hitish_{curr_date.replace('-', '_')}",
-                    "session_name": curr_date,
+                    "session_id": s_id,
+                    "session_name": curr_date if count == 1 else f"{curr_date} (Part {count})",
                     "date": curr_date,
                     "timestamp": parse_date_ts(curr_date),
                     "questions": list(curr_qs),
@@ -1172,5 +1184,557 @@ class QAService:
             filtered.sort(key=lambda x: (x.get("sessions", [{}])[0].get("timestamp", 0.0) if x.get("sessions") else 0.0), reverse=True)
 
         return filtered
+
+    def get_session(self, session_id: str, instructor_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Find a session by its session_id across all instructors (or within an instructor)."""
+        data = self.get_data()
+        for inst in data.get("instructors", []):
+            if instructor_id and inst.get("id") != instructor_id:
+                continue
+            for sess in inst.get("sessions", []):
+                if sess.get("session_id") == session_id:
+                    res = dict(sess)
+                    res["instructor_id"] = inst.get("id")
+                    res["instructor_name"] = inst.get("name")
+                    res["instructor_classes"] = inst.get("classes")
+                    return res
+        return None
+
+    def get_instructor(self, instructor_id: str) -> Optional[Dict[str, Any]]:
+        """Find an instructor by instructor_id."""
+        data = self.get_data()
+        for inst in data.get("instructors", []):
+            if inst.get("id") == instructor_id:
+                return inst
+        return None
+
+    def generate_session_markdown(self, sess: Dict[str, Any]) -> str:
+        """Format a session and all its questions into a clean, complete Markdown document."""
+        inst_name = sess.get("instructor_name", "ArtisanTek Faculty")
+        inst_classes = sess.get("instructor_classes", "")
+        sess_name = sess.get("session_name", "QA Session")
+        sess_date = sess.get("date", "")
+        questions = sess.get("questions", [])
+        total_q = len(questions)
+        answered_q = sum(1 for q in questions if q.get("has_answer"))
+
+        lines = [
+            f"# DevOps QA Session: {sess_name}",
+            "",
+            f"- **Instructor:** {inst_name}{f' ({inst_classes})' if inst_classes else ''}",
+        ]
+        if sess_date and sess_date != sess_name:
+            lines.append(f"- **Date:** {sess_date}")
+        else:
+            lines.append(f"- **Date / Topic:** {sess_date or sess_name}")
+
+        lines.extend([
+            f"- **Total Questions:** {total_q} ({answered_q} with Instructor Guidance)",
+            "- **Source:** DevOps Knowledge Portal & Interview Hub",
+            "",
+            "---",
+            ""
+        ])
+
+        for idx, q in enumerate(questions, 1):
+            q_text = q.get("question", "").strip()
+            topic = q.get("topic")
+            has_ans = q.get("has_answer", False)
+            ans_text = q.get("answer", "").strip()
+
+            lines.append(f"### Q{idx}. {q_text}")
+            if topic:
+                lines.append(f"*Topic: {topic}*")
+            lines.append("")
+
+            if has_ans and ans_text:
+                lines.append("#### Instructor Guidance / Solution:")
+                lines.append(ans_text)
+            else:
+                lines.append("*Instructor Guidance: Question only (No answer recorded in session transcript).*")
+
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+
+        return "\n".join(lines)
+
+    def generate_instructor_markdown(self, inst: Dict[str, Any]) -> str:
+        """Format all sessions for an instructor into a comprehensive Markdown document."""
+        inst_name = inst.get("name", "ArtisanTek Faculty")
+        inst_classes = inst.get("classes", "")
+        sessions = inst.get("sessions", [])
+        total_q = inst.get("total_questions", 0)
+        answered_q = sum(
+            sum(1 for q in s.get("questions", []) if q.get("has_answer"))
+            for s in sessions
+        )
+
+        lines = [
+            f"# DevOps QA Sessions: {inst_name}",
+            "",
+            f"- **Instructor:** {inst_name}{f' ({inst_classes})' if inst_classes else ''}",
+            f"- **Total Sessions:** {len(sessions)}",
+            f"- **Total Questions:** {total_q} ({answered_q} with Instructor Guidance)",
+            "- **Source:** DevOps Knowledge Portal & Interview Hub",
+            "",
+            "---",
+            ""
+        ]
+
+        for s_idx, sess in enumerate(sessions, 1):
+            sess_name = sess.get("session_name", "QA Session")
+            sess_date = sess.get("date", "")
+            questions = sess.get("questions", [])
+            s_answered = sum(1 for q in questions if q.get("has_answer"))
+
+            lines.append(f"## Session {s_idx}: {sess_name}")
+            if sess_date and sess_date != sess_name:
+                lines.append(f"**Date:** {sess_date} | **Questions:** {len(questions)} ({s_answered} with guidance)")
+            else:
+                lines.append(f"**Date / Topic:** {sess_date or sess_name} | **Questions:** {len(questions)} ({s_answered} with guidance)")
+            lines.append("")
+
+            for q_idx, q in enumerate(questions, 1):
+                q_text = q.get("question", "").strip()
+                topic = q.get("topic")
+                has_ans = q.get("has_answer", False)
+                ans_text = q.get("answer", "").strip()
+
+                lines.append(f"### Q{q_idx}. {q_text}")
+                if topic:
+                    lines.append(f"*Topic: {topic}*")
+                lines.append("")
+
+                if has_ans and ans_text:
+                    lines.append("#### Instructor Guidance / Solution:")
+                    lines.append(ans_text)
+                else:
+                    lines.append("*Instructor Guidance: Question only (No answer recorded in session transcript).*")
+
+                lines.append("")
+                lines.append("---")
+                lines.append("")
+
+        return "\n".join(lines)
+
+    def generate_session_html(self, sess: Dict[str, Any]) -> str:
+        """Format a session and all its questions into preview-mode HTML for PDF rendering."""
+        inst_name = sess.get("instructor_name", "ArtisanTek Faculty")
+        inst_classes = sess.get("instructor_classes", "")
+        sess_name = sess.get("session_name", "QA Session")
+        sess_date = sess.get("date", "")
+        questions = sess.get("questions", [])
+        total_q = len(questions)
+        answered_q = sum(1 for q in questions if q.get("has_answer"))
+
+        q_cards = []
+        for idx, q in enumerate(questions, 1):
+            q_text = html.escape(q.get("question", "").strip())
+            topic = q.get("topic")
+            has_ans = q.get("has_answer", False)
+            ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
+            ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+
+            topic_html = f'<span class="topic-tag">{html.escape(topic)}</span>' if topic else ""
+            if has_ans and ans_html.strip():
+                ans_block = f'''
+                <div class="ans-box">
+                    <div class="ans-label">Instructor Guidance &amp; Solution</div>
+                    <div class="ans-body">{ans_html}</div>
+                </div>
+                '''
+            else:
+                ans_block = '''
+                <div class="ans-box no-ans">
+                    <div class="ans-label-muted">Instructor Guidance: Question only (No answer recorded in this session transcript).</div>
+                </div>
+                '''
+
+            q_cards.append(f'''
+            <div class="q-card">
+                <div class="q-header">
+                    <span class="q-num">Q{idx}</span>
+                    {topic_html}
+                    <span class="q-text">{q_text}</span>
+                </div>
+                {ans_block}
+            </div>
+            ''')
+
+        css = """
+        @page {
+            size: A4 portrait;
+            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            @bottom-left {
+                content: "DevOps Interview Hub • ArtisanTek QA Sessions";
+                font-size: 8pt;
+                color: #94a3b8;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+        .header-box {
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .title {
+            font-size: 15pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+        }
+        .subtitle {
+            font-size: 8.5pt;
+            color: #64748b;
+            margin: 0;
+        }
+        .meta-bar {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            font-size: 8.5pt;
+            color: #334155;
+        }
+        .meta-item {
+            margin-right: 14px;
+        }
+        .q-card {
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            background-color: #ffffff;
+            page-break-inside: avoid;
+        }
+        .q-header {
+            padding: 7px 10px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .q-num {
+            background-color: #4f46e5;
+            color: #ffffff;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7.5pt;
+            margin-right: 5px;
+        }
+        .topic-tag {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7pt;
+            margin-right: 5px;
+        }
+        .ans-box {
+            padding: 7px 10px;
+            background-color: #ffffff;
+        }
+        .ans-box.no-ans {
+            background-color: #fcfcfc;
+        }
+        .ans-label {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #4f46e5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .ans-label-muted {
+            font-size: 8pt;
+            color: #64748b;
+            font-style: italic;
+        }
+        .ans-body {
+            font-size: 8.8pt;
+            color: #334155;
+        }
+        pre, code {
+            font-family: Courier, monospace;
+            font-size: 7.5pt;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        pre {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            margin: 4px 0;
+        }
+        ul, ol {
+            margin: 3px 0 3px 14px;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 2px;
+        }
+        """
+
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>QA Session: {html.escape(sess_name)}</title>
+<style>{css}</style>
+</head>
+<body>
+    <div class="header-box">
+        <div class="title">DevOps QA Session: {html.escape(sess_name)}</div>
+        <div class="subtitle">ArtisanTek Faculty Live Classes &bull; DevOps Knowledge Portal &amp; Interview Hub</div>
+    </div>
+    <div class="meta-bar">
+        <span class="meta-item"><strong>Instructor:</strong> {html.escape(inst_name)}{f' ({html.escape(inst_classes)})' if inst_classes else ''}</span>
+        <span class="meta-item"><strong>Date:</strong> {html.escape(sess_date or sess_name)}</span>
+        <span class="meta-item"><strong>Total Questions:</strong> {total_q} ({answered_q} with Instructor Solutions)</span>
+    </div>
+    {''.join(q_cards)}
+</body>
+</html>"""
+
+    def generate_session_pdf(self, sess: Dict[str, Any]) -> bytes:
+        """Convert a session HTML into a PDF byte stream."""
+        html_str = self.generate_session_html(sess)
+        buf = io.BytesIO()
+        if pisa:
+            pisa.CreatePDF(html_str, dest=buf)
+        return buf.getvalue()
+
+    def generate_instructor_html(self, inst: Dict[str, Any]) -> str:
+        """Format an instructor's full set of sessions into preview-mode HTML for PDF rendering."""
+        inst_name = inst.get("name", "ArtisanTek Faculty")
+        inst_classes = inst.get("classes", "")
+        sessions = inst.get("sessions", [])
+        total_q = inst.get("total_questions", 0)
+
+        session_sections = []
+        for s_idx, sess in enumerate(sessions, 1):
+            sess_name = sess.get("session_name", "QA Session")
+            sess_date = sess.get("date", "")
+            questions = sess.get("questions", [])
+
+            q_cards = []
+            for idx, q in enumerate(questions, 1):
+                q_text = html.escape(q.get("question", "").strip())
+                topic = q.get("topic")
+                has_ans = q.get("has_answer", False)
+                ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
+                ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+
+                topic_html = f'<span class="topic-tag">{html.escape(topic)}</span>' if topic else ""
+                if has_ans and ans_html.strip():
+                    ans_block = f'''
+                    <div class="ans-box">
+                        <div class="ans-label">Instructor Guidance &amp; Solution</div>
+                        <div class="ans-body">{ans_html}</div>
+                    </div>
+                    '''
+                else:
+                    ans_block = '''
+                    <div class="ans-box no-ans">
+                        <div class="ans-label-muted">Instructor Guidance: Question only (No answer recorded).</div>
+                    </div>
+                    '''
+
+                q_cards.append(f'''
+                <div class="q-card">
+                    <div class="q-header">
+                        <span class="q-num">Q{idx}</span>
+                        {topic_html}
+                        <span class="q-text">{q_text}</span>
+                    </div>
+                    {ans_block}
+                </div>
+                ''')
+
+            session_sections.append(f'''
+            <div class="session-section" style="page-break-before: auto; margin-top: 16px;">
+                <div class="section-title">Session {s_idx}: {html.escape(sess_name)} ({html.escape(sess_date or sess_name)}) &bull; {len(questions)} Questions</div>
+                {''.join(q_cards)}
+            </div>
+            ''')
+
+        css = """
+        @page {
+            size: A4 portrait;
+            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            @bottom-left {
+                content: "DevOps Interview Hub • ArtisanTek Faculty QA";
+                font-size: 8pt;
+                color: #94a3b8;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+        .header-box {
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+        }
+        .subtitle {
+            font-size: 8.5pt;
+            color: #64748b;
+            margin: 0;
+        }
+        .meta-bar {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            font-size: 8.5pt;
+            color: #334155;
+        }
+        .meta-item {
+            margin-right: 14px;
+        }
+        .section-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #312e81;
+            background-color: #eef2ff;
+            border-left: 4px solid #4f46e5;
+            padding: 5px 8px;
+            margin-bottom: 10px;
+        }
+        .q-card {
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            background-color: #ffffff;
+            page-break-inside: avoid;
+        }
+        .q-header {
+            padding: 7px 10px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .q-num {
+            background-color: #4f46e5;
+            color: #ffffff;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7.5pt;
+            margin-right: 5px;
+        }
+        .topic-tag {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7pt;
+            margin-right: 5px;
+        }
+        .ans-box {
+            padding: 7px 10px;
+            background-color: #ffffff;
+        }
+        .ans-box.no-ans {
+            background-color: #fcfcfc;
+        }
+        .ans-label {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #4f46e5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .ans-label-muted {
+            font-size: 8pt;
+            color: #64748b;
+            font-style: italic;
+        }
+        .ans-body {
+            font-size: 8.8pt;
+            color: #334155;
+        }
+        pre, code {
+            font-family: Courier, monospace;
+            font-size: 7.5pt;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        pre {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            margin: 4px 0;
+        }
+        ul, ol {
+            margin: 3px 0 3px 14px;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 2px;
+        }
+        """
+
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>QA Sessions: {html.escape(inst_name)}</title>
+<style>{css}</style>
+</head>
+<body>
+    <div class="header-box">
+        <div class="title">DevOps QA Master Collection: {html.escape(inst_name)}</div>
+        <div class="subtitle">ArtisanTek Faculty Live Classes &bull; Complete Questions &amp; Guidance</div>
+    </div>
+    <div class="meta-bar">
+        <span class="meta-item"><strong>Instructor:</strong> {html.escape(inst_name)}{f' ({html.escape(inst_classes)})' if inst_classes else ''}</span>
+        <span class="meta-item"><strong>Total Sessions:</strong> {len(sessions)}</span>
+        <span class="meta-item"><strong>Total Questions:</strong> {total_q}</span>
+    </div>
+    {''.join(session_sections)}
+</body>
+</html>"""
+
+    def generate_instructor_pdf(self, inst: Dict[str, Any]) -> bytes:
+        """Convert instructor HTML into a PDF byte stream."""
+        html_str = self.generate_instructor_html(inst)
+        buf = io.BytesIO()
+        if pisa:
+            pisa.CreatePDF(html_str, dest=buf)
+        return buf.getvalue()
 
 qa_service = QAService()

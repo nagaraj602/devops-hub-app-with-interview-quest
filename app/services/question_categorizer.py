@@ -171,6 +171,10 @@ def detect_category_from_text(q_text: str, ans_text: str = "", section_cat: str 
     if any(w in ql for w in ["ansible", "playbook", "inventory", "ad-hoc", "awx", "tower"]):
         return "Ansible"
 
+    # AI/ML
+    if any(w in ql for w in ["ai/ml", "artificial intelligence", "machine learning", "llm", "genai", "copilot", "chatgpt", "coding agent", "ai tool"]) or re.search(r'\b(?:ai|ml|llm)\b', ql):
+        return "AI/ML"
+
     # Git / GitHub
     if any(w in ql for w in ["github", "gitlab", "bitbucket", "rebase", "cherry-pick", "merge conflict", "branching", "pull request", "git commit", "git stash"]) or re.search(r'\bgit\b', ql):
         return "Git / GitHub"
@@ -200,16 +204,12 @@ def detect_category_from_text(q_text: str, ans_text: str = "", section_cat: str 
         return "Shell script"
 
     # Linux
-    if any(w in ql for w in ["linux", "grep", "awk", "sed", "systemd", "systemctl", "chmod", "chown", "iostat", "top", "htop", "free -m", "vmstat", "uptime"]):
+    if any((re.search(r'\b' + re.escape(w) + r'\b', ql) if len(w) <= 4 else w in ql) for w in ["linux", "grep", "awk", "sed", "systemd", "systemctl", "chmod", "chown", "iostat", "top", "htop", "free -m", "vmstat", "uptime"]):
         return "Linux"
 
     # CI/CD
     if any(w in ql for w in ["ci/cd", "continuous integration", "continuous deployment"]):
         return "Jenkins"
-
-    # AI/ML
-    if any(w in ql for w in ["ai/ml", "artificial intelligence", "machine learning", "llm", "genai", "copilot", "chatgpt"]):
-        return "AI/ML"
 
     if section_cat and section_cat not in ["General", "Other"]:
         norm_s = normalize_category(section_cat)

@@ -1048,3 +1048,18 @@ function showDayInterviewDetails(day, monthName, year, events) {
   }
 }
 
+// Question Bank Download Handlers
+function downloadQBRound(roundId, companyName, roundName, e) {
+  if (e) {
+    e.stopPropagation();
+  }
+  showToast(`Generating PDF for ${companyName || ''} - ${roundName || 'round'}...`, "info");
+}
+
+function downloadQBCompany(companyName, e) {
+  if (e) {
+    e.stopPropagation();
+  }
+  showToast(`Generating complete PDF for ${companyName || 'company'}...`, "info");
+}
+

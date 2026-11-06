@@ -1,5 +1,7 @@
 import os
 import re
+import io
+import html
 import pickle
 from typing import Dict, Any, List, Optional, Callable
 from collections import Counter
@@ -12,6 +14,11 @@ from app.services.question_categorizer import (
     detect_category_from_text,
     get_fallback_answer_for_question
 )
+
+try:
+    from xhtml2pdf import pisa
+except ImportError:
+    pisa = None
 
 try:
     import markdown
@@ -142,9 +149,14 @@ class QuestionBankService:
         category_counts = recomputed_counts
 
         # Finalize rounds list & categories and populate calendar events
+        r_counter = 1
         for c in companies_list:
             c["categories"] = sorted(list(c["categories"]))
             for r in c.get("rounds", []):
+                clean_c = re.sub(r'[^a-zA-Z0-9]', '_', c.get("company_name", "")).strip('_').lower()
+                clean_r = re.sub(r'[^a-zA-Z0-9]', '_', r.get("round_name", "")).strip('_').lower()
+                r["round_id"] = f"rnd_{clean_c}_{clean_r}_{r_counter}"
+                r_counter += 1
                 r["categories"] = sorted(list(r.get("categories", [])))
                 r_date = r.get("date", "")
                 if r_date and r_date not in ["Recent", "Core Reference", "N/A"]:
@@ -672,5 +684,611 @@ class QuestionBankService:
             result.sort(key=lambda c: (c.get("timestamp", 0.0), c.get("file_order", 0.0), c.get("company_name", "").lower()), reverse=True)
 
         return result
+
+    def get_round(
+        self,
+        round_id: Optional[str] = None,
+        company_name: Optional[str] = None,
+        round_name: Optional[str] = None,
+        round_date: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Look up a round across all companies by round_id or company + round name."""
+        data = self.get_data()
+        clean_comp = company_name.strip().lower() if company_name else None
+        clean_round = round_name.strip().lower() if round_name else None
+        clean_date = round_date.strip().lower() if round_date else None
+
+        for comp in data.get("companies", []):
+            if clean_comp and comp.get("company_name", "").strip().lower() != clean_comp:
+                continue
+            for r in comp.get("rounds", []):
+                if round_id and r.get("round_id") == round_id:
+                    res = dict(r)
+                    res["company_name"] = comp.get("company_name")
+                    res["is_nagaraj_interview"] = comp.get("is_nagaraj_interview", False)
+                    return res
+                if clean_round and r.get("round_name", "").strip().lower() == clean_round:
+                    if not clean_date or r.get("date", "").strip().lower() == clean_date:
+                        res = dict(r)
+                        res["company_name"] = comp.get("company_name")
+                        res["is_nagaraj_interview"] = comp.get("is_nagaraj_interview", False)
+                        return res
+        return None
+
+    def get_company(self, company_name: str) -> Optional[Dict[str, Any]]:
+        """Look up a company by name."""
+        data = self.get_data()
+        target = company_name.strip().lower()
+        for comp in data.get("companies", []):
+            if comp.get("company_name", "").strip().lower() == target:
+                return comp
+        return None
+
+    def generate_round_markdown(self, round_info: Dict[str, Any]) -> str:
+        """Format a round and all its questions into a clean Markdown string."""
+        comp_name = round_info.get("company_name", "Company")
+        round_name = round_info.get("round_name", "Interview Round")
+        round_date = round_info.get("date", "Recent")
+        questions = round_info.get("questions", [])
+        categories = round_info.get("categories", [])
+        is_nagaraj = round_info.get("is_nagaraj_interview", False)
+        answered_q = sum(1 for q in questions if q.get("has_answer"))
+
+        lines = [
+            f"# DevOps Interview Questions: {comp_name} - {round_name}",
+            "",
+            f"- **Company:** {comp_name}",
+            f"- **Round:** {round_name}",
+            f"- **Date:** {round_date}",
+            f"- **Total Questions:** {len(questions)} ({answered_q} with Production Answers)",
+        ]
+        if categories:
+            lines.append(f"- **Categories:** {', '.join(categories)}")
+        if is_nagaraj:
+            lines.append("- **Special Marker:** Nagaraj's Verified Interview")
+        lines.extend([
+            "- **Source:** DevOps Knowledge Portal & Interview Hub",
+            "",
+            "---",
+            ""
+        ])
+
+        for idx, q in enumerate(questions, 1):
+            q_text = q.get("question", "").strip()
+            cat = q.get("category", "General")
+            ans_text = q.get("answer", "").strip()
+            has_ans = q.get("has_answer", False)
+            is_sub = q.get("is_sub_q", False)
+
+            prefix = "↳ Follow-up: " if is_sub else ""
+            lines.append(f"### Q{idx}. {prefix}{q_text}")
+            lines.append(f"*Category: {cat}*")
+            lines.append("")
+
+            if has_ans and ans_text:
+                lines.append("#### Verified Production Answer:")
+                lines.append(ans_text)
+            else:
+                lines.append("*Status: Question only (No answer recorded).*")
+
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+
+        return "\n".join(lines)
+
+    def generate_company_markdown(self, comp: Dict[str, Any]) -> str:
+        """Format all rounds of a company into a comprehensive Markdown document."""
+        comp_name = comp.get("company_name", "Company")
+        rounds = comp.get("rounds", [])
+        total_q = comp.get("total_questions", 0)
+        categories = comp.get("categories", [])
+        latest_date = comp.get("latest_date", "Recent")
+        is_nagaraj = comp.get("is_nagaraj_interview", False)
+
+        lines = [
+            f"# DevOps Interview Questions: {comp_name}",
+            "",
+            f"- **Company:** {comp_name}",
+            f"- **Total Rounds:** {len(rounds)}",
+            f"- **Total Questions:** {total_q}",
+            f"- **Latest Interview Date:** {latest_date}",
+        ]
+        if categories:
+            lines.append(f"- **Categories Covered:** {', '.join(categories)}")
+        if is_nagaraj:
+            lines.append("- **Special Marker:** Nagaraj's Verified Interview")
+        lines.extend([
+            "- **Source:** DevOps Knowledge Portal & Interview Hub",
+            "",
+            "---",
+            ""
+        ])
+
+        for r_idx, r in enumerate(rounds, 1):
+            r_name = r.get("round_name", f"Round {r_idx}")
+            r_date = r.get("date", "Recent")
+            questions = r.get("questions", [])
+            r_answered = sum(1 for q in questions if q.get("has_answer"))
+
+            lines.append(f"## {r_idx}. {r_name} ({r_date})")
+            lines.append(f"**Total Questions:** {len(questions)} ({r_answered} with Production Answers)")
+            lines.append("")
+
+            for q_idx, q in enumerate(questions, 1):
+                q_text = q.get("question", "").strip()
+                cat = q.get("category", "General")
+                ans_text = q.get("answer", "").strip()
+                has_ans = q.get("has_answer", False)
+                is_sub = q.get("is_sub_q", False)
+
+                prefix = "↳ Follow-up: " if is_sub else ""
+                lines.append(f"### Q{q_idx}. {prefix}{q_text}")
+                lines.append(f"*Category: {cat}*")
+                lines.append("")
+
+                if has_ans and ans_text:
+                    lines.append("#### Verified Production Answer:")
+                    lines.append(ans_text)
+                else:
+                    lines.append("*Status: Question only (No answer recorded).*")
+
+                lines.append("")
+                lines.append("---")
+                lines.append("")
+
+        return "\n".join(lines)
+
+    def generate_round_html(self, round_info: Dict[str, Any]) -> str:
+        """Format a round and all its questions into preview-mode HTML for PDF rendering."""
+        comp_name = round_info.get("company_name", "Company")
+        round_name = round_info.get("round_name", "Interview Round")
+        round_date = round_info.get("date", "Recent")
+        questions = round_info.get("questions", [])
+        categories = round_info.get("categories", [])
+        is_nagaraj = round_info.get("is_nagaraj_interview", False)
+        total_q = len(questions)
+        answered_q = sum(1 for q in questions if q.get("has_answer"))
+
+        q_cards = []
+        for idx, q in enumerate(questions, 1):
+            q_text = html.escape(q.get("question", "").strip())
+            cat = q.get("category", "General")
+            is_sub = q.get("is_sub_q", False)
+            ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
+            ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+
+            sub_tag = '<span class="sub-tag">Follow-up</span>' if is_sub else ""
+            cat_tag = f'<span class="cat-tag">{html.escape(cat)}</span>' if cat else ""
+
+            if ans_html.strip():
+                ans_block = f'''
+                <div class="ans-box">
+                    <div class="ans-label">Verified Production Answer</div>
+                    <div class="ans-body">{ans_html}</div>
+                </div>
+                '''
+            else:
+                ans_block = '''
+                <div class="ans-box no-ans">
+                    <div class="ans-label-muted">Status: Question only (No answer recorded).</div>
+                </div>
+                '''
+
+            q_cards.append(f'''
+            <div class="q-card">
+                <div class="q-header">
+                    <span class="q-num">Q{idx}</span>
+                    {sub_tag}
+                    {cat_tag}
+                    <span class="q-text">{q_text}</span>
+                </div>
+                {ans_block}
+            </div>
+            ''')
+
+        css = """
+        @page {
+            size: A4 portrait;
+            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            @bottom-left {
+                content: "DevOps Interview Hub • Question Bank";
+                font-size: 8pt;
+                color: #94a3b8;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+        .header-box {
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .title {
+            font-size: 15pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+        }
+        .subtitle {
+            font-size: 8.5pt;
+            color: #64748b;
+            margin: 0;
+        }
+        .meta-bar {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            font-size: 8.5pt;
+            color: #334155;
+        }
+        .meta-item {
+            margin-right: 14px;
+        }
+        .q-card {
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            background-color: #ffffff;
+            page-break-inside: avoid;
+        }
+        .q-header {
+            padding: 7px 10px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .q-num {
+            background-color: #4f46e5;
+            color: #ffffff;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7.5pt;
+            margin-right: 5px;
+        }
+        .cat-tag {
+            background-color: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7pt;
+            margin-right: 5px;
+        }
+        .sub-tag {
+            background-color: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 7pt;
+            margin-right: 5px;
+        }
+        .ans-box {
+            padding: 7px 10px;
+            background-color: #ffffff;
+        }
+        .ans-box.no-ans {
+            background-color: #fcfcfc;
+        }
+        .ans-label {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #059669;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .ans-label-muted {
+            font-size: 8pt;
+            color: #64748b;
+            font-style: italic;
+        }
+        .ans-body {
+            font-size: 8.8pt;
+            color: #334155;
+        }
+        pre, code {
+            font-family: Courier, monospace;
+            font-size: 7.5pt;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        pre {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            margin: 4px 0;
+        }
+        ul, ol {
+            margin: 3px 0 3px 14px;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 2px;
+        }
+        """
+
+        categories_str = ", ".join(categories) if categories else "All DevOps Topics"
+
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{html.escape(comp_name)} - {html.escape(round_name)}</title>
+<style>{css}</style>
+</head>
+<body>
+    <div class="header-box">
+        <div class="title">{html.escape(comp_name)} &bull; {html.escape(round_name)}</div>
+        <div class="subtitle">DevOps Interview Questions &amp; Production Verified Answers</div>
+    </div>
+    <div class="meta-bar">
+        <span class="meta-item"><strong>Date:</strong> {html.escape(round_date)}</span>
+        <span class="meta-item"><strong>Total Questions:</strong> {total_q} ({answered_q} with Verified Answers)</span>
+        <span class="meta-item"><strong>Categories:</strong> {html.escape(categories_str)}</span>
+        {f'<span class="meta-item" style="color:#b45309;"><strong>Verified:</strong> Nagaraj Interview</span>' if is_nagaraj else ''}
+    </div>
+    {''.join(q_cards)}
+</body>
+</html>"""
+
+    def generate_round_pdf(self, round_info: Dict[str, Any]) -> bytes:
+        """Convert round HTML into a PDF byte stream."""
+        html_str = self.generate_round_html(round_info)
+        buf = io.BytesIO()
+        if pisa:
+            pisa.CreatePDF(html_str, dest=buf)
+        return buf.getvalue()
+
+    def generate_company_html(self, comp: Dict[str, Any]) -> str:
+        """Format a company's full interview rounds into preview-mode HTML for PDF rendering."""
+        comp_name = comp.get("company_name", "Company")
+        rounds = comp.get("rounds", [])
+        total_q = comp.get("total_questions", 0)
+        categories = comp.get("categories", [])
+        latest_date = comp.get("latest_date", "Recent")
+        is_nagaraj = comp.get("is_nagaraj_interview", False)
+
+        round_sections = []
+        for r_idx, r in enumerate(rounds, 1):
+            r_name = r.get("round_name", f"Round {r_idx}")
+            r_date = r.get("date", "Recent")
+            questions = r.get("questions", [])
+
+            q_cards = []
+            for idx, q in enumerate(questions, 1):
+                q_text = html.escape(q.get("question", "").strip())
+                cat = q.get("category", "General")
+                is_sub = q.get("is_sub_q", False)
+                ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
+                ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+
+                sub_tag = '<span class="sub-tag">Follow-up</span>' if is_sub else ""
+                cat_tag = f'<span class="cat-tag">{html.escape(cat)}</span>' if cat else ""
+
+                if ans_html.strip():
+                    ans_block = f'''
+                    <div class="ans-box">
+                        <div class="ans-label">Verified Production Answer</div>
+                        <div class="ans-body">{ans_html}</div>
+                    </div>
+                    '''
+                else:
+                    ans_block = '''
+                    <div class="ans-box no-ans">
+                        <div class="ans-label-muted">Status: Question only (No answer recorded).</div>
+                    </div>
+                    '''
+
+                q_cards.append(f'''
+                <div class="q-card">
+                    <div class="q-header">
+                        <span class="q-num">Q{idx}</span>
+                        {sub_tag}
+                        {cat_tag}
+                        <span class="q-text">{q_text}</span>
+                    </div>
+                    {ans_block}
+                </div>
+                ''')
+
+            round_sections.append(f'''
+            <div class="round-section" style="page-break-before: auto; margin-top: 16px;">
+                <div class="section-title">{r_idx}. {html.escape(r_name)} ({html.escape(r_date)}) &bull; {len(questions)} Questions</div>
+                {''.join(q_cards)}
+            </div>
+            ''')
+
+        css = """
+        @page {
+            size: A4 portrait;
+            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            @bottom-left {
+                content: "DevOps Interview Hub • Company Archive";
+                font-size: 8pt;
+                color: #94a3b8;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+        .header-box {
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+        }
+        .subtitle {
+            font-size: 8.5pt;
+            color: #64748b;
+            margin: 0;
+        }
+        .meta-bar {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            font-size: 8.5pt;
+            color: #334155;
+        }
+        .meta-item {
+            margin-right: 14px;
+        }
+        .section-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #312e81;
+            background-color: #eef2ff;
+            border-left: 4px solid #4f46e5;
+            padding: 5px 8px;
+            margin-bottom: 10px;
+        }
+        .q-card {
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            background-color: #ffffff;
+            page-break-inside: avoid;
+        }
+        .q-header {
+            padding: 7px 10px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .q-num {
+            background-color: #4f46e5;
+            color: #ffffff;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7.5pt;
+            margin-right: 5px;
+        }
+        .cat-tag {
+            background-color: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 7pt;
+            margin-right: 5px;
+        }
+        .sub-tag {
+            background-color: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 7pt;
+            margin-right: 5px;
+        }
+        .ans-box {
+            padding: 7px 10px;
+            background-color: #ffffff;
+        }
+        .ans-box.no-ans {
+            background-color: #fcfcfc;
+        }
+        .ans-label {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #059669;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .ans-label-muted {
+            font-size: 8pt;
+            color: #64748b;
+            font-style: italic;
+        }
+        .ans-body {
+            font-size: 8.8pt;
+            color: #334155;
+        }
+        pre, code {
+            font-family: Courier, monospace;
+            font-size: 7.5pt;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        pre {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            margin: 4px 0;
+        }
+        ul, ol {
+            margin: 3px 0 3px 14px;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 2px;
+        }
+        """
+
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>All Rounds: {html.escape(comp_name)}</title>
+<style>{css}</style>
+</head>
+<body>
+    <div class="header-box">
+        <div class="title">{html.escape(comp_name)} &bull; All Interview Rounds</div>
+        <div class="subtitle">Complete Questions &amp; Verified Production Answers</div>
+    </div>
+    <div class="meta-bar">
+        <span class="meta-item"><strong>Company:</strong> {html.escape(comp_name)}</span>
+        <span class="meta-item"><strong>Total Rounds:</strong> {len(rounds)}</span>
+        <span class="meta-item"><strong>Total Questions:</strong> {total_q}</span>
+        <span class="meta-item"><strong>Latest Date:</strong> {html.escape(latest_date)}</span>
+    </div>
+    {''.join(round_sections)}
+</body>
+</html>"""
+
+    def generate_company_pdf(self, comp: Dict[str, Any]) -> bytes:
+        """Convert company HTML into a PDF byte stream."""
+        html_str = self.generate_company_html(comp)
+        buf = io.BytesIO()
+        if pisa:
+            pisa.CreatePDF(html_str, dest=buf)
+        return buf.getvalue()
 
 question_bank_service = QuestionBankService()

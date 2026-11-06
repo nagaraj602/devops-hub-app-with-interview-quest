@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response, PlainTextResponse
 from typing import Optional, List
+import re
 from app.services.qa_service import qa_service
 from app.services.page_visibility_service import page_visibility_service
 from app.routes.admin_routes import is_admin_request
@@ -134,3 +135,83 @@ async def get_qa_chunk(
         "total_matched": total_matched,
         "has_more": has_more
     }
+
+@router.get("/api/qa-questions/download")
+async def download_qa_session(
+    session_id: str = Query(..., description="ID of the session to download"),
+    instructor_id: Optional[str] = Query(None, description="Optional instructor ID"),
+    format: Optional[str] = Query("pdf", description="File format: pdf, md, html, or txt")
+):
+    session = qa_service.get_session(session_id, instructor_id=instructor_id)
+    if not session:
+        return PlainTextResponse("QA Session not found", status_code=404)
+
+    inst_name = session.get("instructor_name", "Instructor")
+    sess_name = session.get("session_name", session.get("date", "Session"))
+
+    safe_inst = re.sub(r'[^a-zA-Z0-9_\-]', '_', inst_name).strip('_')
+    safe_sess = re.sub(r'[^a-zA-Z0-9_\-]', '_', sess_name).strip('_')
+
+    base_name = f"{safe_inst}_{safe_sess}" if "qa" in safe_sess.lower() else f"{safe_inst}_{safe_sess}_QA"
+    fmt = (format or "pdf").lower().strip()
+
+    if fmt == "html" or fmt == "preview":
+        html_str = qa_service.generate_session_html(session)
+        return HTMLResponse(content=html_str)
+
+    if fmt == "md":
+        content = qa_service.generate_session_markdown(session)
+        headers = {
+            "Content-Disposition": f'attachment; filename="{base_name}.md"',
+            "Content-Type": "text/markdown; charset=utf-8"
+        }
+        return Response(content=content, media_type="text/markdown; charset=utf-8", headers=headers)
+
+    if fmt == "txt":
+        content = qa_service.generate_session_markdown(session)
+        headers = {
+            "Content-Disposition": f'attachment; filename="{base_name}.txt"',
+            "Content-Type": "text/plain; charset=utf-8"
+        }
+        return Response(content=content, media_type="text/plain; charset=utf-8", headers=headers)
+
+    # Default: PDF
+    pdf_bytes = qa_service.generate_session_pdf(session)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{base_name}.pdf"',
+        "Content-Type": "application/pdf"
+    }
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+
+@router.get("/api/qa-questions/download-instructor")
+async def download_qa_instructor(
+    instructor_id: str = Query(..., description="ID of the instructor to download"),
+    format: Optional[str] = Query("pdf", description="File format: pdf, md, html, or txt")
+):
+    instructor = qa_service.get_instructor(instructor_id)
+    if not instructor:
+        return PlainTextResponse("Instructor not found", status_code=404)
+
+    inst_name = instructor.get("name", "Instructor")
+    safe_inst = re.sub(r'[^a-zA-Z0-9_\-]', '_', inst_name).strip('_')
+    fmt = (format or "pdf").lower().strip()
+
+    if fmt == "html" or fmt == "preview":
+        html_str = qa_service.generate_instructor_html(instructor)
+        return HTMLResponse(content=html_str)
+
+    if fmt == "md":
+        content = qa_service.generate_instructor_markdown(instructor)
+        headers = {
+            "Content-Disposition": f'attachment; filename="{safe_inst}_All_QA_Questions.md"',
+            "Content-Type": "text/markdown; charset=utf-8"
+        }
+        return Response(content=content, media_type="text/markdown; charset=utf-8", headers=headers)
+
+    # Default: PDF
+    pdf_bytes = qa_service.generate_instructor_pdf(instructor)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{safe_inst}_All_QA_Questions.pdf"',
+        "Content-Type": "application/pdf"
+    }
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)

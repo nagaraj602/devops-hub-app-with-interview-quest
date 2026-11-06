@@ -524,6 +524,21 @@ function copyQAAnswerText(qId, e) {
   });
 }
 
+// Download Handlers
+function downloadQASession(sessionId, instructorId, sessionTitle, e) {
+  if (e) {
+    e.stopPropagation();
+  }
+  showToast(`Generating PDF for ${sessionTitle || 'session'}...`, "info");
+}
+
+function downloadQAInstructor(instructorId, instructorName, e) {
+  if (e) {
+    e.stopPropagation();
+  }
+  showToast(`Generating complete PDF for ${instructorName || 'instructor'}...`, "info");
+}
+
 function showToast(message, type = "info") {
   const container = document.getElementById("toastContainer");
   if (!container) return;

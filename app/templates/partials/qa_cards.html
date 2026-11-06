@@ -37,6 +37,14 @@
     </div>
 
     <div class="qa-header-actions">
+      <a href="/api/qa-questions/download-instructor?instructor_id={{ inst.id }}&format=pdf" 
+         class="action-icon-btn qa-download-btn" 
+         title="Download all {{ inst.total_questions }} questions for {{ inst.name }} as PDF" 
+         aria-label="Download questions for {{ inst.name }} as PDF"
+         download
+         onclick="downloadQAInstructor('{{ inst.id }}', '{{ inst.name|escape }}', event)">
+        <i class="fa-solid fa-file-pdf"></i>
+      </a>
       <span class="toggle-icon">
         <i class="fa-solid fa-chevron-down"></i>
       </span>
@@ -65,9 +73,19 @@
           <span class="badge badge-green" style="font-size:0.7rem;">{{ answered_count }} with Answers</span>
           {% endif %}
         </div>
-        <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
-          <i class="fa-solid fa-chevron-down"></i>
-        </span>
+        <div class="qa-session-actions">
+          <a href="/api/qa-questions/download?session_id={{ sess.session_id }}&instructor_id={{ inst.id }}&format=pdf" 
+             class="action-icon-btn qa-download-btn" 
+             title="Download all {{ sess.questions|length }} questions for {{ sess.session_name }} as PDF" 
+             aria-label="Download questions for {{ sess.session_name }} as PDF"
+             download
+             onclick="downloadQASession('{{ sess.session_id }}', '{{ inst.id }}', '{{ sess.session_name|escape }}', event)">
+            <i class="fa-solid fa-file-pdf"></i>
+          </a>
+          <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
+            <i class="fa-solid fa-chevron-down"></i>
+          </span>
+        </div>
       </div>
 
       <!-- Questions List in this Session -->

@@ -15,7 +15,7 @@
         {% if company.is_guide %}
           <i class="{{ company.guide_icon|default('fa-solid fa-terminal') }}" style="color: {{ company.avatar_color|default('var(--primary)') }}; font-size:1.05rem;"></i>
         {% elif company.logo_url %}
-          <img src="{{ company.logo_url }}?v=1.0.30" 
+          <img src="{{ company.logo_url }}?v=1.0.31" 
                alt="{{ company.company_name }}" 
                class="company-logo-img" 
                width="28" 
@@ -73,6 +73,14 @@
     </div>
 
     <div class="company-header-actions">
+      <a href="/api/question-bank/download-company?company_name={{ company.company_name|urlencode }}&format=pdf" 
+         class="action-icon-btn qb-download-btn" 
+         title="Download all {{ company.total_questions }} questions for {{ company.company_name }} as PDF" 
+         aria-label="Download questions for {{ company.company_name }} as PDF"
+         download
+         onclick="downloadQBCompany('{{ company.company_name|escape }}', event)">
+        <i class="fa-solid fa-file-pdf"></i>
+      </a>
       <span class="toggle-icon">
         <i class="fa-solid fa-chevron-down"></i>
       </span>
@@ -82,7 +90,10 @@
   <!-- Company Body: Rounds & Questions -->
   <div class="company-body">
     {% for round in company.rounds %}
-    <div class="round-block{% if is_companies_expanded %} expanded{% endif %}" data-round-name="{{ round.round_name }}" data-round-date="{{ round.date }}">
+    <div class="round-block{% if is_companies_expanded %} expanded{% endif %}" 
+         data-round-name="{{ round.round_name }}" 
+         data-round-date="{{ round.date }}"
+         data-round-id="{{ round.round_id|default('') }}">
       <!-- Round Header -->
       <div class="round-header">
         <div class="round-title-group">
@@ -91,9 +102,19 @@
           <span class="round-date">• {{ round.date }}</span>
           <span class="badge badge-blue" style="font-size:0.7rem;">{{ round.questions|length }} Qs</span>
         </div>
-        <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
-          <i class="fa-solid fa-chevron-down"></i>
-        </span>
+        <div class="round-header-actions">
+          <a href="/api/question-bank/download-round?round_id={{ round.round_id|default('') }}&company_name={{ company.company_name|urlencode }}&round_name={{ round.round_name|urlencode }}&format=pdf" 
+             class="action-icon-btn qb-download-btn" 
+             title="Download all {{ round.questions|length }} questions for {{ round.round_name }} as PDF" 
+             aria-label="Download questions for {{ round.round_name }} as PDF"
+             download
+             onclick="downloadQBRound('{{ round.round_id|default('') }}', '{{ company.company_name|escape }}', '{{ round.round_name|escape }}', event)">
+            <i class="fa-solid fa-file-pdf"></i>
+          </a>
+          <span class="toggle-icon" style="width:24px; height:24px; font-size:0.75rem;">
+            <i class="fa-solid fa-chevron-down"></i>
+          </span>
+        </div>
       </div>
 
       <!-- Questions in this Round -->
