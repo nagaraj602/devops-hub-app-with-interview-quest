@@ -750,7 +750,8 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
   // 4. Locate company helper
   const findCompanyInDOM = () => {
     const compCards = Array.from(document.querySelectorAll(".company-card"));
-    const query = (companyName || "").trim().toLowerCase();
+    const rawQuery = (companyName || "").trim().toLowerCase();
+    const query = rawQuery.replace(/^nagaraj\s*-\s*/i, "").trim();
     const cleanEventDate = (eventDate || "").trim().split(" ")[0].toLowerCase();
 
     let foundCard = null;
@@ -758,7 +759,7 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
       foundCard = compCards.find(c => {
         const cName = (c.dataset.companyName || "").trim().toLowerCase();
         const cDate = (c.dataset.companyDate || "").trim().toLowerCase();
-        const nameMatch = cName === query || cName.includes(query) || query.includes(cName);
+        const nameMatch = cName === query || cName === rawQuery || cName.includes(query) || query.includes(cName);
         const dateMatch = cDate.includes(cleanEventDate) || cleanEventDate.includes(cDate);
         return nameMatch && dateMatch;
       });
@@ -766,7 +767,7 @@ function openRoundInQuestionBank(companyName, roundName, eventDate) {
     if (!foundCard) {
       foundCard = compCards.find(c => {
         const cName = (c.dataset.companyName || "").trim().toLowerCase();
-        return cName === query || cName.includes(query) || query.includes(cName);
+        return cName === query || cName === rawQuery || cName.includes(query) || query.includes(cName);
       });
     }
     return foundCard;
@@ -1022,7 +1023,7 @@ function showDayInterviewDetails(day, monthName, year, events) {
       card.className = "calendar-event-card";
       card.innerHTML = `
         <div style="flex: 1; min-width: 0;">
-          <div class="calendar-event-company">${escapeHtml(ev.company)}</div>
+          <div class="calendar-event-company">${ev.is_nagaraj ? '<i class="fa-solid fa-star" style="color:#d97706; margin-right:0.35rem;" title="Nagaraj\'s Interview"></i>' : ''}${escapeHtml(ev.company)}</div>
           <div class="calendar-event-round"><i class="fa-regular fa-circle-dot" style="margin-right:0.25rem;"></i>${escapeHtml(ev.round)}</div>
           <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;"><i class="fa-regular fa-clock" style="margin-right:0.25rem;"></i>${escapeHtml(ev.date || `${day}-${monthName}-${year}`)}</div>
         </div>
@@ -1033,7 +1034,7 @@ function showDayInterviewDetails(day, monthName, year, events) {
       `;
       card.title = `Click to open ${ev.company} (${ev.round}) directly in Question Bank list`;
       card.addEventListener("click", () => {
-        openRoundInQuestionBank(ev.company, ev.round, ev.date);
+        openRoundInQuestionBank(ev.raw_company || ev.company, ev.round, ev.date);
       });
       list.appendChild(card);
     });

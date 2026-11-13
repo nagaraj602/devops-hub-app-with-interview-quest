@@ -161,11 +161,15 @@ class QuestionBankService:
                 r_date = r.get("date", "")
                 if r_date and r_date not in ["Recent", "Core Reference", "N/A"]:
                     clean_d = r_date.split()[0]
+                    is_nagaraj = c.get("is_nagaraj_interview", False)
+                    comp_name = f"Nagaraj - {c['company_name']}" if is_nagaraj else c["company_name"]
                     calendar_events.setdefault(clean_d, []).append({
-                        "company": c["company_name"],
+                        "company": comp_name,
+                        "raw_company": c["company_name"],
                         "round": r.get("round_name", ""),
                         "date": r_date,
-                        "question_count": len(r.get("questions", []))
+                        "question_count": len(r.get("questions", [])),
+                        "is_nagaraj": is_nagaraj
                     })
 
         # By default, sort listings in order of interview date & time descending (most recent first)
@@ -602,9 +606,10 @@ class QuestionBankService:
         # 1. Target company lookup (e.g. from calendar direct link)
         if target_company and target_company.strip():
             t_name = target_company.strip().lower()
-            matching_comp = [c for c in companies if c.get("company_name", "").strip().lower() == t_name]
+            t_clean = re.sub(r'^nagaraj\s*-\s*', '', t_name).strip()
+            matching_comp = [c for c in companies if c.get("company_name", "").strip().lower() in (t_name, t_clean)]
             if not matching_comp:
-                matching_comp = [c for c in companies if t_name in c.get("company_name", "").strip().lower()]
+                matching_comp = [c for c in companies if t_clean in c.get("company_name", "").strip().lower() or c.get("company_name", "").strip().lower() in t_clean]
             if matching_comp:
                 if sort_by == "group_by_company":
                     return self._consolidate_by_company(matching_comp)
