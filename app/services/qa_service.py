@@ -168,8 +168,8 @@ INSTRUCTORS_CONFIG = [
     {
         "id": "aditya",
         "name": "Aditya",
-        "filename": "5. Aditya QA 69, 77, 89, 91-92 class.md",
-        "classes": "Class 69, 77, 89, 91-92",
+        "filename": "5. Aditya QA 69, 77, 89, 91-94 class.md",
+        "classes": "Class 69, 77, 89, 91-94",
         "avatar_text": "AD",
         "avatar_bg": "#ecfdf5",
         "avatar_color": "#059669",
