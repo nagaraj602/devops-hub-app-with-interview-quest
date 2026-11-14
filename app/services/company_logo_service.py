@@ -10,6 +10,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "acqueon": "acqueon.com",
     "altemrik": "altimetrik.com",
     "altimetrik": "altimetrik.com",
+    "amtech": "amtech.com",
     "apexon": "apexon.com",
     "apty": "apty.io",
     "azentio": "azentio.com",
@@ -29,6 +30,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "dotdash meredith": "dotdashmeredith.com",
     "feuji": "feuji.com",
     "gainwell technologies": "gainwelltechnologies.com",
+    "geektrust": "geektrust.com",
     "grid dynamics": "griddynamics.com",
     "hcl": "hcl.com",
     "highradius": "highradius.com",
@@ -78,6 +80,8 @@ COMPANY_DOMAINS: Dict[str, str] = {
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "amtech": "/static/images/logos/amtech.png",
+    "geektrust": "/static/images/logos/geektrust.png",
     "highradius": "/static/images/logos/highradius.png",
     "unidel": "/static/images/logos/unidel.png",
     "betsol": "/static/images/logos/betsol.png",
