@@ -80,6 +80,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "ntt data": "/static/images/logos/ntt_data.png",
     "amtech": "/static/images/logos/amtech.png",
     "geektrust": "/static/images/logos/geektrust.png",
     "highradius": "/static/images/logos/highradius.png",

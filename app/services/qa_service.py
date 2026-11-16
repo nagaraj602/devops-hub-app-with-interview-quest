@@ -94,13 +94,16 @@ def is_answer_start(s: str) -> bool:
     t = s.strip()
     if not t:
         return False
+    if t.startswith('**') and t.endswith('**') and not (t.endswith(':**') or t.endswith(': **')):
+        return False
     cleaned = re.sub(r'^[\*\-\#\s]+', '', t).strip()
     if re.match(r'^(?:Question|Candidate|Sub-Question|Primary Question|Main Question|Topic|\d+\.|\d+\))', cleaned, re.I):
         return False
 
     ans_keywords = [
-        'guidance / expected answer', 'guidance/expected answer', 'expected answer',
+        'instructor\'s general guidance', 'instructor general guidance', 'general instructor guidance',
         'instructor\'s guidance', 'instructor guidance', 'interviewer guidance',
+        'instructor\'s suggestion / advice', 'instructor suggestion / advice',
         'instructor\'s suggestion', 'instructor suggestion', 'suggestion/answer provided',
         'instructor\'s answer', 'instructor answer', 'instructor\'s answers',
         'instructor\'s addition', 'instructor\'s affirmation',
@@ -118,12 +121,16 @@ def is_answer_start(s: str) -> bool:
         'instructor guidance provided', 'instructor guidance & recommendations',
         'instructor guidance & provided model answer',
         'feedback', 'instructor\'s feedback', 'instructor feedback',
-        'feedback / guidance', 'feedback/guidance', 'feedback / advice', 'feedback/advice'
+        'feedback / guidance', 'feedback/guidance', 'feedback / advice', 'feedback/advice',
+        'guidance / expected answer', 'guidance/expected answer', 'expected answer'
     ]
     cl = cleaned.lower().strip('*_ ')
     for kw in ans_keywords:
         if cl.startswith(kw):
             return True
+
+    if re.search(r'instructor(?:[\'’]s)?\s+(?:general\s+)?(?:guidance|suggestion|advice|feedback|answer)', cleaned, re.I):
+        return True
 
     if re.match(r'^(?:\*\*)?(?:Ans|Answer|Suggestion|Guidance|Feedback)(?:\*\*)?\s*:\s*', cleaned, re.I):
         return True
@@ -599,54 +606,55 @@ class QAService:
         sessions = []
         curr_date = "General"
         curr_qs = []
-        curr_q = ""
+        curr_q_obj = None
         curr_ans = []
         in_ans = False
-        curr_block_qs = []
         curr_topic = ""
         q_idx = 1
 
-        def push_q():
-            nonlocal curr_q, q_idx, curr_topic, curr_qs, curr_block_qs
-            q_clean = clean_question_text(curr_q)
-            if not q_clean:
-                curr_q = ""
+        def commit_ans():
+            nonlocal curr_ans, in_ans, curr_q_obj, curr_qs, q_idx, curr_topic, curr_date
+            if not in_ans and not curr_ans:
                 return
-            q_obj = {
-                "id": f"qa_aditya_{q_idx}",
-                "question": q_clean,
-                "answer": "",
-                "answer_html": "",
-                "has_answer": False,
-                "instructor": config["name"],
-                "session_date": curr_date,
-                "topic": curr_topic
-            }
-            curr_qs.append(q_obj)
-            curr_block_qs.append(q_obj)
-            q_idx += 1
-            curr_q = ""
-
-        def apply_block_ans():
-            nonlocal curr_ans, in_ans, curr_block_qs
             ans_raw = "\n".join(curr_ans).strip()
             ans_clean = clean_grammar_and_unescape(ans_raw)
-            has_ans = is_valid_answer_text(ans_clean)
-            if has_ans and curr_block_qs:
-                ans_html = render_md(ans_clean)
-                for q_obj in curr_block_qs:
-                    if not q_obj["has_answer"]:
-                        q_obj["answer"] = ans_clean
-                        q_obj["answer_html"] = ans_html
-                        q_obj["has_answer"] = True
+            # Strictly strip any synthetic AI tags or labels if present
+            ans_clean = re.sub(r'^(?:\*|_)?\s*(?:\*\*)?(?:Guidance\s*/\s*Expected\s*Answer|Verified\s*Production\s*Answer|Expected\s*Answer)(?:\*\*)?:?\s*', '', ans_clean, flags=re.I).strip()
+            ans_clean = re.sub(r'^(?:[\*\-\s#_]*(?:\*\*)?Instructor(?:[\'’]s)?\s+[^\n]+(?:\*\*)?:?\s*\n+)', '', ans_clean, flags=re.I).strip()
+            if is_valid_answer_text(ans_clean):
+                if curr_q_obj is not None:
+                    curr_q_obj["answer"] = ans_clean
+                    curr_q_obj["answer_html"] = render_md(ans_clean)
+                    curr_q_obj["has_answer"] = True
+                    curr_q_obj = None
+                else:
+                    # Standalone instructor guidance block (e.g. at the start or end of a session)
+                    title = curr_topic or "Instructor Guidance & Feedback"
+                    q_item = {
+                        "id": f"qa_aditya_{q_idx}",
+                        "question": title,
+                        "sub_questions": [],
+                        "answer": ans_clean,
+                        "answer_html": render_md(ans_clean),
+                        "has_answer": True,
+                        "instructor": config["name"],
+                        "session_date": curr_date,
+                        "topic": curr_topic or "Instructor Guidance",
+                        "is_guidance_only": True
+                    }
+                    curr_qs.append(q_item)
+                    q_idx += 1
             curr_ans = []
             in_ans = False
-            curr_block_qs = []
+
+        def commit_q():
+            nonlocal curr_q_obj
+            commit_ans()
+            curr_q_obj = None
 
         def push_session():
-            nonlocal curr_qs, curr_date, sessions
-            push_q()
-            apply_block_ans()
+            nonlocal curr_qs, curr_date, sessions, curr_q_obj
+            commit_q()
             if curr_qs:
                 sessions.append({
                     "session_id": f"aditya_{curr_date.replace('-', '_')}",
@@ -659,12 +667,14 @@ class QAService:
                 curr_qs = []
 
         for line in lines:
-            s = clean_grammar_and_unescape(line)
+            raw_s = line.rstrip()
+            s = clean_grammar_and_unescape(raw_s)
             if not s:
                 if in_ans:
                     curr_ans.append("")
                 continue
 
+            # Session Header: ## 14-Nov-2026:
             m_d = re.match(r'^##\s*([0-9]{1,2}-[A-Za-z]+-[0-9]{4}):?', s)
             if m_d:
                 push_session()
@@ -672,56 +682,80 @@ class QAService:
                 curr_topic = ""
                 continue
 
+            # Check if this line starts an instructor suggestion / advice block
             if is_answer_start(s):
-                push_q()
+                commit_ans()
                 in_ans = True
                 curr_ans.append(s)
                 continue
 
-            if s.startswith("**") and s.endswith("**") and len(s) > 4:
-                topic_title = s.strip('*').strip()
-                if "Instructor" in topic_title:
-                    push_q()
-                    in_ans = True
+            # In answer accumulation mode: check if a new question or section starts
+            if in_ans:
+                is_new_section = False
+                if s.startswith("**") and s.endswith("**") and len(s) > 4:
+                    is_new_section = True
+                elif re.match(r'^Candidate\s*\d+', s, re.I):
+                    is_new_section = True
+                elif s.startswith("* **Question") or s.startswith("- **Question") or s.startswith("Question:"):
+                    is_new_section = True
+                elif (s.startswith("* ") or s.startswith("- ")) and not re.match(r'^[\*\-\s]+(?:\*\*)?(?:Sub-question|Follow-up)', raw_s, re.I):
+                    if s.startswith("* ") and not s.startswith("* -"):
+                        if not re.search(r'^\*\s+\*\*On\s+[A-Za-z]', s):
+                            is_new_section = True
+
+                if is_new_section:
+                    commit_q()
+                else:
                     curr_ans.append(s)
                     continue
+
+            # Topic Header: **Topic Name**
+            if s.startswith("**") and s.endswith("**") and len(s) > 4:
+                topic_title = s.strip('*').strip()
                 if "Candidate" not in topic_title and "Questions Asked" not in topic_title:
-                    push_q()
-                    if in_ans:
-                        apply_block_ans()
+                    commit_q()
                     curr_topic = topic_title
                 continue
 
+            # Candidate Header
             if re.match(r'^Candidate\s*\d+', s, re.I):
-                push_q()
-                if in_ans:
-                    apply_block_ans()
+                commit_q()
                 continue
 
-            if s.startswith("* ") or s.startswith("- "):
-                if is_answer_start(s[2:]):
-                    push_q()
-                    in_ans = True
-                    curr_ans.append(s)
-                    continue
+            # Sub-question detection
+            m_sub = re.match(r'^[\*\-\s]+(?:\*\*)?(?:Sub-question|Follow-up)(?:\:|\*+\:)?\s*(.*)', raw_s, re.I)
+            if m_sub:
+                sub_text = clean_question_text(m_sub.group(1))
+                if sub_text and curr_q_obj is not None:
+                    curr_q_obj["sub_questions"].append(sub_text)
+                continue
 
-                if in_ans:
-                    if s.startswith("* **Question") or s.startswith("* Question:"):
-                        apply_block_ans()
-                        push_q()
-                        curr_q = s[2:].strip()
-                    else:
-                        curr_ans.append(s)
-                else:
-                    push_q()
-                    curr_q = s[2:].strip()
-            elif in_ans:
-                curr_ans.append(s)
-            elif s.startswith("Question:"):
-                if in_ans:
-                    apply_block_ans()
-                push_q()
-                curr_q = s[9:].strip()
+            # Main Question detection
+            if s.startswith("* ") or s.startswith("- ") or s.startswith("Question:"):
+                # If indented under an active question, treat as sub-question
+                if (raw_s.startswith("  ") or raw_s.startswith("\t")) and curr_q_obj is not None:
+                    clean_sub = clean_question_text(s.lstrip("*- \t"))
+                    if clean_sub:
+                        curr_q_obj["sub_questions"].append(clean_sub)
+                        continue
+
+                commit_q()
+                q_text = clean_question_text(s)
+                if q_text:
+                    curr_q_obj = {
+                        "id": f"qa_aditya_{q_idx}",
+                        "question": q_text,
+                        "sub_questions": [],
+                        "answer": "",
+                        "answer_html": "",
+                        "has_answer": False,
+                        "instructor": config["name"],
+                        "session_date": curr_date,
+                        "topic": curr_topic
+                    }
+                    curr_qs.append(curr_q_obj)
+                    q_idx += 1
+                continue
 
         push_session()
         sessions.sort(key=lambda s: s.get("timestamp", 0.0), reverse=True)
@@ -1238,22 +1272,47 @@ class QAService:
             ""
         ])
 
-        for idx, q in enumerate(questions, 1):
-            q_text = q.get("question", "").strip()
-            topic = q.get("topic")
-            has_ans = q.get("has_answer", False)
-            ans_text = q.get("answer", "").strip()
+        # Group consecutive questions with identical non-empty answer to avoid repetitive text
+        grouped = []
+        q_counter = 1
+        for q in questions:
+            ans = q.get("answer", "").strip()
+            if grouped and grouped[-1]["answer"] and grouped[-1]["answer"] == ans:
+                grouped[-1]["questions"].append((q_counter, q))
+            else:
+                grouped.append({
+                    "questions": [(q_counter, q)],
+                    "answer": ans,
+                    "topic": q.get("topic"),
+                })
+            q_counter += 1
 
-            lines.append(f"### Q{idx}. {q_text}")
-            if topic:
-                lines.append(f"*Topic: {topic}*")
-            lines.append("")
+        for g in grouped:
+            qs = g["questions"]
+            topic = g["topic"]
+            ans_text = g["answer"]
+            has_ans = bool(ans_text)
+
+            if len(qs) == 1:
+                num, q = qs[0]
+                q_text = q.get("question", "").strip()
+                lines.append(f"### Q{num}. {q_text}")
+                if topic:
+                    lines.append(f"*Topic: {topic}*")
+                lines.append("")
+            else:
+                first_num = qs[0][0]
+                last_num = qs[-1][0]
+                heading_topic = f" - {topic}" if topic else ""
+                lines.append(f"### Q{first_num} – Q{last_num}{heading_topic}")
+                for num, q in qs:
+                    lines.append(f"- **Q{num}.** {q.get('question', '').strip()}")
+                lines.append("")
 
             if has_ans and ans_text:
-                lines.append("#### Instructor Guidance / Solution:")
                 lines.append(ans_text)
             else:
-                lines.append("*Instructor Guidance: Question only (No answer recorded in session transcript).*")
+                lines.append("*Question only (No answer recorded in session transcript).*")
 
             lines.append("")
             lines.append("---")
@@ -1297,22 +1356,46 @@ class QAService:
                 lines.append(f"**Date / Topic:** {sess_date or sess_name} | **Questions:** {len(questions)} ({s_answered} with guidance)")
             lines.append("")
 
-            for q_idx, q in enumerate(questions, 1):
-                q_text = q.get("question", "").strip()
-                topic = q.get("topic")
-                has_ans = q.get("has_answer", False)
-                ans_text = q.get("answer", "").strip()
+            grouped = []
+            q_counter = 1
+            for q in questions:
+                ans = q.get("answer", "").strip()
+                if grouped and grouped[-1]["answer"] and grouped[-1]["answer"] == ans:
+                    grouped[-1]["questions"].append((q_counter, q))
+                else:
+                    grouped.append({
+                        "questions": [(q_counter, q)],
+                        "answer": ans,
+                        "topic": q.get("topic"),
+                    })
+                q_counter += 1
 
-                lines.append(f"### Q{q_idx}. {q_text}")
-                if topic:
-                    lines.append(f"*Topic: {topic}*")
-                lines.append("")
+            for g in grouped:
+                qs = g["questions"]
+                topic = g["topic"]
+                ans_text = g["answer"]
+                has_ans = bool(ans_text)
+
+                if len(qs) == 1:
+                    num, q = qs[0]
+                    q_text = q.get("question", "").strip()
+                    lines.append(f"### Q{num}. {q_text}")
+                    if topic:
+                        lines.append(f"*Topic: {topic}*")
+                    lines.append("")
+                else:
+                    first_num = qs[0][0]
+                    last_num = qs[-1][0]
+                    heading_topic = f" - {topic}" if topic else ""
+                    lines.append(f"### Q{first_num} – Q{last_num}{heading_topic}")
+                    for num, q in qs:
+                        lines.append(f"- **Q{num}.** {q.get('question', '').strip()}")
+                    lines.append("")
 
                 if has_ans and ans_text:
-                    lines.append("#### Instructor Guidance / Solution:")
                     lines.append(ans_text)
                 else:
-                    lines.append("*Instructor Guidance: Question only (No answer recorded in session transcript).*")
+                    lines.append("*Question only (No answer recorded in session transcript).*")
 
                 lines.append("")
                 lines.append("---")
@@ -1320,174 +1403,203 @@ class QAService:
 
         return "\n".join(lines)
 
+    @staticmethod
+    def _clean_pdf_text(text: str) -> str:
+        """Replace Unicode symbols and special characters that ReportLab/xhtml2pdf fonts cannot render."""
+        if not text:
+            return ""
+        replacements = {
+            "↳": "- ",
+            "●": "&bull;",
+            "🏢": "",
+            "📁": "",
+            "├──": "|-- ",
+            "└──": "\\-- ",
+            "│": "|",
+            "├": "|-",
+            "└": "\\-",
+            "─": "-",
+            "—": "--",
+            "–": "-",
+            "’": "'",
+            "‘": "'",
+            "“": '"',
+            "”": '"',
+            "•": "&bull;",
+            "…": "...",
+        }
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        return text
+
     def generate_session_html(self, sess: Dict[str, Any]) -> str:
-        """Format a session and all its questions into preview-mode HTML for PDF rendering."""
+        """Format a session and all its questions into clean, minimalist HTML for PDF rendering."""
         inst_name = sess.get("instructor_name", "ArtisanTek Faculty")
         inst_classes = sess.get("instructor_classes", "")
         sess_name = sess.get("session_name", "QA Session")
         sess_date = sess.get("date", "")
         questions = sess.get("questions", [])
         total_q = len(questions)
-        answered_q = sum(1 for q in questions if q.get("has_answer"))
 
-        q_cards = []
+        q_items_html = []
         for idx, q in enumerate(questions, 1):
-            q_text = html.escape(q.get("question", "").strip())
-            topic = q.get("topic")
-            has_ans = q.get("has_answer", False)
-            ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
-            ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+            q_text = html.escape(self._clean_pdf_text(q.get("question", "").strip()))
+            topic = q.get("topic", "").strip()
+            sub_questions = q.get("sub_questions", [])
+            has_ans = bool(q.get("has_answer"))
+            ans = (q.get("answer") or "").strip()
+            # Strictly strip any residual synthetic AI tags if present
+            ans = re.sub(r'^(?:\*|_)?\s*(?:\*\*)?(?:Guidance\s*/\s*Expected\s*Answer|Verified\s*Production\s*Answer|Expected\s*Answer)(?:\*\*)?:?\s*', '', ans, flags=re.I).strip()
+            ans = re.sub(r'^(?:[\*\-\s#_]*(?:\*\*)?Instructor(?:[\'’]s)?\s+[^\n]+(?:\*\*)?:?\s*\n+)', '', ans, flags=re.I).strip()
+            ans_html = q.get("answer_html", "") or render_md(ans)
+            ans_html = self._clean_pdf_text(ans_html)
 
-            topic_html = f'<span class="topic-tag">{html.escape(topic)}</span>' if topic else ""
+            # Sub-questions HTML
+            sub_html = ""
+            if sub_questions:
+                sub_lis = "".join([
+                    f'<li>{html.escape(self._clean_pdf_text(sub))}</li>'
+                    for sub in sub_questions
+                ])
+                sub_html = f'''
+                <div class="subquestions-wrap">
+                    <div class="subquestions-header">Follow-up / Sub-questions:</div>
+                    <ul class="subquestions-list">{sub_lis}</ul>
+                </div>
+                '''
+
+            # Guidance HTML (Only instructor suggestions / guidance, never synthetic AI answers)
+            guidance_html = ""
             if has_ans and ans_html.strip():
-                ans_block = f'''
-                <div class="ans-box">
-                    <div class="ans-label">Instructor Guidance &amp; Solution</div>
-                    <div class="ans-body">{ans_html}</div>
-                </div>
-                '''
-            else:
-                ans_block = '''
-                <div class="ans-box no-ans">
-                    <div class="ans-label-muted">Instructor Guidance: Question only (No answer recorded in this session transcript).</div>
+                guidance_html = f'''
+                <div class="guidance-box">
+                    <div class="guidance-header"><strong>Instructor\'s Suggestion &amp; Guidance:</strong></div>
+                    <div class="guidance-body">{ans_html}</div>
                 </div>
                 '''
 
-            q_cards.append(f'''
-            <div class="q-card">
-                <div class="q-header">
-                    <span class="q-num">Q{idx}</span>
-                    {topic_html}
-                    <span class="q-text">{q_text}</span>
-                </div>
-                {ans_block}
+            topic_badge = f' <span class="item-topic">({html.escape(topic)})</span>' if topic else ""
+
+            q_items_html.append(f'''
+            <div class="question-item">
+                <div class="question-title">Q{idx}. {q_text}{topic_badge}</div>
+                {sub_html}
+                {guidance_html}
             </div>
             ''')
 
         css = """
         @page {
             size: A4 portrait;
-            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            margin: 1.0cm 1.0cm 1.0cm 1.0cm;
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
-                font-size: 8pt;
-                color: #64748b;
+                font-size: 7.5pt;
+                color: #777777;
                 font-family: Helvetica, Arial, sans-serif;
             }
             @bottom-left {
                 content: "DevOps Interview Hub • ArtisanTek QA Sessions";
-                font-size: 8pt;
-                color: #94a3b8;
+                font-size: 7.5pt;
+                color: #999999;
                 font-family: Helvetica, Arial, sans-serif;
             }
         }
         body {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 9.5pt;
-            line-height: 1.5;
-            color: #1e293b;
-        }
-        .header-box {
-            border-bottom: 2px solid #4f46e5;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .title {
-            font-size: 15pt;
-            font-weight: bold;
-            color: #0f172a;
-            margin: 0 0 3px 0;
-        }
-        .subtitle {
             font-size: 8.5pt;
-            color: #64748b;
+            line-height: 1.35;
+            color: #111111;
+        }
+        .doc-header {
+            border-bottom: 1.5px solid #333333;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+        }
+        .doc-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #111111;
+            margin: 0 0 2px 0;
+        }
+        .doc-meta {
+            font-size: 8pt;
+            color: #555555;
             margin: 0;
         }
-        .meta-bar {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 6px 10px;
-            border-radius: 4px;
-            margin-bottom: 14px;
-            font-size: 8.5pt;
-            color: #334155;
+        .question-item {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            page-break-inside: auto;
         }
-        .meta-item {
-            margin-right: 14px;
-        }
-        .q-card {
-            margin-bottom: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 5px;
-            background-color: #ffffff;
-            page-break-inside: avoid;
-        }
-        .q-header {
-            padding: 7px 10px;
-            background-color: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 9.5pt;
+        .question-title {
+            font-size: 9pt;
             font-weight: bold;
-            color: #0f172a;
+            color: #111111;
+            margin-bottom: 4px;
+            page-break-after: avoid;
         }
-        .q-num {
-            background-color: #4f46e5;
-            color: #ffffff;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7.5pt;
-            margin-right: 5px;
+        .item-topic {
+            font-size: 7.8pt;
+            font-weight: normal;
+            color: #4b5563;
         }
-        .topic-tag {
-            background-color: #e0e7ff;
-            color: #3730a3;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7pt;
-            margin-right: 5px;
+        .subquestions-wrap {
+            margin: 3px 0 5px 10px;
         }
-        .ans-box {
-            padding: 7px 10px;
-            background-color: #ffffff;
-        }
-        .ans-box.no-ans {
-            background-color: #fcfcfc;
-        }
-        .ans-label {
-            font-size: 7.5pt;
+        .subquestions-header {
+            font-size: 7.8pt;
             font-weight: bold;
-            color: #4f46e5;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
+            color: #374151;
+            margin-bottom: 2px;
         }
-        .ans-label-muted {
+        .subquestions-list {
+            margin: 0 0 0 14px;
+            padding: 0;
+            font-size: 8.2pt;
+            color: #1f2937;
+        }
+        .subquestions-list li {
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+        .guidance-box {
+            background-color: #f8fafc;
+            border-left: 2.5px solid #2563eb;
+            padding: 4px 8px;
+            margin: 4px 0 2px 8px;
+            font-size: 8.2pt;
+            line-height: 1.35;
+        }
+        .guidance-header {
             font-size: 8pt;
-            color: #64748b;
-            font-style: italic;
+            color: #1e40af;
+            margin-bottom: 2px;
         }
-        .ans-body {
-            font-size: 8.8pt;
-            color: #334155;
+        .guidance-body {
+            color: #1f2937;
+        }
+        p {
+            margin: 2px 0 3px 0;
         }
         pre, code {
             font-family: Courier, monospace;
-            font-size: 7.5pt;
-            background-color: #f1f5f9;
-            color: #0f172a;
+            font-size: 7.2pt;
+            background-color: #f6f6f6;
+            color: #111111;
         }
         pre {
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            margin: 4px 0;
+            padding: 4px 6px;
+            border: 1px solid #e0e0e0;
+            margin: 3px 0;
         }
         ul, ol {
-            margin: 3px 0 3px 14px;
+            margin: 2px 0 3px 14px;
             padding: 0;
         }
         li {
-            margin-bottom: 2px;
+            margin-bottom: 1.5px;
         }
         """
 
@@ -1499,16 +1611,15 @@ class QAService:
 <style>{css}</style>
 </head>
 <body>
-    <div class="header-box">
-        <div class="title">DevOps QA Session: {html.escape(sess_name)}</div>
-        <div class="subtitle">ArtisanTek Faculty Live Classes &bull; DevOps Knowledge Portal &amp; Interview Hub</div>
+    <div class="doc-header">
+        <div class="doc-title">DevOps QA Session: {html.escape(sess_name)}</div>
+        <div class="doc-meta">
+            <strong>Instructor:</strong> {html.escape(inst_name)}{f' ({html.escape(inst_classes)})' if inst_classes else ''} &bull; 
+            <strong>Date:</strong> {html.escape(sess_date or sess_name)} &bull; 
+            <strong>Total Questions:</strong> {total_q}
+        </div>
     </div>
-    <div class="meta-bar">
-        <span class="meta-item"><strong>Instructor:</strong> {html.escape(inst_name)}{f' ({html.escape(inst_classes)})' if inst_classes else ''}</span>
-        <span class="meta-item"><strong>Date:</strong> {html.escape(sess_date or sess_name)}</span>
-        <span class="meta-item"><strong>Total Questions:</strong> {total_q} ({answered_q} with Instructor Solutions)</span>
-    </div>
-    {''.join(q_cards)}
+    {''.join(q_items_html)}
 </body>
 </html>"""
 
@@ -1521,7 +1632,7 @@ class QAService:
         return buf.getvalue()
 
     def generate_instructor_html(self, inst: Dict[str, Any]) -> str:
-        """Format an instructor's full set of sessions into preview-mode HTML for PDF rendering."""
+        """Format an instructor's full set of sessions into clean, minimalist HTML for PDF rendering."""
         inst_name = inst.get("name", "ArtisanTek Faculty")
         inst_classes = inst.get("classes", "")
         sessions = inst.get("sessions", [])
@@ -1533,180 +1644,178 @@ class QAService:
             sess_date = sess.get("date", "")
             questions = sess.get("questions", [])
 
-            q_cards = []
+            q_items_html = []
             for idx, q in enumerate(questions, 1):
-                q_text = html.escape(q.get("question", "").strip())
-                topic = q.get("topic")
-                has_ans = q.get("has_answer", False)
-                ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
-                ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+                q_text = html.escape(self._clean_pdf_text(q.get("question", "").strip()))
+                topic = q.get("topic", "").strip()
+                sub_questions = q.get("sub_questions", [])
+                has_ans = bool(q.get("has_answer"))
+                ans = (q.get("answer") or "").strip()
+                ans = re.sub(r'^(?:\*|_)?\s*(?:\*\*)?(?:Guidance\s*/\s*Expected\s*Answer|Verified\s*Production\s*Answer|Expected\s*Answer)(?:\*\*)?:?\s*', '', ans, flags=re.I).strip()
+                ans = re.sub(r'^(?:[\*\-\s#_]*(?:\*\*)?Instructor(?:[\'’]s)?\s+[^\n]+(?:\*\*)?:?\s*\n+)', '', ans, flags=re.I).strip()
+                ans_html = q.get("answer_html", "") or render_md(ans)
+                ans_html = self._clean_pdf_text(ans_html)
 
-                topic_html = f'<span class="topic-tag">{html.escape(topic)}</span>' if topic else ""
+                sub_html = ""
+                if sub_questions:
+                    sub_lis = "".join([
+                        f'<li>{html.escape(self._clean_pdf_text(sub))}</li>'
+                        for sub in sub_questions
+                    ])
+                    sub_html = f'''
+                    <div class="subquestions-wrap">
+                        <div class="subquestions-header">Follow-up / Sub-questions:</div>
+                        <ul class="subquestions-list">{sub_lis}</ul>
+                    </div>
+                    '''
+
+                guidance_html = ""
                 if has_ans and ans_html.strip():
-                    ans_block = f'''
-                    <div class="ans-box">
-                        <div class="ans-label">Instructor Guidance &amp; Solution</div>
-                        <div class="ans-body">{ans_html}</div>
-                    </div>
-                    '''
-                else:
-                    ans_block = '''
-                    <div class="ans-box no-ans">
-                        <div class="ans-label-muted">Instructor Guidance: Question only (No answer recorded).</div>
+                    guidance_html = f'''
+                    <div class="guidance-box">
+                        <div class="guidance-header"><strong>Instructor\'s Suggestion &amp; Guidance:</strong></div>
+                        <div class="guidance-body">{ans_html}</div>
                     </div>
                     '''
 
-                q_cards.append(f'''
-                <div class="q-card">
-                    <div class="q-header">
-                        <span class="q-num">Q{idx}</span>
-                        {topic_html}
-                        <span class="q-text">{q_text}</span>
-                    </div>
-                    {ans_block}
+                topic_badge = f' <span class="item-topic">({html.escape(topic)})</span>' if topic else ""
+
+                q_items_html.append(f'''
+                <div class="question-item">
+                    <div class="question-title">Q{idx}. {q_text}{topic_badge}</div>
+                    {sub_html}
+                    {guidance_html}
                 </div>
                 ''')
 
             session_sections.append(f'''
-            <div class="session-section" style="page-break-before: auto; margin-top: 16px;">
+            <div class="session-section">
                 <div class="section-title">Session {s_idx}: {html.escape(sess_name)} ({html.escape(sess_date or sess_name)}) &bull; {len(questions)} Questions</div>
-                {''.join(q_cards)}
+                {''.join(q_items_html)}
             </div>
             ''')
 
         css = """
         @page {
             size: A4 portrait;
-            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            margin: 1.0cm 1.0cm 1.0cm 1.0cm;
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
-                font-size: 8pt;
-                color: #64748b;
+                font-size: 7.5pt;
+                color: #777777;
                 font-family: Helvetica, Arial, sans-serif;
             }
             @bottom-left {
                 content: "DevOps Interview Hub • ArtisanTek Faculty QA";
-                font-size: 8pt;
-                color: #94a3b8;
+                font-size: 7.5pt;
+                color: #999999;
                 font-family: Helvetica, Arial, sans-serif;
             }
         }
         body {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 9.5pt;
-            line-height: 1.5;
-            color: #1e293b;
-        }
-        .header-box {
-            border-bottom: 2px solid #4f46e5;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .title {
-            font-size: 16pt;
-            font-weight: bold;
-            color: #0f172a;
-            margin: 0 0 3px 0;
-        }
-        .subtitle {
             font-size: 8.5pt;
-            color: #64748b;
-            margin: 0;
+            line-height: 1.35;
+            color: #111111;
         }
-        .meta-bar {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 6px 10px;
-            border-radius: 4px;
-            margin-bottom: 14px;
-            font-size: 8.5pt;
-            color: #334155;
-        }
-        .meta-item {
-            margin-right: 14px;
-        }
-        .section-title {
-            font-size: 12pt;
-            font-weight: bold;
-            color: #312e81;
-            background-color: #eef2ff;
-            border-left: 4px solid #4f46e5;
-            padding: 5px 8px;
+        .doc-header {
+            border-bottom: 1.5px solid #333333;
+            padding-bottom: 4px;
             margin-bottom: 10px;
         }
-        .q-card {
-            margin-bottom: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 5px;
-            background-color: #ffffff;
-            page-break-inside: avoid;
-        }
-        .q-header {
-            padding: 7px 10px;
-            background-color: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 9.5pt;
+        .doc-title {
+            font-size: 13pt;
             font-weight: bold;
-            color: #0f172a;
+            color: #111111;
+            margin: 0 0 2px 0;
         }
-        .q-num {
-            background-color: #4f46e5;
-            color: #ffffff;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7.5pt;
-            margin-right: 5px;
-        }
-        .topic-tag {
-            background-color: #e0e7ff;
-            color: #3730a3;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7pt;
-            margin-right: 5px;
-        }
-        .ans-box {
-            padding: 7px 10px;
-            background-color: #ffffff;
-        }
-        .ans-box.no-ans {
-            background-color: #fcfcfc;
-        }
-        .ans-label {
-            font-size: 7.5pt;
-            font-weight: bold;
-            color: #4f46e5;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
-        }
-        .ans-label-muted {
+        .doc-meta {
             font-size: 8pt;
-            color: #64748b;
-            font-style: italic;
+            color: #555555;
+            margin: 0;
         }
-        .ans-body {
-            font-size: 8.8pt;
-            color: #334155;
+        .section-title {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #111111;
+            border-bottom: 1px solid #dddddd;
+            padding-bottom: 2px;
+            margin: 12px 0 6px 0;
+            page-break-after: avoid;
+        }
+        .question-item {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            page-break-inside: auto;
+        }
+        .question-title {
+            font-size: 9pt;
+            font-weight: bold;
+            color: #111111;
+            margin-bottom: 4px;
+            page-break-after: avoid;
+        }
+        .item-topic {
+            font-size: 7.8pt;
+            font-weight: normal;
+            color: #4b5563;
+        }
+        .subquestions-wrap {
+            margin: 3px 0 5px 10px;
+        }
+        .subquestions-header {
+            font-size: 7.8pt;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+        .subquestions-list {
+            margin: 0 0 0 14px;
+            padding: 0;
+            font-size: 8.2pt;
+            color: #1f2937;
+        }
+        .subquestions-list li {
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+        .guidance-box {
+            background-color: #f8fafc;
+            border-left: 2.5px solid #2563eb;
+            padding: 4px 8px;
+            margin: 4px 0 2px 8px;
+            font-size: 8.2pt;
+            line-height: 1.35;
+        }
+        .guidance-header {
+            font-size: 8pt;
+            color: #1e40af;
+            margin-bottom: 2px;
+        }
+        .guidance-body {
+            color: #1f2937;
+        }
+        p {
+            margin: 2px 0 3px 0;
         }
         pre, code {
             font-family: Courier, monospace;
-            font-size: 7.5pt;
-            background-color: #f1f5f9;
-            color: #0f172a;
+            font-size: 7.2pt;
+            background-color: #f6f6f6;
+            color: #111111;
         }
         pre {
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            margin: 4px 0;
+            padding: 4px 6px;
+            border: 1px solid #e0e0e0;
+            margin: 3px 0;
         }
         ul, ol {
-            margin: 3px 0 3px 14px;
+            margin: 2px 0 3px 14px;
             padding: 0;
         }
         li {
-            margin-bottom: 2px;
+            margin-bottom: 1.5px;
         }
         """
 
@@ -1718,14 +1827,13 @@ class QAService:
 <style>{css}</style>
 </head>
 <body>
-    <div class="header-box">
-        <div class="title">DevOps QA Master Collection: {html.escape(inst_name)}</div>
-        <div class="subtitle">ArtisanTek Faculty Live Classes &bull; Complete Questions &amp; Guidance</div>
-    </div>
-    <div class="meta-bar">
-        <span class="meta-item"><strong>Instructor:</strong> {html.escape(inst_name)}{f' ({html.escape(inst_classes)})' if inst_classes else ''}</span>
-        <span class="meta-item"><strong>Total Sessions:</strong> {len(sessions)}</span>
-        <span class="meta-item"><strong>Total Questions:</strong> {total_q}</span>
+    <div class="doc-header">
+        <div class="doc-title">DevOps QA Collection: {html.escape(inst_name)}</div>
+        <div class="doc-meta">
+            <strong>Instructor:</strong> {html.escape(inst_name)}{f' ({html.escape(inst_classes)})' if inst_classes else ''} &bull; 
+            <strong>Total Sessions:</strong> {len(sessions)} &bull; 
+            <strong>Total Questions:</strong> {total_q}
+        </div>
     </div>
     {''.join(session_sections)}
 </body>

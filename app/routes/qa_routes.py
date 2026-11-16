@@ -51,12 +51,12 @@ async def qa_questions_view(
     all_instructors = data.get("instructors", [])
 
     if is_default:
-        # Load first 2 instructors initially for fast page load on 2 CPU 8GB RAM laptops
-        initial_chunk = all_instructors[:2]
+        # Load 1 instructor initially for lightning-fast First Contentful Paint (<200KB vs 3.3MB)
+        initial_chunk = all_instructors[:1]
         total_matched = len(all_instructors)
     else:
         filtered = qa_service.filter_qa(instructor=instructor, search=search, sort_by=sort_by)
-        initial_chunk = filtered[:2]
+        initial_chunk = filtered[:1] if len(filtered) > 1 else filtered
         total_matched = len(filtered)
 
     template_response = request.app.state.templates.TemplateResponse(

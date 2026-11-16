@@ -18,15 +18,23 @@ document.addEventListener("DOMContentLoaded", () => {
   initInstantPrefetch();
 });
 
-// Instant Navigation Prefetcher for 2-CPU Low Spec Systems
+// Smart Navigation Prefetcher for 2-CPU Low Spec Systems
 function initInstantPrefetch() {
   const prefetchedUrls = new Set();
+  const allowedPaths = new Set([
+    "/", "/question-bank", "/qa-questions", "/project", 
+    "/training-materials", "/command-cheatsheet"
+  ]);
+
   const prefetch = (url) => {
-    if (!url || prefetchedUrls.has(url) || url.startsWith("#") || url.startsWith("javascript:")) return;
+    if (!url || url.startsWith("#") || url.startsWith("javascript:")) return;
     try {
       const u = new URL(url, window.location.origin);
       if (u.origin !== window.location.origin) return;
       if (u.pathname === window.location.pathname) return;
+      if (!allowedPaths.has(u.pathname)) return; // Strictly ignore /api/ and download links
+      if (prefetchedUrls.has(u.pathname)) return;
+
       prefetchedUrls.add(u.pathname);
       const link = document.createElement("link");
       link.rel = "prefetch";
@@ -35,8 +43,15 @@ function initInstantPrefetch() {
     } catch (e) {}
   };
 
+  let hoverTimer = null;
   document.querySelectorAll("a[href^='/']").forEach(a => {
-    a.addEventListener("mouseenter", () => prefetch(a.getAttribute("href")), { passive: true });
+    a.addEventListener("mouseenter", () => {
+      const href = a.getAttribute("href");
+      hoverTimer = setTimeout(() => prefetch(href), 80);
+    }, { passive: true });
+    a.addEventListener("mouseleave", () => {
+      if (hoverTimer) clearTimeout(hoverTimer);
+    }, { passive: true });
     a.addEventListener("touchstart", () => prefetch(a.getAttribute("href")), { passive: true });
   });
 }

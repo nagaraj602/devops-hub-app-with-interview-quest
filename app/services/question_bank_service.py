@@ -729,15 +729,32 @@ class QuestionBankService:
                 return comp
         return None
 
+    @staticmethod
+    def _group_questions_hierarchy(questions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Group sequential questions such that follow-up sub-questions (is_sub_q=True) are nested under their primary question."""
+        grouped = []
+        current_main = None
+        for q in questions:
+            is_sub = q.get("is_sub_q", False)
+            if not is_sub or current_main is None:
+                current_main = {
+                    "question": q.get("question", "").strip(),
+                    "category": q.get("category", "General"),
+                    "sub_questions": []
+                }
+                grouped.append(current_main)
+            else:
+                current_main["sub_questions"].append(q.get("question", "").strip())
+        return grouped
+
     def generate_round_markdown(self, round_info: Dict[str, Any]) -> str:
-        """Format a round and all its questions into a clean Markdown string."""
+        """Format a round and all its questions into a clean Markdown string with ONLY questions and sub-questions."""
         comp_name = round_info.get("company_name", "Company")
         round_name = round_info.get("round_name", "Interview Round")
         round_date = round_info.get("date", "Recent")
         questions = round_info.get("questions", [])
         categories = round_info.get("categories", [])
         is_nagaraj = round_info.get("is_nagaraj_interview", False)
-        answered_q = sum(1 for q in questions if q.get("has_answer"))
 
         lines = [
             f"# DevOps Interview Questions: {comp_name} - {round_name}",
@@ -745,7 +762,7 @@ class QuestionBankService:
             f"- **Company:** {comp_name}",
             f"- **Round:** {round_name}",
             f"- **Date:** {round_date}",
-            f"- **Total Questions:** {len(questions)} ({answered_q} with Production Answers)",
+            f"- **Total Questions:** {len(questions)}",
         ]
         if categories:
             lines.append(f"- **Categories:** {', '.join(categories)}")
@@ -758,24 +775,16 @@ class QuestionBankService:
             ""
         ])
 
-        for idx, q in enumerate(questions, 1):
-            q_text = q.get("question", "").strip()
-            cat = q.get("category", "General")
-            ans_text = q.get("answer", "").strip()
-            has_ans = q.get("has_answer", False)
-            is_sub = q.get("is_sub_q", False)
-
-            prefix = "↳ Follow-up: " if is_sub else ""
-            lines.append(f"### Q{idx}. {prefix}{q_text}")
-            lines.append(f"*Category: {cat}*")
-            lines.append("")
-
-            if has_ans and ans_text:
-                lines.append("#### Verified Production Answer:")
-                lines.append(ans_text)
-            else:
-                lines.append("*Status: Question only (No answer recorded).*")
-
+        grouped = self._group_questions_hierarchy(questions)
+        for idx, item in enumerate(grouped, 1):
+            q_text = item["question"]
+            cat = item["category"]
+            cat_str = f" *({cat})*" if cat and cat != "General" else ""
+            lines.append(f"### Q{idx}. {q_text}{cat_str}")
+            if item["sub_questions"]:
+                lines.append("")
+                for sub in item["sub_questions"]:
+                    lines.append(f"  * **Follow-up / Sub-question:** {sub}")
             lines.append("")
             lines.append("---")
             lines.append("")
@@ -783,7 +792,7 @@ class QuestionBankService:
         return "\n".join(lines)
 
     def generate_company_markdown(self, comp: Dict[str, Any]) -> str:
-        """Format all rounds of a company into a comprehensive Markdown document."""
+        """Format all rounds of a company into a clean Markdown document with ONLY questions and sub-questions."""
         comp_name = comp.get("company_name", "Company")
         rounds = comp.get("rounds", [])
         total_q = comp.get("total_questions", 0)
@@ -814,222 +823,169 @@ class QuestionBankService:
             r_name = r.get("round_name", f"Round {r_idx}")
             r_date = r.get("date", "Recent")
             questions = r.get("questions", [])
-            r_answered = sum(1 for q in questions if q.get("has_answer"))
 
             lines.append(f"## {r_idx}. {r_name} ({r_date})")
-            lines.append(f"**Total Questions:** {len(questions)} ({r_answered} with Production Answers)")
+            lines.append(f"**Total Questions:** {len(questions)}")
             lines.append("")
 
-            for q_idx, q in enumerate(questions, 1):
-                q_text = q.get("question", "").strip()
-                cat = q.get("category", "General")
-                ans_text = q.get("answer", "").strip()
-                has_ans = q.get("has_answer", False)
-                is_sub = q.get("is_sub_q", False)
-
-                prefix = "↳ Follow-up: " if is_sub else ""
-                lines.append(f"### Q{q_idx}. {prefix}{q_text}")
-                lines.append(f"*Category: {cat}*")
-                lines.append("")
-
-                if has_ans and ans_text:
-                    lines.append("#### Verified Production Answer:")
-                    lines.append(ans_text)
-                else:
-                    lines.append("*Status: Question only (No answer recorded).*")
-
+            grouped = self._group_questions_hierarchy(questions)
+            for idx, item in enumerate(grouped, 1):
+                q_text = item["question"]
+                cat = item["category"]
+                cat_str = f" *({cat})*" if cat and cat != "General" else ""
+                lines.append(f"### Q{idx}. {q_text}{cat_str}")
+                if item["sub_questions"]:
+                    lines.append("")
+                    for sub in item["sub_questions"]:
+                        lines.append(f"  * **Follow-up / Sub-question:** {sub}")
                 lines.append("")
                 lines.append("---")
                 lines.append("")
 
         return "\n".join(lines)
 
+    @staticmethod
+    def _clean_pdf_text(text: str) -> str:
+        """Replace Unicode symbols and special characters that ReportLab/xhtml2pdf fonts cannot render."""
+        if not text:
+            return ""
+        replacements = {
+            "↳": "- ",
+            "●": "&bull;",
+            "🏢": "",
+            "📁": "",
+            "├──": "|-- ",
+            "└──": "\\-- ",
+            "│": "|",
+            "├": "|-",
+            "└": "\\-",
+            "─": "-",
+            "—": "--",
+            "–": "-",
+            "’": "'",
+            "‘": "'",
+            "“": '"',
+            "”": '"',
+            "•": "&bull;",
+            "…": "...",
+        }
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        return text
+
     def generate_round_html(self, round_info: Dict[str, Any]) -> str:
-        """Format a round and all its questions into preview-mode HTML for PDF rendering."""
+        """Format a round and all its questions into clean, minimalist HTML for PDF rendering (questions & sub-questions only)."""
         comp_name = round_info.get("company_name", "Company")
         round_name = round_info.get("round_name", "Interview Round")
         round_date = round_info.get("date", "Recent")
         questions = round_info.get("questions", [])
-        categories = round_info.get("categories", [])
         is_nagaraj = round_info.get("is_nagaraj_interview", False)
         total_q = len(questions)
-        answered_q = sum(1 for q in questions if q.get("has_answer"))
 
-        q_cards = []
-        for idx, q in enumerate(questions, 1):
-            q_text = html.escape(q.get("question", "").strip())
-            cat = q.get("category", "General")
-            is_sub = q.get("is_sub_q", False)
-            ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
-            ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+        grouped = self._group_questions_hierarchy(questions)
+        q_items_html = []
+        for idx, item in enumerate(grouped, 1):
+            q_text = html.escape(self._clean_pdf_text(item["question"]))
+            cat = item["category"]
+            cat_badge = f' <span class="item-topic">({html.escape(cat)})</span>' if cat and cat != "General" else ""
 
-            sub_tag = '<span class="sub-tag">Follow-up</span>' if is_sub else ""
-            cat_tag = f'<span class="cat-tag">{html.escape(cat)}</span>' if cat else ""
-
-            if ans_html.strip():
-                ans_block = f'''
-                <div class="ans-box">
-                    <div class="ans-label">Verified Production Answer</div>
-                    <div class="ans-body">{ans_html}</div>
-                </div>
-                '''
-            else:
-                ans_block = '''
-                <div class="ans-box no-ans">
-                    <div class="ans-label-muted">Status: Question only (No answer recorded).</div>
+            sub_html = ""
+            if item["sub_questions"]:
+                sub_lis = "".join([
+                    f'<li>{html.escape(self._clean_pdf_text(sub))}</li>'
+                    for sub in item["sub_questions"]
+                ])
+                sub_html = f'''
+                <div class="subquestions-wrap">
+                    <div class="subquestions-header">Follow-up / Sub-questions:</div>
+                    <ul class="subquestions-list">{sub_lis}</ul>
                 </div>
                 '''
 
-            q_cards.append(f'''
-            <div class="q-card">
-                <div class="q-header">
-                    <span class="q-num">Q{idx}</span>
-                    {sub_tag}
-                    {cat_tag}
-                    <span class="q-text">{q_text}</span>
-                </div>
-                {ans_block}
+            q_items_html.append(f'''
+            <div class="question-item">
+                <div class="question-title">Q{idx}. {q_text}{cat_badge}</div>
+                {sub_html}
             </div>
             ''')
 
         css = """
         @page {
             size: A4 portrait;
-            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            margin: 1.0cm 1.0cm 1.0cm 1.0cm;
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
-                font-size: 8pt;
-                color: #64748b;
+                font-size: 7.5pt;
+                color: #777777;
                 font-family: Helvetica, Arial, sans-serif;
             }
             @bottom-left {
                 content: "DevOps Interview Hub • Question Bank";
-                font-size: 8pt;
-                color: #94a3b8;
+                font-size: 7.5pt;
+                color: #999999;
                 font-family: Helvetica, Arial, sans-serif;
             }
         }
         body {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 9.5pt;
-            line-height: 1.5;
-            color: #1e293b;
-        }
-        .header-box {
-            border-bottom: 2px solid #4f46e5;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .title {
-            font-size: 15pt;
-            font-weight: bold;
-            color: #0f172a;
-            margin: 0 0 3px 0;
-        }
-        .subtitle {
             font-size: 8.5pt;
-            color: #64748b;
+            line-height: 1.35;
+            color: #111111;
+        }
+        .doc-header {
+            border-bottom: 1.5px solid #333333;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+        }
+        .doc-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #111111;
+            margin: 0 0 2px 0;
+        }
+        .doc-meta {
+            font-size: 8pt;
+            color: #555555;
             margin: 0;
         }
-        .meta-bar {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 6px 10px;
-            border-radius: 4px;
-            margin-bottom: 14px;
-            font-size: 8.5pt;
-            color: #334155;
-        }
-        .meta-item {
-            margin-right: 14px;
-        }
-        .q-card {
-            margin-bottom: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 5px;
-            background-color: #ffffff;
+        .question-item {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
             page-break-inside: avoid;
         }
-        .q-header {
-            padding: 7px 10px;
-            background-color: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 9.5pt;
+        .question-title {
+            font-size: 9pt;
             font-weight: bold;
-            color: #0f172a;
+            color: #111111;
+            margin-bottom: 4px;
+            page-break-after: avoid;
         }
-        .q-num {
-            background-color: #4f46e5;
-            color: #ffffff;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7.5pt;
-            margin-right: 5px;
+        .item-topic {
+            font-size: 7.8pt;
+            font-weight: normal;
+            color: #4b5563;
         }
-        .cat-tag {
-            background-color: #ecfdf5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7pt;
-            margin-right: 5px;
+        .subquestions-wrap {
+            margin: 3px 0 4px 12px;
         }
-        .sub-tag {
-            background-color: #fef3c7;
-            color: #b45309;
-            border: 1px solid #fde68a;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: 7pt;
-            margin-right: 5px;
-        }
-        .ans-box {
-            padding: 7px 10px;
-            background-color: #ffffff;
-        }
-        .ans-box.no-ans {
-            background-color: #fcfcfc;
-        }
-        .ans-label {
-            font-size: 7.5pt;
+        .subquestions-header {
+            font-size: 7.8pt;
             font-weight: bold;
-            color: #059669;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
-        }
-        .ans-label-muted {
-            font-size: 8pt;
-            color: #64748b;
-            font-style: italic;
-        }
-        .ans-body {
-            font-size: 8.8pt;
-            color: #334155;
-        }
-        pre, code {
-            font-family: Courier, monospace;
-            font-size: 7.5pt;
-            background-color: #f1f5f9;
-            color: #0f172a;
-        }
-        pre {
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            margin: 4px 0;
-        }
-        ul, ol {
-            margin: 3px 0 3px 14px;
-            padding: 0;
-        }
-        li {
+            color: #374151;
             margin-bottom: 2px;
         }
+        .subquestions-list {
+            margin: 0 0 0 14px;
+            padding: 0;
+            font-size: 8.2pt;
+            color: #1f2937;
+        }
+        .subquestions-list li {
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
         """
-
-        categories_str = ", ".join(categories) if categories else "All DevOps Topics"
 
         return f"""<!DOCTYPE html>
 <html>
@@ -1039,17 +995,15 @@ class QuestionBankService:
 <style>{css}</style>
 </head>
 <body>
-    <div class="header-box">
-        <div class="title">{html.escape(comp_name)} &bull; {html.escape(round_name)}</div>
-        <div class="subtitle">DevOps Interview Questions &amp; Production Verified Answers</div>
+    <div class="doc-header">
+        <div class="doc-title">{html.escape(comp_name)} &bull; {html.escape(round_name)}</div>
+        <div class="doc-meta">
+            <strong>Date:</strong> {html.escape(round_date)} &bull; 
+            <strong>Total Questions:</strong> {total_q}
+            {f' &bull; <strong>Verified:</strong> Nagaraj Interview' if is_nagaraj else ''}
+        </div>
     </div>
-    <div class="meta-bar">
-        <span class="meta-item"><strong>Date:</strong> {html.escape(round_date)}</span>
-        <span class="meta-item"><strong>Total Questions:</strong> {total_q} ({answered_q} with Verified Answers)</span>
-        <span class="meta-item"><strong>Categories:</strong> {html.escape(categories_str)}</span>
-        {f'<span class="meta-item" style="color:#b45309;"><strong>Verified:</strong> Nagaraj Interview</span>' if is_nagaraj else ''}
-    </div>
-    {''.join(q_cards)}
+    {''.join(q_items_html)}
 </body>
 </html>"""
 
@@ -1062,13 +1016,10 @@ class QuestionBankService:
         return buf.getvalue()
 
     def generate_company_html(self, comp: Dict[str, Any]) -> str:
-        """Format a company's full interview rounds into preview-mode HTML for PDF rendering."""
+        """Format a company's full interview rounds into clean, minimalist HTML for PDF rendering (questions & sub-questions only)."""
         comp_name = comp.get("company_name", "Company")
         rounds = comp.get("rounds", [])
         total_q = comp.get("total_questions", 0)
-        categories = comp.get("categories", [])
-        latest_date = comp.get("latest_date", "Recent")
-        is_nagaraj = comp.get("is_nagaraj_interview", False)
 
         round_sections = []
         for r_idx, r in enumerate(rounds, 1):
@@ -1076,193 +1027,124 @@ class QuestionBankService:
             r_date = r.get("date", "Recent")
             questions = r.get("questions", [])
 
-            q_cards = []
-            for idx, q in enumerate(questions, 1):
-                q_text = html.escape(q.get("question", "").strip())
-                cat = q.get("category", "General")
-                is_sub = q.get("is_sub_q", False)
-                ans_html = q.get("answer_html", "") or render_md(q.get("answer", ""))
-                ans_html = ans_html.replace("↳", "- ").replace("●", "&bull;").replace("🏢", "").replace("📁", "")
+            grouped = self._group_questions_hierarchy(questions)
+            q_items_html = []
+            for idx, item in enumerate(grouped, 1):
+                q_text = html.escape(self._clean_pdf_text(item["question"]))
+                cat = item["category"]
+                cat_badge = f' <span class="item-topic">({html.escape(cat)})</span>' if cat and cat != "General" else ""
 
-                sub_tag = '<span class="sub-tag">Follow-up</span>' if is_sub else ""
-                cat_tag = f'<span class="cat-tag">{html.escape(cat)}</span>' if cat else ""
-
-                if ans_html.strip():
-                    ans_block = f'''
-                    <div class="ans-box">
-                        <div class="ans-label">Verified Production Answer</div>
-                        <div class="ans-body">{ans_html}</div>
-                    </div>
-                    '''
-                else:
-                    ans_block = '''
-                    <div class="ans-box no-ans">
-                        <div class="ans-label-muted">Status: Question only (No answer recorded).</div>
+                sub_html = ""
+                if item["sub_questions"]:
+                    sub_lis = "".join([
+                        f'<li>{html.escape(self._clean_pdf_text(sub))}</li>'
+                        for sub in item["sub_questions"]
+                    ])
+                    sub_html = f'''
+                    <div class="subquestions-wrap">
+                        <div class="subquestions-header">Follow-up / Sub-questions:</div>
+                        <ul class="subquestions-list">{sub_lis}</ul>
                     </div>
                     '''
 
-                q_cards.append(f'''
-                <div class="q-card">
-                    <div class="q-header">
-                        <span class="q-num">Q{idx}</span>
-                        {sub_tag}
-                        {cat_tag}
-                        <span class="q-text">{q_text}</span>
-                    </div>
-                    {ans_block}
+                q_items_html.append(f'''
+                <div class="question-item">
+                    <div class="question-title">Q{idx}. {q_text}{cat_badge}</div>
+                    {sub_html}
                 </div>
                 ''')
 
             round_sections.append(f'''
-            <div class="round-section" style="page-break-before: auto; margin-top: 16px;">
+            <div class="round-section">
                 <div class="section-title">{r_idx}. {html.escape(r_name)} ({html.escape(r_date)}) &bull; {len(questions)} Questions</div>
-                {''.join(q_cards)}
+                {''.join(q_items_html)}
             </div>
             ''')
 
         css = """
         @page {
             size: A4 portrait;
-            margin: 1.4cm 1.2cm 1.4cm 1.2cm;
+            margin: 1.0cm 1.0cm 1.0cm 1.0cm;
             @bottom-right {
                 content: "Page " counter(page) " of " counter(pages);
-                font-size: 8pt;
-                color: #64748b;
+                font-size: 7.5pt;
+                color: #777777;
                 font-family: Helvetica, Arial, sans-serif;
             }
             @bottom-left {
-                content: "DevOps Interview Hub • Company Archive";
-                font-size: 8pt;
-                color: #94a3b8;
+                content: "DevOps Interview Hub • Question Bank";
+                font-size: 7.5pt;
+                color: #999999;
                 font-family: Helvetica, Arial, sans-serif;
             }
         }
         body {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 9.5pt;
-            line-height: 1.5;
-            color: #1e293b;
-        }
-        .header-box {
-            border-bottom: 2px solid #4f46e5;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .title {
-            font-size: 16pt;
-            font-weight: bold;
-            color: #0f172a;
-            margin: 0 0 3px 0;
-        }
-        .subtitle {
             font-size: 8.5pt;
-            color: #64748b;
-            margin: 0;
+            line-height: 1.35;
+            color: #111111;
         }
-        .meta-bar {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 6px 10px;
-            border-radius: 4px;
-            margin-bottom: 14px;
-            font-size: 8.5pt;
-            color: #334155;
-        }
-        .meta-item {
-            margin-right: 14px;
-        }
-        .section-title {
-            font-size: 12pt;
-            font-weight: bold;
-            color: #312e81;
-            background-color: #eef2ff;
-            border-left: 4px solid #4f46e5;
-            padding: 5px 8px;
+        .doc-header {
+            border-bottom: 1.5px solid #333333;
+            padding-bottom: 4px;
             margin-bottom: 10px;
         }
-        .q-card {
-            margin-bottom: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 5px;
-            background-color: #ffffff;
+        .doc-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #111111;
+            margin: 0 0 2px 0;
+        }
+        .doc-meta {
+            font-size: 8pt;
+            color: #555555;
+            margin: 0;
+        }
+        .section-title {
+            font-size: 10.5pt;
+            font-weight: bold;
+            color: #111111;
+            border-bottom: 1px solid #dddddd;
+            padding-bottom: 2px;
+            margin: 14px 0 8px 0;
+            page-break-after: avoid;
+        }
+        .question-item {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
             page-break-inside: avoid;
         }
-        .q-header {
-            padding: 7px 10px;
-            background-color: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 9.5pt;
+        .question-title {
+            font-size: 9pt;
             font-weight: bold;
-            color: #0f172a;
+            color: #111111;
+            margin-bottom: 4px;
+            page-break-after: avoid;
         }
-        .q-num {
-            background-color: #4f46e5;
-            color: #ffffff;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7.5pt;
-            margin-right: 5px;
+        .item-topic {
+            font-size: 7.8pt;
+            font-weight: normal;
+            color: #4b5563;
         }
-        .cat-tag {
-            background-color: #ecfdf5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7pt;
-            margin-right: 5px;
+        .subquestions-wrap {
+            margin: 3px 0 4px 12px;
         }
-        .sub-tag {
-            background-color: #fef3c7;
-            color: #b45309;
-            border: 1px solid #fde68a;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: 7pt;
-            margin-right: 5px;
-        }
-        .ans-box {
-            padding: 7px 10px;
-            background-color: #ffffff;
-        }
-        .ans-box.no-ans {
-            background-color: #fcfcfc;
-        }
-        .ans-label {
-            font-size: 7.5pt;
+        .subquestions-header {
+            font-size: 7.8pt;
             font-weight: bold;
-            color: #059669;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
-        }
-        .ans-label-muted {
-            font-size: 8pt;
-            color: #64748b;
-            font-style: italic;
-        }
-        .ans-body {
-            font-size: 8.8pt;
-            color: #334155;
-        }
-        pre, code {
-            font-family: Courier, monospace;
-            font-size: 7.5pt;
-            background-color: #f1f5f9;
-            color: #0f172a;
-        }
-        pre {
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            margin: 4px 0;
-        }
-        ul, ol {
-            margin: 3px 0 3px 14px;
-            padding: 0;
-        }
-        li {
+            color: #374151;
             margin-bottom: 2px;
+        }
+        .subquestions-list {
+            margin: 0 0 0 14px;
+            padding: 0;
+            font-size: 8.2pt;
+            color: #1f2937;
+        }
+        .subquestions-list li {
+            margin-bottom: 2px;
+            line-height: 1.3;
         }
         """
 
@@ -1274,15 +1156,13 @@ class QuestionBankService:
 <style>{css}</style>
 </head>
 <body>
-    <div class="header-box">
-        <div class="title">{html.escape(comp_name)} &bull; All Interview Rounds</div>
-        <div class="subtitle">Complete Questions &amp; Verified Production Answers</div>
-    </div>
-    <div class="meta-bar">
-        <span class="meta-item"><strong>Company:</strong> {html.escape(comp_name)}</span>
-        <span class="meta-item"><strong>Total Rounds:</strong> {len(rounds)}</span>
-        <span class="meta-item"><strong>Total Questions:</strong> {total_q}</span>
-        <span class="meta-item"><strong>Latest Date:</strong> {html.escape(latest_date)}</span>
+    <div class="doc-header">
+        <div class="doc-title">{html.escape(comp_name)} &bull; Interview Questions</div>
+        <div class="doc-meta">
+            <strong>Company:</strong> {html.escape(comp_name)} &bull; 
+            <strong>Total Rounds:</strong> {len(rounds)} &bull; 
+            <strong>Total Questions:</strong> {total_q}
+        </div>
     </div>
     {''.join(round_sections)}
 </body>

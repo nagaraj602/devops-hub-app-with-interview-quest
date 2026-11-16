@@ -106,7 +106,7 @@
                 <span class="qa-date-pill">{{ q.session_date }}</span>
                 {% if q.has_answer %}
                 <span class="badge badge-green" style="font-size:0.68rem;">
-                  <i class="fa-solid fa-check"></i> Answer Included
+                  <i class="fa-solid fa-check"></i> Instructor Guidance Included
                 </span>
                 {% else %}
                 <span class="badge badge-gray" style="font-size:0.68rem;">
@@ -118,6 +118,18 @@
                 <span class="qa-q-num">{{ loop.index }}.</span>
                 <span class="qa-q-content">{{ q.question }}</span>
               </div>
+              {% if q.sub_questions %}
+              <div class="qa-subquestions-wrap" style="margin: 0.35rem 0 0.25rem 1.6rem;">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.2rem;">
+                  <i class="fa-solid fa-turn-down" style="font-size: 0.7rem; margin-right: 0.25rem; transform: rotate(-45deg);"></i> Follow-up / Sub-questions
+                </div>
+                <ul class="qa-subquestions-list" style="margin: 0 0 0 1rem; padding: 0; list-style-type: disc; color: var(--text-normal); font-size: 0.88rem; line-height: 1.45;">
+                  {% for sub in q.sub_questions %}
+                  <li style="margin-bottom: 0.25rem;">{{ sub }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
             </div>
 
             <div class="qa-question-actions">
@@ -131,7 +143,7 @@
               </button>
               <!-- Dropdown Chevron Icon (ONLY if question has answer) -->
               {% if q.has_answer %}
-              <span class="qa-q-toggle-icon" title="Click to expand/collapse Instructor Answer">
+              <span class="qa-q-toggle-icon" title="Click to expand/collapse Instructor Guidance">
                 <i class="fa-solid fa-chevron-down"></i>
               </span>
               {% endif %}
@@ -142,9 +154,9 @@
           {% if q.has_answer %}
           <div class="qa-answer-body">
             <div class="qa-answer-header-bar">
-              <span><i class="fa-solid fa-graduation-cap" style="color:var(--primary); margin-right:0.35rem;"></i> Instructor Guidance & Solution</span>
+              <span><i class="fa-solid fa-graduation-cap" style="color:var(--primary); margin-right:0.35rem;"></i> Instructor Guidance &amp; Suggestions</span>
               <button type="button" class="copy-btn copy-ans-btn" onclick="copyQAAnswerText('{{ q.id }}', event)">
-                <i class="fa-regular fa-copy"></i> Copy Solution
+                <i class="fa-regular fa-copy"></i> Copy Guidance
               </button>
             </div>
             <div class="qa-answer-markdown answer-markdown">

@@ -4,15 +4,15 @@
   "base_os": "Ubuntu 24.04 LTS",
   "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
   "stats": {
-    "total_questions": 2006,
+    "total_questions": 2034,
     "total_companies": 68,
-    "total_rounds": 111,
-    "tech_categories": 26
+    "total_rounds": 112,
+    "tech_categories": 27
   },
-  "last_synced": "2026-11-14 13:04:16",
+  "last_synced": "2026-11-16 14:50:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.36",
+  "version": "1.0.37",
   "admin_port": 9256,
-  "last_event": "Sync Aditya QA Class 94 (14-Nov-2026) session with 52 Q&As and instructor advice (v1.0.36)"
+  "last_event": "Add NTT Data Level 1 Q&As (28 questions) to Question Bank and reset Discord template (v1.0.37)"
 }
