@@ -4,6 +4,11 @@ from typing import Dict, Any, Tuple
 # Domain mapping for companies appearing in the interview question banks
 COMPANY_DOMAINS: Dict[str, str] = {
     "accenture": "accenture.com",
+    "atos": "atos.net",
+    "wissen": "wissen.com",
+    "ascendion": "ascendion.com",
+    "c ahead": "cahead.com",
+    "c ahead technologies": "cahead.com",
     "accionlabs": "accionlabs.com",
     "acldigital": "acldigital.com",
     "acl digital": "acldigital.com",
