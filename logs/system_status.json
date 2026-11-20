@@ -4,15 +4,15 @@
   "base_os": "Ubuntu 24.04 LTS",
   "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
   "stats": {
-    "total_questions": 2152,
+    "total_questions": 2218,
     "total_companies": 72,
-    "total_rounds": 116,
+    "total_rounds": 118,
     "tech_categories": 27
   },
-  "last_synced": "2026-11-18 13:40:00",
+  "last_synced": "2026-11-20 12:30:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.38",
+  "version": "1.0.39",
   "admin_port": 9256,
-  "last_event": "Add Atos (11 Qs), Wissen (42 Qs), Ascendion (53 Qs), and C Ahead Technologies (12 Qs) Q&As (v1.0.38)"
+  "last_event": "Add Ascendion Face to Face (41 Qs) and Wissen Face to Face (25 Qs) Q&As (v1.0.39)"
 }
