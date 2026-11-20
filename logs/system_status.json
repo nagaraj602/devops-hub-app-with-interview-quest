@@ -9,10 +9,10 @@
     "total_rounds": 118,
     "tech_categories": 27
   },
-  "last_synced": "2026-11-20 12:30:00",
+  "last_synced": "2026-11-20 12:45:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.39",
+  "version": "1.0.40",
   "admin_port": 9256,
-  "last_event": "Add Ascendion Face to Face (41 Qs) and Wissen Face to Face (25 Qs) Q&As (v1.0.39)"
+  "last_event": "Fix company logos: add local high-res transparent emblems for Atos, Wissen, Ascendion, and C Ahead Technologies (v1.0.40)"
 }
