@@ -12,7 +12,7 @@
   "last_synced": "2026-11-21 11:30:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.41",
+  "version": "1.0.42",
   "admin_port": 9256,
-  "last_event": "Add Capco Level 1 (11 Qs) & Ascendion Level 1 (61 Qs) with local Capco logo mapping (v1.0.41)"
+  "last_event": "Remove Nagaraj's Interview label from company cards (v1.0.42)"
 }
