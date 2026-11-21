@@ -4,15 +4,15 @@
   "base_os": "Ubuntu 24.04 LTS",
   "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
   "stats": {
-    "total_questions": 2218,
-    "total_companies": 72,
-    "total_rounds": 118,
+    "total_questions": 2290,
+    "total_companies": 73,
+    "total_rounds": 120,
     "tech_categories": 27
   },
-  "last_synced": "2026-11-20 12:45:00",
+  "last_synced": "2026-11-21 11:30:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.40",
+  "version": "1.0.41",
   "admin_port": 9256,
-  "last_event": "Fix company logos: add local high-res transparent emblems for Atos, Wissen, Ascendion, and C Ahead Technologies (v1.0.40)"
+  "last_event": "Add Capco Level 1 (11 Qs) & Ascendion Level 1 (61 Qs) with local Capco logo mapping (v1.0.41)"
 }

@@ -21,6 +21,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "azentio": "azentio.com",
     "betsol": "betsol.com",
     "bounteous": "bounteous.com",
+    "capco": "capco.com",
     "capgemini": "capgemini.com",
     "cepegemini": "capgemini.com",
     "citiustech": "citiustech.com",
@@ -85,6 +86,7 @@ COMPANY_DOMAINS: Dict[str, str] = {
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "capco": "/static/images/logos/capco.png",
     "atos": "/static/images/logos/atos.png",
     "wissen": "/static/images/logos/wissen.png",
     "ascendion": "/static/images/logos/ascendion.png",
