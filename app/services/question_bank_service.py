@@ -273,8 +273,6 @@ class QuestionBankService:
 
             current_round_questions.append(q_entry)
             current_round_categories.add(norm_cat)
-            if is_nagaraj:
-                current_round_categories.add("Nagaraj's Interview")
 
             current_q_text = ""
             current_answer_lines = []
