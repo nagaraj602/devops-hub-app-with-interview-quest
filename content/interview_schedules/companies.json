@@ -1,0 +1,56 @@
+[
+  {
+    "id": "ascendion",
+    "name": "Ascendion",
+    "logo_url": "/static/images/logos/ascendion.png",
+    "initials": "AS",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#a21caf",
+    "created_at": "2026-11-24T09:39:15.832381"
+  },
+  {
+    "id": "wissen",
+    "name": "Wissen",
+    "logo_url": "/static/images/logos/wissen.png",
+    "initials": "WI",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#0f766e",
+    "created_at": "2026-11-24T09:39:15.844486"
+  },
+  {
+    "id": "c_ahead_technologies",
+    "name": "C Ahead Technologies",
+    "logo_url": "/static/images/logos/c_ahead_technologies.png",
+    "initials": "CA",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#1d4ed8",
+    "created_at": "2026-11-24T09:39:15.844613"
+  },
+  {
+    "id": "hutech_solutions",
+    "name": "Hutech Solutions",
+    "logo_url": "/static/images/logos/hutech_solutions.png",
+    "initials": "HS",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#4338ca",
+    "created_at": "2026-11-24T09:39:15.844755"
+  },
+  {
+    "id": "s10x_inc_",
+    "name": "S10x Inc.",
+    "logo_url": "/static/images/logos/s10x_inc.png",
+    "initials": "SI",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#1d4ed8",
+    "created_at": "2026-11-24T09:39:15.844810"
+  },
+  {
+    "id": "grid_dynamics",
+    "name": "Grid Dynamics",
+    "logo_url": "/static/images/logos/grid_dynamics.png",
+    "initials": "GD",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#a21caf",
+    "created_at": "2026-11-24T09:39:15.844863"
+  }
+]
