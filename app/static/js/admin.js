@@ -42,6 +42,7 @@ let hubState = {
   activeView: "week", // 'week' or 'month'
   activeFilterDate: null
 };
+window.hubState = hubState;
 
 function bootstrapAdminPortal() {
   initAdminTabs();
@@ -172,7 +173,7 @@ function initGraphViewSwitcher() {
   }
 }
 
-window.switchGraphView = function(view) {
+function switchGraphView(view) {
   const btnWeek = document.getElementById("btnViewWeek");
   const btnMonth = document.getElementById("btnViewMonth");
   const weekView = document.getElementById("weekActivityView");
@@ -230,7 +231,8 @@ window.switchGraphView = function(view) {
     }
     updateFooterMetrics(hubState.weeklyData);
   }
-};
+}
+window.switchGraphView = switchGraphView;
 
 function updateFooterMetrics(data) {
   if (!data) return;
@@ -301,6 +303,7 @@ async function fetchWeeklyData(targetDate = "") {
     console.error("Failed to fetch weekly data:", err);
   }
 }
+window.fetchWeeklyData = fetchWeeklyData;
 
 function renderWeeklyGrid(weekly) {
   if (!weekly || !weekly.days) return;
@@ -417,6 +420,7 @@ async function fetchMonthlyData(targetMonth = "") {
     console.error("Failed to fetch monthly data:", err);
   }
 }
+window.fetchMonthlyData = fetchMonthlyData;
 
 function renderMonthMatrix(monthly) {
   if (!monthly || !monthly.days) return;
@@ -1368,7 +1372,7 @@ function initEmailsViewerModal() {
   });
 }
 
-window.closeEmailsViewerModal = function() {
+function closeEmailsViewerModal() {
   const modal = document.getElementById("emailsViewerModal");
   if (modal) {
     modal.style.display = "none";
@@ -1376,9 +1380,10 @@ window.closeEmailsViewerModal = function() {
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
   }
-};
+}
+window.closeEmailsViewerModal = closeEmailsViewerModal;
 
-window.openEmailsViewerModal = async function(scheduleId) {
+async function openEmailsViewerModal(scheduleId) {
   const modal = document.getElementById("emailsViewerModal");
   const titleEl = document.getElementById("emailsViewerTitle");
   const contentEl = document.getElementById("emailsViewerContent");
@@ -1450,7 +1455,8 @@ window.openEmailsViewerModal = async function(scheduleId) {
   modal.classList.add("active");
   modal.removeAttribute("aria-hidden");
   document.body.style.overflow = "hidden";
-};
+}
+window.openEmailsViewerModal = openEmailsViewerModal;
 
 function initTranscriptViewerModal() {
   const modal = document.getElementById("transcriptViewerModal");
@@ -1494,7 +1500,7 @@ function initTranscriptViewerModal() {
   });
 }
 
-window.closeTranscriptViewerModal = function() {
+function closeTranscriptViewerModal() {
   const modal = document.getElementById("transcriptViewerModal");
   if (modal) {
     modal.style.display = "none";
@@ -1505,7 +1511,8 @@ window.closeTranscriptViewerModal = function() {
     const iframe = modal.querySelector("iframe");
     if (iframe) iframe.src = "";
   }
-};
+}
+window.closeTranscriptViewerModal = closeTranscriptViewerModal;
 
 function extractYouTubeId(url) {
   if (!url) return null;
@@ -1513,7 +1520,7 @@ function extractYouTubeId(url) {
   return match ? match[1] : null;
 }
 
-window.openTranscriptViewerModal = async function(scheduleId) {
+async function openTranscriptViewerModal(scheduleId) {
   const modal = document.getElementById("transcriptViewerModal");
   const titleEl = document.getElementById("transcriptViewerTitle");
   const contentEl = document.getElementById("transcriptViewerContent");
@@ -1620,10 +1627,11 @@ window.openTranscriptViewerModal = async function(scheduleId) {
   modal.classList.add("active");
   modal.removeAttribute("aria-hidden");
   document.body.style.overflow = "hidden";
-};
+}
+window.openTranscriptViewerModal = openTranscriptViewerModal;
 
 /* Quick YouTube Link Modal */
-window.openQuickYoutubeModal = async function(scheduleId) {
+async function openQuickYoutubeModal(scheduleId) {
   const modal = document.getElementById("quickYoutubeModal");
   const idInput = document.getElementById("quickYoutubeScheduleId");
   const urlInput = document.getElementById("quickYoutubeInput");
@@ -1647,9 +1655,10 @@ window.openQuickYoutubeModal = async function(scheduleId) {
   modal.removeAttribute("aria-hidden");
   document.body.style.overflow = "hidden";
   setTimeout(() => urlInput.focus(), 100);
-};
+}
+window.openQuickYoutubeModal = openQuickYoutubeModal;
 
-window.closeQuickYoutubeModal = function() {
+function closeQuickYoutubeModal() {
   const modal = document.getElementById("quickYoutubeModal");
   if (modal) {
     modal.style.display = "none";
@@ -1657,9 +1666,10 @@ window.closeQuickYoutubeModal = function() {
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
   }
-};
+}
+window.closeQuickYoutubeModal = closeQuickYoutubeModal;
 
-window.submitQuickYoutubeForm = async function(e) {
+async function submitQuickYoutubeForm(e) {
   e.preventDefault();
   const id = document.getElementById("quickYoutubeScheduleId")?.value;
   const ytUrl = (document.getElementById("quickYoutubeInput")?.value || "").trim();
@@ -1696,7 +1706,8 @@ window.submitQuickYoutubeForm = async function(e) {
       saveBtn.innerHTML = "Save Recording Link";
     }
   }
-};
+}
+window.submitQuickYoutubeForm = submitQuickYoutubeForm;
 
 function initQuickYoutubeModal() {
   const modal = document.getElementById("quickYoutubeModal");
