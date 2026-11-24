@@ -14,5 +14,5 @@
   "status": "Healthy",
   "version": "1.0.44",
   "admin_port": 9256,
-  "last_event": "Add Synchronoss Level 1 (15 Qs) and Broadridge Client Round (10 Qs) adhering to profile (v1.0.44)"
+  "last_event": "Release v1.0.44: Synchronoss & Broadridge Q&As (25 Qs), admin dashboard interview schedules & report fixes"
 }

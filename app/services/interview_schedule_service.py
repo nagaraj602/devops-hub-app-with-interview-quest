@@ -890,12 +890,7 @@ class InterviewScheduleService:
             screens_html = ""
             for sc in s.get("screenshots", []):
                 fname = sc.get("filename", "")
-                img_path = self.get_attachment_path(fname)
-                img_src = ""
-                if for_pdf and img_path:
-                    img_src = str(img_path.absolute())
-                else:
-                    img_src = self._get_image_base64_data_uri(fname)
+                img_src = self._get_image_base64_data_uri(fname)
 
                 if img_src:
                     screens_html += f"""
@@ -910,12 +905,13 @@ class InterviewScheduleService:
             # Transcript block
             transcript_html = ""
             if has_transcript and transcript:
-                transcript_html = f"<div style='background:#f1f5f9; padding:10px 14px; border-radius:6px; font-size:12px; line-height:1.5; color:#1e293b; white-space:pre-wrap;'>{transcript}</div>"
+                formatted_transcript = transcript.replace("\n", "<br>")
+                transcript_html = f"<div style='background:#f1f5f9; padding:10px 14px; border-radius:6px; font-size:11px; line-height:1.4; color:#1e293b;'>{formatted_transcript}</div>"
             else:
                 transcript_html = "<div style='color:#94a3b8; font-size:12px; font-style:italic;'>No transcript available / Not recorded</div>"
 
             items_html.append(f"""
-            <div style="border:1px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:24px; page-break-inside:avoid;">
+            <div style="border:1px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:24px; page-break-inside:auto;">
                 <div style="border-bottom:2px solid #0284c7; padding-bottom:8px; margin-bottom:12px;">
                     <table style="width:100%; border-collapse:collapse;">
                         <tr>
