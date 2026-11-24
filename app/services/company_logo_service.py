@@ -81,11 +81,19 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "virtusa": "virtusa.com",
     "wipro": "wipro.com",
     "worklife tech": "worklife.io",
-    "a5econsulting": "a5econsulting.com"
+    "a5econsulting": "a5econsulting.com",
+    "synchronoss": "synchronoss.com",
+    "synchronoss technologies": "synchronoss.com",
+    "broadridge": "broadridge.com",
+    "braodridge": "broadridge.com"
 }
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "synchronoss": "/static/images/logos/synchronoss.png",
+    "synchronoss technologies": "/static/images/logos/synchronoss.png",
+    "broadridge": "/static/images/logos/broadridge.png",
+    "braodridge": "/static/images/logos/broadridge.png",
     "capco": "/static/images/logos/capco.png",
     "atos": "/static/images/logos/atos.png",
     "wissen": "/static/images/logos/wissen.png",

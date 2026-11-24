@@ -4,15 +4,15 @@
   "base_os": "Ubuntu 24.04 LTS",
   "architecture": "Multi-stage Docker, Kubernetes (Docker Desktop & Production), Docker Compose (GCP)",
   "stats": {
-    "total_questions": 2306,
-    "total_companies": 73,
-    "total_rounds": 121,
-    "tech_categories": 27
+    "total_questions": 2331,
+    "total_companies": 75,
+    "total_rounds": 123,
+    "tech_categories": 26
   },
-  "last_synced": "2026-11-23 15:00:00",
+  "last_synced": "2026-11-24 17:15:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "admin_port": 9256,
-  "last_event": "Add Ascendion Level 2 Q&As (16 Qs) adhering to profile (v1.0.43)"
+  "last_event": "Add Synchronoss Level 1 (15 Qs) and Broadridge Client Round (10 Qs) adhering to profile (v1.0.44)"
 }
