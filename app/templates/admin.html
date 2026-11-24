@@ -11,10 +11,10 @@
       </div>
       <div class="admin-title-group">
         <h1>
-          <span>Admin Portal — Page & Menu Publisher</span>
+          <span>Admin Portal — Private Control Hub</span>
           <span class="admin-badge-private"><i class="fa-solid fa-lock"></i> Private Control</span>
         </h1>
-        <p>Manage public menu visibility across Question Bank, Project Architecture, Training Materials, Cheatsheets, and App Logs.</p>
+        <p>Manage Nagaraj's interview schedules & activity pipeline, alongside public menu page visibility controls.</p>
       </div>
     </div>
 
@@ -31,39 +31,6 @@
     </div>
   </div>
 
-  <!-- Quick Overview Stats -->
-  <div class="admin-stats-grid">
-    <div class="admin-stat-card">
-      <div class="admin-stat-icon blue">
-        <i class="fa-solid fa-bars-staggered"></i>
-      </div>
-      <div class="admin-stat-info">
-        <span class="admin-stat-label">Total Managed Pages</span>
-        <span class="admin-stat-value">{{ total_pages }}</span>
-      </div>
-    </div>
-
-    <div class="admin-stat-card">
-      <div class="admin-stat-icon green">
-        <i class="fa-solid fa-circle-check"></i>
-      </div>
-      <div class="admin-stat-info">
-        <span class="admin-stat-label">Published & Live</span>
-        <span class="admin-stat-value" id="adminStatPublished">{{ published_count }}</span>
-      </div>
-    </div>
-
-    <div class="admin-stat-card">
-      <div class="admin-stat-icon amber">
-        <i class="fa-solid fa-eye-slash"></i>
-      </div>
-      <div class="admin-stat-info">
-        <span class="admin-stat-label">Hidden (Unpublished)</span>
-        <span class="admin-stat-value" id="adminStatHidden">{{ hidden_count }}</span>
-      </div>
-    </div>
-  </div>
-
   {% if not is_authenticated %}
   <!-- Authentication Unlock Gate -->
   <div class="admin-auth-card">
@@ -71,7 +38,7 @@
       <i class="fa-solid fa-key"></i>
     </div>
     <h2>Admin Session Locked</h2>
-    <p>Please enter the administrator passphrase to unlock page publishing and menu visibility controls.</p>
+    <p>Please enter the administrator passphrase to unlock interview activity management and page publishing controls.</p>
 
     <form id="adminLoginForm">
       <div class="admin-input-wrap">
@@ -84,91 +51,1053 @@
   </div>
   {% else %}
 
-  <!-- Page Visibility Controller Section -->
-  <div class="admin-section-header">
-    <h2>
-      <i class="fa-solid fa-sliders" style="color:var(--primary);"></i>
-      <span>Page Visibility Controls</span>
-    </h2>
-    <span style="font-size:0.82rem; color:var(--text-muted);">Changes take effect immediately across all visitors and git audit log</span>
+  <!-- Admin Navigation Tabs -->
+  <div class="admin-tab-nav" role="tablist">
+    <button type="button" class="admin-tab-btn {% if active_tab != 'visibility' %}active{% endif %}" data-tab="tab-interview-schedules" role="tab" id="tabBtnInterviews">
+      <i class="fa-solid fa-calendar-check"></i>
+      <span>Nagaraj's Interview Activity</span>
+      <span class="tab-badge-counter">{{ total_schedules }}</span>
+    </button>
+    <button type="button" class="admin-tab-btn {% if active_tab == 'visibility' %}active{% endif %}" data-tab="tab-page-publisher" role="tab" id="tabBtnPublisher">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Page & Menu Publisher</span>
+      <span class="tab-badge-counter">{{ total_pages }}</span>
+    </button>
   </div>
 
-  <div class="admin-pages-grid">
-    {% for p in pages %}
-    <div class="admin-page-card {% if p.is_published %}is-published-mode{% else %}is-hidden-mode{% endif %}" data-page-key="{{ p.key }}" id="admin-card-{{ p.key }}">
-      <div class="admin-page-info">
-        <div class="admin-page-icon-wrap">
-          <i class="fa-solid {{ p.icon }}"></i>
-        </div>
-        <div class="admin-page-details">
-          <div class="admin-page-title-row">
-            <span class="admin-page-name">{{ p.name }}</span>
-            <span class="admin-page-route">{{ p.route }}</span>
-            <span class="admin-status-pill {% if p.is_published %}published{% else %}hidden{% endif %}">
-              {% if p.is_published %}
-              <i class="fa-solid fa-circle-check"></i> Published & Live
-              {% else %}
-              <i class="fa-solid fa-eye-slash"></i> Hidden (Unpublished)
-              {% endif %}
-            </span>
-          </div>
-          <p class="admin-page-desc">{{ p.description }}</p>
-        </div>
+  <!-- ========================================================================= -->
+  <!-- TAB 1: NAGARAJ'S INTERVIEW ACTIVITY & SCHEDULES -->
+  <!-- ========================================================================= -->
+  <div class="admin-tab-pane {% if active_tab != 'visibility' %}active{% endif %}" id="tab-interview-schedules" role="tabpanel">
+
+    <!-- Action Toolbar & Summary Cards -->
+    <div class="interview-hub-header">
+      <div class="interview-hub-title-area">
+        <h2>
+          <i class="fa-solid fa-briefcase" style="color:var(--primary);"></i>
+          <span>Interview Pipeline & Schedules Dashboard</span>
+        </h2>
+        <p>Comprehensive tracking of company rounds, connected progression workflows, emails, lossless screenshot capture, and professional reporting.</p>
       </div>
 
-      <div class="admin-page-actions">
-        <!-- Preview Link -->
-        <a href="{{ p.route }}" target="_blank" class="btn btn-sm btn-outline" title="Preview Page in New Tab">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview
-        </a>
-
-        <!-- Publish Button -->
-        <button type="button" class="btn-toggle-publish publish-btn btn-publish-action" title="Publish this page to public visitors" {% if p.is_published %}disabled style="opacity:0.6; cursor:default;"{% endif %}>
-          <i class="fa-solid fa-circle-check"></i> Publish
+      <div class="interview-hub-actions">
+        <!-- Add New Schedule Button -->
+        <button type="button" class="btn btn-primary" id="btnOpenAddSchedule">
+          <i class="fa-solid fa-plus"></i> Add New Schedule
         </button>
 
-        <!-- Hide Button -->
-        <button type="button" class="btn-toggle-publish hide-btn btn-hide-action" title="Hide this page from public menu and direct navigation" {% if not p.is_published %}disabled style="opacity:0.6; cursor:default;"{% endif %}>
-          <i class="fa-solid fa-eye-slash"></i> Hide
-        </button>
+        <!-- Professional Report Download Dropdown -->
+        <div class="dropdown-wrap" id="reportDropdownWrap">
+          <button type="button" class="btn btn-secondary dropdown-trigger" id="btnReportDropdown">
+            <i class="fa-solid fa-file-arrow-down"></i> Download Report <i class="fa-solid fa-chevron-down" style="font-size:0.75rem; margin-left:0.3rem;"></i>
+          </button>
+          <div class="dropdown-menu-custom" id="reportDropdownMenu">
+            <a href="/api/admin/interview-schedules/export/pdf" class="dropdown-item-custom" target="_blank" download>
+              <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i>
+              <div>
+                <strong>Professional PDF Dossier</strong>
+                <span>Executive styled print format with embedded lossless screenshots & transcripts</span>
+              </div>
+            </a>
+            <a href="/api/admin/interview-schedules/export/editable?format=doc" class="dropdown-item-custom" target="_blank" download>
+              <i class="fa-solid fa-file-word" style="color:#2563eb;"></i>
+              <div>
+                <strong>Editable Word Document (.doc)</strong>
+                <span>Formatted document editable in MS Word / LibreOffice</span>
+              </div>
+            </a>
+            <a href="/api/admin/interview-schedules/export/editable?format=md" class="dropdown-item-custom" target="_blank" download>
+              <i class="fa-brands fa-markdown" style="color:#10b981;"></i>
+              <div>
+                <strong>Editable Markdown (.md)</strong>
+                <span>Raw markdown document for Git or text editors</span>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
-    {% endfor %}
-  </div>
 
-  <!-- Network & Domain Access Guide -->
-  <div class="admin-guide-card">
-    <h3>
-      <i class="fa-solid fa-globe" style="color:var(--primary);"></i>
-      <span>Admin Access & Cloudflare Tunnel Configuration</span>
-    </h3>
-    
-    <div class="admin-guide-grid">
-      <!-- Localhost Access -->
-      <div class="admin-guide-box">
-        <h4><i class="fa-solid fa-laptop-code" style="color:#0284c7;"></i> Localhost Access</h4>
-        <p>Access the admin portal directly on dedicated port <strong>{{ admin_port }}</strong> (blocked on public port {{ main_port }}):</p>
-        <pre class="admin-guide-code">http://localhost:{{ admin_port }}/</pre>
-        <p style="margin-top:0.6rem; font-size:0.78rem; color:var(--text-muted);">
-          Docker Desktop Kubernetes routes port 9256 directly to <code>localhost:9256</code> (NodePort <code>30956</code>).
-        </p>
+    <!-- Metrics Cards Grid -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <div class="admin-stat-icon blue">
+          <i class="fa-solid fa-calendar-days"></i>
+        </div>
+        <div class="admin-stat-info">
+          <span class="admin-stat-label">Total Interviews</span>
+          <span class="admin-stat-value" id="statTotalSchedules">{{ total_schedules }}</span>
+        </div>
       </div>
 
-      <!-- Cloudflare Tunnel Access on GCP -->
-      <div class="admin-guide-box">
-        <h4><i class="fa-solid fa-cloud" style="color:#f59e0b;"></i> Cloudflare Tunnel on GCP</h4>
-        <p>In your Cloudflare Tunnel configuration on GCP (<code>/etc/cloudflared/config.yml</code>) or Cloudflare Dashboard Public Hostnames, route <strong>admin.sidorea.shop</strong> to port {{ admin_port }}:</p>
-        <pre class="admin-guide-code">ingress:
+      <div class="admin-stat-card">
+        <div class="admin-stat-icon green">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="admin-stat-info">
+          <span class="admin-stat-label">Completed</span>
+          <span class="admin-stat-value" id="statCompletedSchedules">{{ completed_schedules }}</span>
+        </div>
+      </div>
+
+      <div class="admin-stat-card">
+        <div class="admin-stat-icon amber">
+          <i class="fa-solid fa-clock"></i>
+        </div>
+        <div class="admin-stat-info">
+          <span class="admin-stat-label">Scheduled / Upcoming</span>
+          <span class="admin-stat-value" id="statUpcomingSchedules">{{ scheduled_count }}</span>
+        </div>
+      </div>
+
+      <div class="admin-stat-card">
+        <div class="admin-stat-icon red">
+          <i class="fa-solid fa-ban"></i>
+        </div>
+        <div class="admin-stat-info">
+          <span class="admin-stat-label">Cancelled / Postponed</span>
+          <span class="admin-stat-value" id="statCancelledSchedules">{{ cancelled_schedules }}</span>
+        </div>
+      </div>
+
+      <div class="admin-stat-card">
+        <div class="admin-stat-icon purple">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <div class="admin-stat-info">
+          <span class="admin-stat-label">Companies Attended</span>
+          <span class="admin-stat-value" id="statTotalCompanies">{{ company_boxes|length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Interactive Graph Card (Week & Month Views) -->
+    <div class="activity-graph-card">
+      <div class="activity-graph-header">
+        <div class="activity-title-group">
+          <h3>
+            <i class="fa-solid fa-chart-line" style="color:var(--primary);"></i>
+            <span id="activityGraphMainTitle">Weekly Interview Dynamics</span>
+          </h3>
+          <span class="activity-range-label" id="activityRangeLabel">{{ weekly_data.formatted_week_label }}</span>
+        </div>
+
+        <div class="activity-header-controls">
+          <!-- View Switcher Toggle -->
+          <div class="view-switch-tabs" role="tablist">
+            <button type="button" class="view-switch-btn active" id="btnViewWeek" data-view="week">
+              <i class="fa-solid fa-calendar-week"></i> Week View
+            </button>
+            <button type="button" class="view-switch-btn" id="btnViewMonth" data-view="month">
+              <i class="fa-solid fa-calendar-days"></i> Month View
+            </button>
+          </div>
+
+          <!-- Navigation Controls (Week mode default) -->
+          <div class="activity-nav-controls" id="weekNavControls">
+            <button type="button" class="btn btn-sm btn-outline" id="btnPrevWeek" data-date="{{ weekly_data.prev_week }}" title="Previous Week">
+              <i class="fa-solid fa-chevron-left"></i> Prev
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" id="btnCurrentWeek" title="Current Week">
+              Current
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" id="btnNextWeek" data-date="{{ weekly_data.next_week }}" title="Next Week">
+              Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- Navigation Controls (Month mode) -->
+          <div class="activity-nav-controls" id="monthNavControls" style="display:none;">
+            <button type="button" class="btn btn-sm btn-outline" id="btnPrevMonth" data-month="{{ monthly_data.prev_month }}" title="Previous Month">
+              <i class="fa-solid fa-chevron-left"></i> Prev Month
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" id="btnCurrentMonth" title="Current Month">
+              Current Month
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" id="btnNextMonth" data-month="{{ monthly_data.next_month }}" title="Next Month">
+              Next Month <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graph View 1: Week Activity (Modern 7-Day Matrix Strip) -->
+      <div id="weekActivityView" class="activity-view-pane active">
+        <div class="week-days-modern-grid" id="weekDaysModernGrid">
+          {% for day in weekly_data.days %}
+          <div class="week-day-pill-card {% if day.count > 0 %}active-day{% endif %}" data-date="{{ day.date }}" title="{{ day.count }} interview(s) on {{ day.day_name }}, {{ day.formatted_date }}">
+            <div class="day-pill-header">
+              <span class="day-pill-name">{{ day.day_name }}</span>
+              <span class="day-pill-date">{{ day.date | indian_date }}</span>
+            </div>
+            <div class="day-pill-body">
+              {% if day.count > 0 %}
+              <div class="activity-chip has-count">
+                <i class="fa-solid fa-bolt"></i>
+                <span>{{ day.count }} Round{% if day.count > 1 %}s{% endif %}</span>
+              </div>
+              <div class="day-companies-list">
+                {% for s in day.schedules %}
+                <span class="day-company-tag" title="{{ s.company_name }} - {{ s.round_name }}">
+                  <span class="mini-status-dot {{ s.status|lower }}"></span>
+                  <strong>{{ s.company_name }}</strong> &bull; {{ s.round_name }}
+                </span>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="activity-chip is-empty">
+                <span class="empty-dash">No Interviews</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Graph View 2: Month Activity (Monthly Calendar Matrix) -->
+      <div id="monthActivityView" class="activity-view-pane" style="display:none;">
+        <div class="month-matrix-container" id="monthMatrixContainer">
+          <!-- Calendar matrix rendered dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Activity Summary Legend & Active Filter Bar -->
+      <div class="activity-footer-legend">
+        <div class="weekly-status-legend">
+          <span class="legend-item"><span class="legend-dot green"></span> Completed: <strong id="activityCompletedVal">{{ weekly_data.completed_count }}</strong></span>
+          <span class="legend-item"><span class="legend-dot blue"></span> Scheduled: <strong id="activityScheduledVal">{{ weekly_data.scheduled_count }}</strong></span>
+          <span class="legend-item"><span class="legend-dot red"></span> Cancelled: <strong id="activityCancelledVal">{{ weekly_data.cancelled_count }}</strong></span>
+          <span class="legend-item"><span class="legend-dot purple"></span> Total in Period: <strong id="activityTotalVal">{{ weekly_data.total_count }}</strong></span>
+        </div>
+        <div class="active-filter-indicator" id="activeFilterIndicator" style="display:none;">
+          <span><i class="fa-solid fa-filter"></i> Filtered by date: <strong id="filterDateDisplay"></strong></span>
+          <button type="button" class="btn btn-xs btn-outline" id="btnClearDateFilter"><i class="fa-solid fa-xmark"></i> Clear Filter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Row-Wise Section (ALL INFO HIDDEN UNDER COMPANY CARD) -->
+    <div class="company-rows-section">
+      <div class="company-rows-header-bar">
+        <div>
+          <h3>
+            <i class="fa-solid fa-building-user" style="color:var(--primary);"></i>
+            <span>Interview Company Journey & Connected Rounds</span>
+          </h3>
+          <p>Organized row-wise by recent activity. Click any company row to expand its progression stages and interview dossiers.</p>
+        </div>
+
+        <div class="company-search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="companySearchInput" placeholder="Filter company, round, date, tech..." autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Company Rows Accordion List -->
+      <div class="company-rows-container" id="companyRowsContainer">
+        {% for cb in company_boxes %}
+        <!-- NOTE: ALL INFO HIDDEN BY DEFAULT (no is-expanded on loop.first) -->
+        <div class="company-row-card" data-company-name="{{ cb.meta.name|lower }}" id="comp-row-{{ cb.meta.id }}">
+          
+          <!-- Row Summary Header (Always Visible) -->
+          <div class="company-row-header" data-target="comp-body-{{ cb.meta.id }}">
+            <div class="company-row-left">
+              <!-- Company Logo / Initials -->
+              {% if cb.meta.logo_url %}
+              <img src="{{ cb.meta.logo_url }}" alt="{{ cb.meta.name }} logo" class="company-row-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="company-row-avatar-fallback" style="display:none; background:{{ cb.meta.avatar_bg }}; color:{{ cb.meta.avatar_color }};">
+                {{ cb.meta.initials }}
+              </div>
+              {% else %}
+              <div class="company-row-avatar-fallback" style="background:{{ cb.meta.avatar_bg }}; color:{{ cb.meta.avatar_color }};">
+                {{ cb.meta.initials }}
+              </div>
+              {% endif %}
+
+              <div class="company-row-title-meta">
+                <div class="company-title-line">
+                  <h4>{{ cb.meta.name }}</h4>
+                  {% if cb.latest_schedule %}
+                  <span class="status-pill status-pill-{{ cb.latest_schedule.status|lower }}">
+                    {{ cb.latest_schedule.status }}
+                  </span>
+                  {% endif %}
+                </div>
+
+                <div class="company-activity-line">
+                  {% if cb.latest_schedule %}
+                  <span class="latest-activity-badge">
+                    <i class="fa-regular fa-clock"></i> Latest Activity: <strong>{{ cb.latest_schedule.date | indian_date }}</strong> &bull; {{ cb.latest_schedule.round_name }} ({{ cb.latest_schedule.start_time }})
+                  </span>
+                  {% else %}
+                  <span class="latest-activity-badge text-muted">No scheduled rounds yet</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Row Summary Right Actions -->
+            <div class="company-row-right">
+              <div class="company-row-pills">
+                <span class="badge-round-count"><i class="fa-solid fa-layer-group"></i> {{ cb.total_rounds }} Round{% if cb.total_rounds != 1 %}s{% endif %}</span>
+                {% if cb.completed_rounds > 0 %}
+                <span class="badge-completed-count"><i class="fa-solid fa-check-double"></i> {{ cb.completed_rounds }} Completed</span>
+                {% endif %}
+              </div>
+
+              <!-- Quick Add Round for Company -->
+              <button type="button" class="btn btn-xs btn-outline btn-add-round-for-comp" data-company="{{ cb.meta.name }}" title="Add New Round / Schedule for {{ cb.meta.name }}">
+                <i class="fa-solid fa-plus"></i> Add Round
+              </button>
+
+              <!-- Link & Reorder Rounds Trigger -->
+              <button type="button" class="btn btn-xs btn-outline btn-open-link-rounds" data-company="{{ cb.meta.name }}" title="Link rounds with arrows and set progression sequence">
+                <i class="fa-solid fa-arrows-split-up-and-left"></i> Link Rounds
+              </button>
+
+              <!-- Accordion Toggle Chevron -->
+              <div class="accordion-chevron-wrap" title="Click to expand/collapse details">
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row Collapsible Content (ALL INFO HIDDEN BY DEFAULT UNDER COMPANY CARD) -->
+          <div class="company-row-body" id="comp-body-{{ cb.meta.id }}" style="display:none;">
+
+            <div class="pipeline-section-header">
+              <div class="pipeline-title-text">
+                <i class="fa-solid fa-route" style="color:var(--primary);"></i>
+                <span>Connected Rounds Pipeline & Progression</span>
+              </div>
+              <span class="pipeline-help-text">Stages connect sequentially &bull; Use "Link Rounds" to reorder sequence</span>
+            </div>
+
+            <!-- Unified Connected Rounds Pipeline -->
+            <div class="connected-rounds-pipeline">
+              {% for s in cb.schedules %}
+              <div class="pipeline-stage-card status-border-{{ s.status|lower }}" data-schedule-id="{{ s.id }}" data-date="{{ s.date }}" id="round-card-{{ s.id }}">
+                
+                <!-- Stage Header -->
+                <div class="stage-card-header">
+                  <div class="stage-title-group">
+                    <span class="stage-order-bubble">Round {{ s.round_order or loop.index }}</span>
+                    <strong class="stage-title-text">{{ s.round_name }}</strong>
+                    <span class="stage-date-text">
+                      <i class="fa-regular fa-calendar"></i> {{ s.date | indian_date }}
+                      {% if s.start_time %} &bull; {{ s.start_time }}{% if s.end_time %} - {{ s.end_time }}{% endif %}{% endif %}
+                    </span>
+                  </div>
+
+                  <div class="stage-header-actions">
+                    <span class="status-pill status-pill-{{ s.status|lower }}">
+                      {% if s.status == 'Completed' %}
+                      <i class="fa-solid fa-circle-check"></i> Completed
+                      {% elif s.status == 'Cancelled' %}
+                      <i class="fa-solid fa-ban"></i> Cancelled
+                      {% elif s.status == 'Rescheduled' %}
+                      <i class="fa-solid fa-arrows-rotate"></i> Rescheduled
+                      {% else %}
+                      <i class="fa-solid fa-clock"></i> Scheduled
+                      {% endif %}
+                    </span>
+
+                    <button type="button" class="btn btn-xs btn-primary btn-edit-schedule" data-id="{{ s.id }}">
+                      <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Stage Contact & Question Bank Links Row -->
+                <div class="stage-meta-row">
+                  {% if s.qb_link %}
+                  <a href="{{ s.qb_link }}" target="_blank" class="qb-direct-link" title="Directly jump to questions in Question Bank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>Question Bank{% if s.question_count %} ({{ s.question_count }} Questions){% endif %}</span>
+                  </a>
+                  {% endif %}
+
+                  {% if s.hr_email %}
+                  <span class="meta-tag-pill"><i class="fa-solid fa-envelope"></i> {{ s.hr_email }}</span>
+                  {% endif %}
+
+                  {% if s.hr_phone %}
+                  <span class="meta-tag-pill"><i class="fa-solid fa-phone"></i> {{ s.hr_phone }}</span>
+                  {% endif %}
+
+                  {% if s.youtube_url %}
+                  <div class="youtube-pill-group" style="display:inline-flex; align-items:center; gap:3px;">
+                    <a href="{{ s.youtube_url }}" target="_blank" rel="noopener noreferrer" class="meta-tag-pill youtube-recording-pill" title="Watch Interview Recording on YouTube">
+                      <i class="fa-brands fa-youtube" style="color:#ef4444; font-size:0.85rem;"></i>
+                      <span>Watch Recording</span>
+                      <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.6rem; opacity:0.7;"></i>
+                    </a>
+                    <button type="button" class="meta-tag-pill meta-tag-btn" onclick="openQuickYoutubeModal('{{ s.id }}'); event.stopPropagation();" title="Edit YouTube recording link" style="padding:0.1rem 0.35rem; color:#64748b;">
+                      <i class="fa-solid fa-pen" style="font-size:0.65rem;"></i>
+                    </button>
+                  </div>
+                  {% else %}
+                  <button type="button" class="meta-tag-pill meta-tag-btn btn-add-youtube" onclick="openQuickYoutubeModal('{{ s.id }}'); event.stopPropagation();" title="Add YouTube recording of this interview">
+                    <i class="fa-brands fa-youtube" style="color:#ef4444; font-size:0.8rem;"></i>
+                    <span>+ YouTube Link</span>
+                  </button>
+                  {% endif %}
+
+                  {% if s.emails and s.emails|length > 0 %}
+                  <button type="button" class="meta-tag-pill meta-tag-btn btn-view-emails" data-id="{{ s.id }}" onclick="openEmailsViewerModal('{{ s.id }}'); event.stopPropagation();" title="Click to view all {{ s.emails|length }} attached email(s)">
+                    <i class="fa-solid fa-envelope-open-text" style="color:var(--primary);"></i>
+                    <span><strong>{{ s.emails|length }}</strong> email{% if s.emails|length > 1 %}s{% endif %}</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.6rem; opacity:0.7;"></i>
+                  </button>
+                  {% endif %}
+
+                  {% if s.screenshots and s.screenshots|length > 0 %}
+                  <span class="meta-tag-pill" title="{{ s.screenshots|length }} Screenshot(s) attached">
+                    <i class="fa-solid fa-image"></i> {{ s.screenshots|length }} screenshot{% if s.screenshots|length > 1 %}s{% endif %}
+                  </span>
+                  {% endif %}
+
+                  {% if (s.transcript and s.transcript|trim) or (s.has_transcript and s.transcript) %}
+                  <button type="button" class="meta-tag-pill transcript-available meta-tag-btn btn-view-transcript" data-id="{{ s.id }}" onclick="openTranscriptViewerModal('{{ s.id }}'); event.stopPropagation();" title="Click to read full interview transcript">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span><strong>Transcript recorded</strong></span>
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.6rem; opacity:0.7;"></i>
+                  </button>
+                  {% elif s.has_transcript %}
+                  <button type="button" class="meta-tag-pill transcript-available meta-tag-btn btn-view-transcript" data-id="{{ s.id }}" onclick="openTranscriptViewerModal('{{ s.id }}'); event.stopPropagation();" title="Transcript marked as recorded (Click to view/add)">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span><strong>Transcript recorded</strong></span>
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.6rem; opacity:0.7;"></i>
+                  </button>
+                  {% else %}
+                  <span class="meta-tag-pill text-muted"><i class="fa-solid fa-file-excel"></i> No transcript</span>
+                  {% endif %}
+                </div>
+
+                <!-- Candidate Experience Box -->
+                {% if s.experience %}
+                <div class="round-experience-box">
+                  <strong><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Candidate Experience:</strong>
+                  <span>{{ s.experience }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Lossless Screenshots Thumbnails Row -->
+                {% if s.screenshots and s.screenshots|length > 0 %}
+                <div class="round-screenshots-preview-row">
+                  {% for sc in s.screenshots %}
+                  <div class="round-screenshot-mini-thumb" onclick="openScreenshotViewer('{{ sc.url }}', '{{ sc.original_name }}')" title="View 100% Original Lossless Screenshot: {{ sc.original_name }}">
+                    <img src="{{ sc.url }}" alt="{{ sc.original_name }}">
+                    <span class="mini-thumb-label"><i class="fa-solid fa-magnifying-glass-plus"></i> Lossless</span>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Cancellation Note -->
+                {% if s.status == 'Cancelled' and s.cancellation_reason %}
+                <div class="cancellation-alert-banner">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <span>Cancellation Reason: {{ s.cancellation_reason }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Quick Status Controls -->
+                <div class="stage-footer-actions">
+                  <div class="quick-status-group">
+                    {% if s.status != 'Completed' %}
+                    <button type="button" class="btn btn-xs btn-outline btn-quick-status" data-id="{{ s.id }}" data-status="Completed" title="Mark as Completed">
+                      <i class="fa-solid fa-check" style="color:#16a34a;"></i> Complete
+                    </button>
+                    {% endif %}
+
+                    {% if s.status != 'Cancelled' %}
+                    <button type="button" class="btn btn-xs btn-outline btn-quick-status" data-id="{{ s.id }}" data-status="Cancelled" title="Mark as Cancelled">
+                      <i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Cancel
+                    </button>
+                    {% endif %}
+
+                    {% if s.status == 'Cancelled' %}
+                    <button type="button" class="btn btn-xs btn-outline btn-reschedule-action" data-company="{{ s.company_name }}" data-round="{{ s.round_name }}" data-id="{{ s.id }}" title="Schedule New Date for this Cancelled Interview">
+                      <i class="fa-solid fa-plus"></i> Reschedule New
+                    </button>
+                    {% endif %}
+                  </div>
+                </div>
+
+              </div>
+
+              {% if not loop.last %}
+              <!-- PROMINENT ARROW MARK CONNECTING TO NEXT ROUND -->
+              <div class="pipeline-arrow-separator">
+                <div class="arrow-vertical-stem"></div>
+                <div class="arrow-pill-indicator">
+                  <i class="fa-solid fa-arrow-down"></i>
+                  <span>Connected to Round {{ (s.round_order or loop.index) + 1 }}</span>
+                </div>
+                <div class="arrow-vertical-stem"></div>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 2: PAGE & MENU PUBLISHER (EXISTING CONTROLS PRESERVED INTACT) -->
+  <!-- ========================================================================= -->
+  <div class="admin-tab-pane {% if active_tab == 'visibility' %}active{% endif %}" id="tab-page-publisher" role="tabpanel">
+
+    <div class="admin-section-header">
+      <h2>
+        <i class="fa-solid fa-sliders" style="color:var(--primary);"></i>
+        <span>Page Visibility Controls</span>
+      </h2>
+      <span style="font-size:0.82rem; color:var(--text-muted);">Changes take effect immediately across all visitors and git audit log</span>
+    </div>
+
+    <div class="admin-pages-grid">
+      {% for p in pages %}
+      <div class="admin-page-card {% if p.is_published %}is-published-mode{% else %}is-hidden-mode{% endif %}" data-page-key="{{ p.key }}" id="admin-card-{{ p.key }}">
+        <div class="admin-page-info">
+          <div class="admin-page-icon-wrap">
+            <i class="fa-solid {{ p.icon }}"></i>
+          </div>
+          <div class="admin-page-details">
+            <div class="admin-page-title-row">
+              <span class="admin-page-name">{{ p.name }}</span>
+              <span class="admin-page-route">{{ p.route }}</span>
+              <span class="admin-status-pill {% if p.is_published %}published{% else %}hidden{% endif %}">
+                {% if p.is_published %}
+                <i class="fa-solid fa-circle-check"></i> Published & Live
+                {% else %}
+                <i class="fa-solid fa-eye-slash"></i> Hidden (Unpublished)
+                {% endif %}
+              </span>
+            </div>
+            <p class="admin-page-desc">{{ p.description }}</p>
+          </div>
+        </div>
+
+        <div class="admin-page-actions">
+          <a href="{{ p.route }}" target="_blank" class="btn btn-sm btn-outline" title="Preview Page in New Tab">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview
+          </a>
+
+          <button type="button" class="btn-toggle-publish publish-btn btn-publish-action" title="Publish this page to public visitors" {% if p.is_published %}disabled style="opacity:0.6; cursor:default;"{% endif %}>
+            <i class="fa-solid fa-circle-check"></i> Publish
+          </button>
+
+          <button type="button" class="btn-toggle-publish hide-btn btn-hide-action" title="Hide this page from public menu and direct navigation" {% if not p.is_published %}disabled style="opacity:0.6; cursor:default;"{% endif %}>
+            <i class="fa-solid fa-eye-slash"></i> Hide
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Network & Domain Access Guide -->
+    <div class="admin-guide-card">
+      <h3>
+        <i class="fa-solid fa-globe" style="color:var(--primary);"></i>
+        <span>Admin Access & Cloudflare Tunnel Configuration</span>
+      </h3>
+      
+      <div class="admin-guide-grid">
+        <div class="admin-guide-box">
+          <h4><i class="fa-solid fa-laptop-code" style="color:#0284c7;"></i> Localhost Access</h4>
+          <p>Access the admin portal directly on dedicated port <strong>{{ admin_port }}</strong> (blocked on public port {{ main_port }}):</p>
+          <pre class="admin-guide-code">http://localhost:{{ admin_port }}/</pre>
+          <p style="margin-top:0.6rem; font-size:0.78rem; color:var(--text-muted);">
+            Docker Desktop Kubernetes routes port 9256 directly to <code>localhost:9256</code> (NodePort <code>30956</code>).
+          </p>
+        </div>
+
+        <div class="admin-guide-box">
+          <h4><i class="fa-solid fa-cloud" style="color:#f59e0b;"></i> Cloudflare Tunnel on GCP</h4>
+          <p>In your Cloudflare Tunnel configuration on GCP (<code>/etc/cloudflared/config.yml</code>) or Cloudflare Dashboard Public Hostnames, route <strong>admin.sidorea.shop</strong> to port {{ admin_port }}:</p>
+          <pre class="admin-guide-code">ingress:
   - hostname: admin.sidorea.shop
     service: http://localhost:{{ admin_port }}
   - hostname: sidorea.shop
     service: http://localhost:{{ main_port }}
   - service: http_status:404</pre>
+        </div>
       </div>
     </div>
-  </div>
 
+  </div>
   {% endif %}
 
 </div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: SCHEDULE DETAILS & INPUT (ADD / EDIT) -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="scheduleModal" style="display:none;" aria-hidden="true">
+  <div class="modal-content modal-lg">
+    <form id="scheduleForm">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-calendar-plus" style="color:var(--primary);"></i>
+          <span id="scheduleModalTitle">Add Interview Schedule</span>
+        </div>
+        <button type="button" class="modal-close-btn" id="btnCloseScheduleModal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="formScheduleId" name="id">
+      <input type="hidden" id="formRoundId" name="round_id">
+      <input type="hidden" id="formQuestionCount" name="question_count" value="0">
+      <input type="hidden" id="formQbLink" name="qb_link">
+
+      <div class="modal-body">
+
+        <!-- Company & Round Row (With Dynamic Dropdowns + Custom Add) -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="formCompanyName" class="form-label">
+              Company Name <span class="required">*</span>
+            </label>
+            <input type="text" id="formCompanyName" name="company_name" list="companyDatalist" class="form-control" placeholder="Select or type company name..." required autocomplete="off">
+            <datalist id="companyDatalist">
+              {% for c in companies %}
+              <option value="{{ c.name }}"></option>
+              {% endfor %}
+            </datalist>
+            <span class="form-help">Type a new company name to automatically add it to future dropdowns.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="formRoundName" class="form-label">
+              Round Name <span class="required">*</span>
+            </label>
+            <input type="text" id="formRoundName" name="round_name" list="roundDatalist" class="form-control" placeholder="Select or type round name..." required autocomplete="off">
+            <datalist id="roundDatalist">
+              {% for r in rounds %}
+              <option value="{{ r }}"></option>
+              {% endfor %}
+            </datalist>
+            <span class="form-help">e.g. Level 1, Level 2, Face to face, System Design. Auto-saves for future picks.</span>
+          </div>
+        </div>
+
+        <!-- Round Progression Linking (Manual Sequence & Arrow Link) -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="formRoundOrder" class="form-label">
+              <i class="fa-solid fa-arrow-down-1-9"></i> Round Sequence Number
+            </label>
+            <input type="number" id="formRoundOrder" name="round_order" class="form-control" min="1" max="20" value="1" placeholder="e.g. 1, 2, 3...">
+            <span class="form-help">Determines position in the progression arrows journey (1 = Round 1, 2 = Round 2).</span>
+          </div>
+
+          <div class="form-group">
+            <label for="formNextRoundId" class="form-label">
+              <i class="fa-solid fa-arrow-right-long"></i> Connect to Next Round (Arrow Link)
+            </label>
+            <select id="formNextRoundId" name="next_round_id" class="form-control">
+              <option value="">-- No Next Round (Final Round) --</option>
+            </select>
+            <span class="form-help">Manually choose which subsequent round this stage leads to.</span>
+          </div>
+        </div>
+
+        <!-- Date & Times Row -->
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="formDate" class="form-label">
+              Interview Date <span class="required">*</span>
+            </label>
+            <input type="date" id="formDate" name="date" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="formStartTime" class="form-label">
+              Start Time <span class="required">*</span>
+            </label>
+            <input type="text" id="formStartTime" name="start_time" class="form-control" placeholder="e.g. 03:00 PM" required>
+          </div>
+
+          <div class="form-group">
+            <label for="formEndTime" class="form-label">
+              End Time
+            </label>
+            <input type="text" id="formEndTime" name="end_time" class="form-control" placeholder="e.g. 04:00 PM">
+          </div>
+        </div>
+
+        <!-- HR Details Row -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="formHrEmail" class="form-label">
+              HR Email Address
+            </label>
+            <input type="email" id="formHrEmail" name="hr_email" class="form-control" placeholder="recruiter@company.com">
+          </div>
+
+          <div class="form-group">
+            <label for="formHrPhone" class="form-label">
+              HR Phone Number
+            </label>
+            <input type="tel" id="formHrPhone" name="hr_phone" class="form-control" placeholder="+91 9876543210">
+          </div>
+        </div>
+
+        <!-- YouTube Recording URL Field -->
+        <div class="form-group">
+          <label for="formYoutubeUrl" class="form-label">
+            <i class="fa-brands fa-youtube" style="color:#ef4444;"></i> YouTube Recording Link
+          </label>
+          <input type="url" id="formYoutubeUrl" name="youtube_url" class="form-control" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." autocomplete="off">
+          <span class="form-help">Optionally paste the YouTube recording or mock interview discussion link.</span>
+        </div>
+
+        <!-- Status Radio Selector -->
+        <div class="form-group">
+          <label class="form-label">Interview Status</label>
+          <div class="status-selector-row">
+            <label class="status-option-label">
+              <input type="radio" name="status" value="Scheduled" id="statusScheduled" checked>
+              <span class="status-pill status-pill-scheduled"><i class="fa-solid fa-clock"></i> Scheduled</span>
+            </label>
+            <label class="status-option-label">
+              <input type="radio" name="status" value="Completed" id="statusCompleted">
+              <span class="status-pill status-pill-completed"><i class="fa-solid fa-circle-check"></i> Completed</span>
+            </label>
+            <label class="status-option-label">
+              <input type="radio" name="status" value="Cancelled" id="statusCancelled">
+              <span class="status-pill status-pill-cancelled"><i class="fa-solid fa-ban"></i> Cancelled</span>
+            </label>
+            <label class="status-option-label">
+              <input type="radio" name="status" value="Rescheduled" id="statusRescheduled">
+              <span class="status-pill status-pill-rescheduled"><i class="fa-solid fa-arrows-rotate"></i> Rescheduled</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Conditional: Cancellation Reason (Shows when Cancelled) -->
+        <div class="form-group" id="cancellationReasonGroup" style="display:none;">
+          <label for="formCancellationReason" class="form-label text-danger">
+            <i class="fa-solid fa-triangle-exclamation"></i> Cancellation Reason / Postponement Note
+          </label>
+          <textarea id="formCancellationReason" name="cancellation_reason" class="form-control" rows="2" placeholder="e.g. Interviewer rescheduled due to production release; waiting for revised slot..."></textarea>
+        </div>
+
+        <!-- Multi-Email Section -->
+        <div class="form-section-box">
+          <div class="form-section-header">
+            <div>
+              <h4 style="margin:0; font-size:0.95rem; font-weight:700;">
+                <i class="fa-solid fa-envelope" style="color:var(--primary);"></i>
+                Received Interview Emails
+              </h4>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Add one or multiple interview invitation/confirmation emails</span>
+            </div>
+            <button type="button" class="btn btn-xs btn-outline" id="btnAddEmailBlock">
+              <i class="fa-solid fa-plus"></i> Add Email
+            </button>
+          </div>
+
+          <div id="emailsListContainer" class="emails-list-container">
+            <!-- Dynamic Email Blocks injected by JS -->
+          </div>
+        </div>
+
+        <!-- Lossless Screenshot Upload Section -->
+        <div class="form-section-box">
+          <div class="form-section-header">
+            <div>
+              <h4 style="margin:0; font-size:0.95rem; font-weight:700;">
+                <i class="fa-solid fa-image" style="color:var(--primary);"></i>
+                Screenshot Proof & Visual Capture
+              </h4>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Upload full-resolution email or calendar screenshots (lossless quality preserved)</span>
+            </div>
+            <div>
+              <label for="screenshotFileInput" class="btn btn-xs btn-secondary" style="cursor:pointer; margin:0;">
+                <i class="fa-solid fa-upload"></i> Upload Screenshot
+              </label>
+              <input type="file" id="screenshotFileInput" accept="image/*" style="display:none;">
+            </div>
+          </div>
+
+          <div id="screenshotsGalleryContainer" class="screenshots-gallery-grid">
+            <!-- Dynamic Screenshot Thumbnails injected by JS -->
+          </div>
+          <div id="noScreenshotsNotice" class="no-items-notice">
+            <i class="fa-regular fa-image"></i> No screenshots attached yet. Click upload to attach lossless images.
+          </div>
+        </div>
+
+        <!-- Candidate Interview Experience -->
+        <div class="form-group">
+          <label for="formExperience" class="form-label">
+            <i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Candidate Interview Experience & Technical Reflections
+          </label>
+          <textarea id="formExperience" name="experience" class="form-control" rows="3" placeholder="Describe your experience with this company and round: questions asked, interviewer tone, challenges faced, hands-on tasks, areas to review..."></textarea>
+        </div>
+
+        <!-- Conditional Transcript Section -->
+        <div class="form-section-box" id="transcriptSectionBox">
+          <div class="form-section-header">
+            <div>
+              <h4 style="margin:0; font-size:0.95rem; font-weight:700;">
+                <i class="fa-solid fa-file-lines" style="color:var(--primary);"></i>
+                Interview Transcript & Discussion Notes
+              </h4>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Full transcript or detailed notes for completed sessions</span>
+            </div>
+            <!-- Toggle for No transcript available -->
+            <label class="toggle-switch-label" title="Toggle when no transcript was recorded">
+              <input type="checkbox" id="toggleNoTranscript">
+              <span>No transcript available</span>
+            </label>
+          </div>
+
+          <div id="transcriptInputWrap">
+            <textarea id="formTranscript" name="transcript" class="form-control" rows="4" placeholder="Paste full transcript or round conversation questions here..."></textarea>
+          </div>
+          <div id="noTranscriptNotice" class="no-transcript-banner" style="display:none;">
+            <i class="fa-solid fa-circle-info"></i> No transcript available for this interview session.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:space-between;">
+        <div>
+          <button type="button" class="btn btn-danger btn-sm" id="btnDeleteSchedule" style="display:none;">
+            <i class="fa-solid fa-trash"></i> Delete Schedule
+          </button>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnCancelScheduleModal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btnSaveSchedule">
+            <i class="fa-solid fa-floppy-disk"></i> Save Schedule
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: MANUAL LINK & REORDER ROUNDS -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="reorderRoundsModal" style="display:none;" aria-hidden="true">
+  <div class="modal-content modal-md">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-link" style="color:var(--primary);"></i>
+        <span id="reorderModalTitle">Link & Reorder Rounds</span>
+      </div>
+      <button type="button" class="modal-close-btn" id="btnCloseReorderModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p style="font-size:0.84rem; color:var(--text-secondary); margin-bottom:1rem;">
+        Arrange the rounds in sequential order. Arrows will automatically connect them from top to bottom (Round 1 ──► Round 2 ──► Round 3).
+      </p>
+      <input type="hidden" id="reorderCompanyInput">
+      <div id="reorderRoundsList" class="reorder-rounds-list">
+        <!-- Injected dynamically by JS -->
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm" id="btnCancelReorderModal">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" id="btnSaveReorderRounds">
+        <i class="fa-solid fa-check"></i> Apply Order & Save Arrows
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: VIEW ATTACHED INTERVIEW EMAILS -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="emailsViewerModal" style="display:none; z-index:9999;" aria-hidden="true">
+  <div class="modal-content modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-envelope-open-text" style="color:var(--primary);"></i>
+        <span id="emailsViewerTitle">Received Interview Emails</span>
+      </div>
+      <button type="button" class="modal-close-btn" id="btnCloseEmailsViewerModal" onclick="closeEmailsViewerModal()" aria-label="Close modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="emailsViewerContent">
+      <!-- Injected dynamically by JS -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm" id="btnCancelEmailsViewerModal" onclick="closeEmailsViewerModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: VIEW FULL INTERVIEW TRANSCRIPT -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="transcriptViewerModal" style="display:none; z-index:9999;" aria-hidden="true">
+  <div class="modal-content modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-file-lines" style="color:#047857;"></i>
+        <span id="transcriptViewerTitle">Interview Transcript & Discussion Notes</span>
+      </div>
+      <button type="button" class="modal-close-btn" id="btnCloseTranscriptViewerModal" onclick="closeTranscriptViewerModal()" aria-label="Close modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="transcriptViewerContent">
+      <!-- Injected dynamically by JS -->
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:space-between;">
+      <button type="button" class="btn btn-sm btn-outline" id="btnCopyTranscriptModal">
+        <i class="fa-regular fa-copy"></i> Copy Transcript
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnCancelTranscriptViewerModal" onclick="closeTranscriptViewerModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: QUICK YOUTUBE RECORDING LINK -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="quickYoutubeModal" style="display:none; z-index:9999;" aria-hidden="true">
+  <div class="modal-content modal-sm">
+    <form id="quickYoutubeForm" onsubmit="submitQuickYoutubeForm(event)">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-brands fa-youtube" style="color:#ef4444;"></i>
+          <span id="quickYoutubeModalTitle">Interview YouTube Recording</span>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeQuickYoutubeModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="quickYoutubeScheduleId">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="quickYoutubeInput" class="form-label">YouTube Video / Recording URL</label>
+          <input type="url" id="quickYoutubeInput" class="form-control" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." required autocomplete="off">
+          <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:0.35rem;">
+            Paste full YouTube URL. Once saved, a "Watch Recording" button will appear on the interview round.
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeQuickYoutubeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="btnSaveQuickYoutube">Save Recording Link</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: LOSSLESS FULL-RESOLUTION SCREENSHOT VIEWER -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="screenshotViewerModal" style="display:none; z-index:9999;" aria-hidden="true">
+  <div class="modal-content modal-viewer">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-magnifying-glass-plus" style="color:var(--primary);"></i>
+        <span id="viewerTitle">Screenshot Preview</span>
+      </div>
+      <button type="button" class="modal-close-btn" id="btnCloseViewerModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body viewer-body">
+      <img id="viewerImage" src="" alt="Full Resolution Screenshot" class="viewer-img-lossless">
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: QUICK STATUS UPDATE -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="quickStatusModal" style="display:none;" aria-hidden="true">
+  <div class="modal-content modal-sm">
+    <form id="quickStatusForm">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-sliders" style="color:var(--primary);"></i>
+          <span id="quickStatusModalTitle">Update Schedule Status</span>
+        </div>
+        <button type="button" class="modal-close-btn" id="btnCloseQuickStatusModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="quickStatusScheduleId">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">New Status</label>
+          <select id="quickStatusSelect" class="form-control">
+            <option value="Completed">Completed</option>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Rescheduled">Rescheduled</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="quickCancellationGroup" style="display:none;">
+          <label for="quickCancellationReason" class="form-label text-danger">Cancellation Reason</label>
+          <input type="text" id="quickCancellationReason" class="form-control" placeholder="Reason for cancellation...">
+        </div>
+
+        <div class="form-group" id="quickTranscriptGroup" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <label class="form-label" style="margin:0;">Interview Transcript</label>
+            <label style="font-size:0.75rem; display:flex; align-items:center; gap:0.25rem;">
+              <input type="checkbox" id="quickNoTranscriptToggle"> No transcript
+            </label>
+          </div>
+          <textarea id="quickTranscriptInput" class="form-control" rows="3" placeholder="Paste transcript here..."></textarea>
+        </div>
+
+        <div class="form-group" id="quickYoutubeGroup" style="display:none;">
+          <label for="quickYoutubeUrl" class="form-label" style="display:flex; align-items:center; gap:0.4rem;">
+            <i class="fa-brands fa-youtube" style="color:#ef4444;"></i> YouTube Recording Link
+          </label>
+          <input type="url" id="quickYoutubeUrl" class="form-control" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." autocomplete="off">
+          <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:0.25rem;">Optionally paste YouTube recording or interview video URL.</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnCancelQuickStatus">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Pre-rendered JSON State for Zero-Latency Dashboard Loading -->
+<script id="hub-init-data" type="application/json">
+{
+  "schedules": {{ schedules | tojson }},
+  "companies": {{ companies | tojson }},
+  "rounds": {{ rounds | tojson }},
+  "weekly": {{ weekly_data | tojson }},
+  "monthly": {{ monthly_data | tojson }}
+}
+</script>
 {% endblock %}

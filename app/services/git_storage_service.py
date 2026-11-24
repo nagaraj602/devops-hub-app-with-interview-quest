@@ -108,23 +108,40 @@ class GitStorageService:
         except Exception as e:
             print(f"Error saving system status: {e}")
 
-    def commit_and_push_logs(self, commit_msg: str = "chore: update continuous activity audit logs") -> Dict[str, Any]:
-        """Optionally commits and pushes changes to git origin main."""
+    def commit_and_push(self, paths: Optional[List[str]] = None, commit_msg: str = "chore: sync data to git storage") -> Dict[str, Any]:
+        """Stages specified paths (defaulting to logs/ and content/interview_schedules/), commits and pushes to origin main."""
+        target_paths = paths or ["logs/", "content/interview_schedules/"]
         try:
-            subprocess.run(["git", "add", "logs/"], cwd=str(BASE_DIR), check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Ensure git repo directory is treated as safe in all execution environments (host & Docker)
+            subprocess.run(["git", "config", "--global", "--add", "safe.directory", "*"], cwd=str(BASE_DIR), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            for p in target_paths:
+                p_path = BASE_DIR / p if not os.path.isabs(p) else Path(p)
+                if p_path.exists():
+                    subprocess.run(["git", "add", str(p)], cwd=str(BASE_DIR), check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
             diff_check = subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=str(BASE_DIR))
             if diff_check.returncode == 0:
-                return {"status": "success", "message": "No new log changes to commit."}
+                return {"status": "success", "message": "No new changes to commit."}
 
             subprocess.run(["git", "commit", "-m", commit_msg], cwd=str(BASE_DIR), check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             # Try push with timeout
-            push_res = subprocess.run(["git", "push", "origin", "main"], cwd=str(BASE_DIR), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=15)
+            push_res = subprocess.run(["git", "push", "origin", "main"], cwd=str(BASE_DIR), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=20)
             if push_res.returncode == 0:
-                return {"status": "success", "message": "Successfully committed and pushed audit logs to GitHub repo."}
+                return {"status": "success", "message": f"Successfully committed and pushed changes to GitHub: {commit_msg}"}
             else:
                 return {"status": "warning", "message": f"Committed locally. Push notice: {push_res.stderr.strip()}"}
         except Exception as e:
-            return {"status": "info", "message": f"Saved logs locally in repository. ({str(e)})"}
+            return {"status": "info", "message": f"Saved changes locally in repository. ({str(e)})"}
+
+    def commit_and_push_async(self, paths: Optional[List[str]] = None, commit_msg: str = "chore: sync data to git storage"):
+        """Asynchronously triggers commit_and_push in a background daemon thread so HTTP requests don't block."""
+        import threading
+        t = threading.Thread(target=self.commit_and_push, args=(paths, commit_msg), daemon=True)
+        t.start()
+
+    def commit_and_push_logs(self, commit_msg: str = "chore: update continuous activity audit logs") -> Dict[str, Any]:
+        """Commits and pushes audit log changes to git origin main."""
+        return self.commit_and_push(["logs/"], commit_msg)
 
     def get_runtime_environment(self) -> Dict[str, Any]:
         """Detects whether running on Kubernetes cluster or Docker Compose, and checks component health."""

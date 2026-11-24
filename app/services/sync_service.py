@@ -113,12 +113,12 @@ class SyncService:
             return res
 
         elif repo_id == "hub_storage":
-            # Commit and push continuous activity logs
-            push_result = git_storage_service.commit_and_push_logs()
+            # Commit and push continuous activity logs and interview schedules
+            push_result = git_storage_service.commit_and_push(["content/interview_schedules/", "logs/"], "chore: update continuous activity audit logs and interview schedules")
             git_storage_service.log_event(
                 "Git Database Sync",
                 "Hub Repo",
-                f"Continuous logs recorded to git: {push_result.get('message')}",
+                f"Continuous logs and schedules recorded to git: {push_result.get('message')}",
                 "User / Web UI"
             )
             return push_result

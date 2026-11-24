@@ -190,6 +190,13 @@ class GitSyncManager:
         training_service.invalidate_cache()
         training_service.get_combined_trees(force_refresh=True)
 
+        # 6. Auto-sync interview schedules with refreshed Question Bank questions
+        try:
+            from app.services.interview_schedule_service import interview_schedule_service
+            interview_schedule_service.sync_with_question_bank(data)
+        except Exception as e:
+            print(f"Notice: interview_schedule_service auto-sync failed: {e}")
+
         total_q = data["stats"]["total_questions"]
         total_c = data["stats"]["total_companies"]
         total_r = data["stats"]["total_rounds"]

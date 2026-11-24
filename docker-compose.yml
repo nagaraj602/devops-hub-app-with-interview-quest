@@ -10,7 +10,9 @@ services:
       - "8926:8926"
       - "9256:9256"
     volumes:
-      - ./logs:/app/logs
+      - .:/app
+      - /root/.gitconfig:/root/.gitconfig:ro
+      - /root/.git-credentials:/root/.git-credentials:ro
     environment:
       - PORT=8926
       - ADMIN_PORT=9256

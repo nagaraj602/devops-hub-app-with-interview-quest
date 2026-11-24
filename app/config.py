@@ -21,6 +21,8 @@ ADMIN_PASSWORD_SALT = os.getenv("ADMIN_PASSWORD_SALT", "devops_hub_admin_salt_20
 
 # Content directories
 INTERVIEW_QUESTIONS_DIR = os.getenv("INTERVIEW_QUESTIONS_DIR", str(CONTENT_DIR / "interview_questions"))
+INTERVIEW_SCHEDULES_DIR = os.getenv("INTERVIEW_SCHEDULES_DIR", str(CONTENT_DIR / "interview_schedules"))
+ATTACHMENTS_DIR = os.getenv("ATTACHMENTS_DIR", str(Path(INTERVIEW_SCHEDULES_DIR) / "attachments"))
 QA_SESSIONS_DIR = os.getenv("QA_SESSIONS_DIR", str(CONTENT_DIR / "qa_sessions"))
 CHEATSHEET_DIR = os.getenv("CHEATSHEET_DIR", str(CONTENT_DIR / "cheatsheets"))
 NOTES_DIR = os.getenv("NOTES_DIR", str(CONTENT_DIR / "notes"))

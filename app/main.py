@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
         from app.services.project_service import project_service
         from app.services.training_service import training_service
         from app.services.sync_service import sync_service
+        from app.services.interview_schedule_service import interview_schedule_service
         # Pre-warm all data caches in memory
         question_bank_service.get_data()
         qa_service.get_data()
@@ -41,6 +42,7 @@ async def lifespan(app: FastAPI):
         training_service.get_repo_tree("training")
         training_service.get_repo_tree("notes")
         sync_service.get_sync_status()
+        interview_schedule_service.get_all_schedules()
     except Exception as e:
         print(f"Lifespan pre-warm notice: {e}")
     yield
@@ -119,7 +121,9 @@ static_dir = APP_DIR / "static"
 os.makedirs(templates_dir, exist_ok=True)
 os.makedirs(static_dir, exist_ok=True)
 
+from app.services.interview_schedule_service import format_indian_date
 templates = Jinja2Templates(directory=str(templates_dir))
+templates.env.filters["indian_date"] = format_indian_date
 # Register template global helpers for dynamic page visibility and auth
 templates.env.globals["get_page_visibility"] = page_visibility_service.get_visibility_map
 templates.env.globals["is_page_published"] = page_visibility_service.is_page_published

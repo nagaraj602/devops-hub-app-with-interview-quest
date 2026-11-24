@@ -40,9 +40,7 @@ CATEGORY_NORMALIZE_MAP = {
     "ai/ml": "AI/ML",
     "build tools": "Build Tools",
     "general": "General",
-    "other": "General",
-    "nagaraj's interview": "Nagaraj's Interview",
-    "nagaraj interview": "Nagaraj's Interview"
+    "other": "General"
 }
 
 BASE_CATEGORIES_MAP = {c.lower(): c for c in BASE_CATEGORIES_LIST}

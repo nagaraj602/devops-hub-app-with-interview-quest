@@ -144,8 +144,6 @@ class QuestionBankService:
                 for q in r.get("questions", []):
                     q_cat = q.get("category", "General")
                     recomputed_counts[q_cat] = recomputed_counts.get(q_cat, 0) + 1
-                    if q.get("is_nagaraj"):
-                        recomputed_counts["Nagaraj's Interview"] = recomputed_counts.get("Nagaraj's Interview", 0) + 1
         category_counts = recomputed_counts
 
         # Finalize rounds list & categories and populate calendar events
@@ -179,10 +177,8 @@ class QuestionBankService:
         total_rounds = sum(len(c["rounds"]) for c in companies_list)
         total_questions = sum(c["total_questions"] for c in companies_list)
 
-        # Build dynamic category list: Include "Nagaraj's Interview" ONLY if matching files exist
+        # Build category list (Nagaraj's Interview tag excluded from category pills)
         active_categories = list(BASE_CATEGORIES_LIST)
-        if has_nagaraj_interviews:
-            active_categories.insert(0, "Nagaraj's Interview")
 
         sorted_categories = []
         for cat in active_categories:
@@ -223,7 +219,7 @@ class QuestionBankService:
         current_company = "General"
         current_round_name = "Level 1"
         current_round_date = ""
-        current_category = "Nagaraj's Interview" if is_nagaraj else "General"
+        current_category = "General"
         current_q_text = ""
         current_answer_lines: List[str] = []
         in_answer = False
@@ -255,8 +251,6 @@ class QuestionBankService:
 
             norm_cat = detect_category_from_text(q_clean, ans_clean, current_category)
             category_counts[norm_cat] = category_counts.get(norm_cat, 0) + 1
-            if is_nagaraj:
-                category_counts["Nagaraj's Interview"] = category_counts.get("Nagaraj's Interview", 0) + 1
 
             q_id = f"q_{len(category_counts)}_{sum(s.get('total_questions', 0) for s in sessions_list) + len(current_round_questions)}"
             q_entry = {
@@ -349,7 +343,7 @@ class QuestionBankService:
                 current_company = c_clean
                 current_round_name = r_init
                 current_round_date = ""
-                current_category = "Nagaraj's Interview" if is_nagaraj else "General"
+                current_category = "General"
                 continue
 
             m_round_details = re.search(r'<summary>\s*(?:<h3>)?\s*([A-Za-z0-9\s\.\-_/&]+?)(?:</h3>)?\s*</summary>', line_str, re.IGNORECASE)
@@ -369,7 +363,7 @@ class QuestionBankService:
                 current_company = c_clean
                 current_round_name = r_init
                 current_round_date = ""
-                current_category = "Nagaraj's Interview" if is_nagaraj else "General"
+                current_category = "General"
                 continue
 
             m_cat = re.search(r'【\s*(.+?)\s*】', line_str)
