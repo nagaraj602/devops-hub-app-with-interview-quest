@@ -910,8 +910,9 @@ class InterviewScheduleService:
             else:
                 transcript_html = "<div style='color:#94a3b8; font-size:12px; font-style:italic;'>No transcript available / Not recorded</div>"
 
+            page_break = "page-break-before:always;" if idx > 1 else ""
             items_html.append(f"""
-            <div style="border:1px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:24px; page-break-inside:auto;">
+            <div style="border:1px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:24px; {page_break}">
                 <div style="border-bottom:2px solid #0284c7; padding-bottom:8px; margin-bottom:12px;">
                     <table style="width:100%; border-collapse:collapse;">
                         <tr>
