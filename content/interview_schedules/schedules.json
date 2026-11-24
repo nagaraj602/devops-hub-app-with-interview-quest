@@ -63,7 +63,9 @@
     "question_count": 61,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_120",
     "updated_at": "2026-11-24T14:37:47.246865",
-    "created_at": "2026-11-24T09:48:09.781511"
+    "created_at": "2026-11-24T09:48:09.781511",
+    "indian_date": "20-Nov-2026",
+    "display_date": "20-Nov-2026"
   },
   {
     "id": "sched_imp_wissen_face_to_face_round_2026-11-19",
@@ -259,7 +261,20 @@
         "date": "2026-11-13"
       }
     ],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "id": "sc_a9c15ed0",
+        "filename": "20261124_143837_ff96ed_Gmail_-_Fwd__Nagaraj__please_confirm_your_meeting_with_Ascendion_Page_1.png",
+        "original_name": "Gmail - Fwd_ Nagaraj, please confirm your meeting with Ascendion_Page_1.png",
+        "url": "/api/admin/interview-schedules/attachment/20261124_143837_ff96ed_Gmail_-_Fwd__Nagaraj__please_confirm_your_meeting_with_Ascendion_Page_1.png"
+      },
+      {
+        "id": "sc_30a84d53",
+        "filename": "20261124_143842_e215be_Gmail_-_Fwd__Nagaraj__please_confirm_your_meeting_with_Ascendion_Page_2.png",
+        "original_name": "Gmail - Fwd_ Nagaraj, please confirm your meeting with Ascendion_Page_2.png",
+        "url": "/api/admin/interview-schedules/attachment/20261124_143842_e215be_Gmail_-_Fwd__Nagaraj__please_confirm_your_meeting_with_Ascendion_Page_2.png"
+      }
+    ],
     "experience": "Since this interview was cancelled and HR told that, she will schedule on Monday or Tuesday.",
     "transcript": "",
     "has_transcript": false,
@@ -268,10 +283,8 @@
     "next_round_id": "sched_imp_ascendion_level_1_2026-11-17",
     "question_count": 61,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_120",
-    "updated_at": "2026-11-24T14:35:27.898859",
-    "created_at": "2026-11-24T14:34:31.186152",
-    "indian_date": "13-Nov-2026",
-    "display_date": "13-Nov-2026"
+    "updated_at": "2026-11-24T14:38:51.420490",
+    "created_at": "2026-11-24T14:34:31.186152"
   },
   {
     "id": "sched_imp_hutech_solutions_level_1_2026-11-13",
