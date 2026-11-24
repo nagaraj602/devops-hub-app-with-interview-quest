@@ -159,11 +159,12 @@
     "question_count": 42,
     "qb_link": "/question-bank?search=Wissen#rnd_wissen_level_1_115",
     "created_at": "2026-11-24T09:48:09.781770",
-    "updated_at": "2026-11-24T09:48:09.781772",
+    "updated_at": "2026-11-24T11:58:22.992582",
     "round_order": 1,
     "next_round_id": "sched_imp_wissen_face_to_face_round_2026-11-19",
     "indian_date": "17-Nov-2026",
-    "display_date": "17-Nov-2026"
+    "display_date": "17-Nov-2026",
+    "youtube_url": "https://www.youtube.com/watch?v=live_sync_verification"
   },
   {
     "id": "sched_imp_c_ahead_technologies_level_1_2026-11-17",
