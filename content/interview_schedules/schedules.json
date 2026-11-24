@@ -115,7 +115,9 @@
     "question_count": 16,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_2_121",
     "updated_at": "2026-11-24T16:36:25.653780",
-    "created_at": "2026-11-24T09:48:09.781365"
+    "created_at": "2026-11-24T09:48:09.781365",
+    "indian_date": "23-Nov-2026",
+    "display_date": "23-Nov-2026"
   },
   {
     "id": "sched_imp_ascendion_level_1_2026-11-20",
@@ -147,6 +149,12 @@
         "subject": "Fwd: Nagaraj Kamath with Ascendion",
         "body": "From: Vathsala Muniraju <vathsala.muniraju@ascendion.com>\nDate: Thu, 19 Nov, 2026, 4:21 pm\nSubject: Nagaraj Kamath with Ascendion\nTo: nagarajkamath701@gmail.com <nagarajkamath701@gmail.com>\n\n\n\nPlease find Interview Details for DevOps Engineer at Ascendion:\n\nAgenda:\n\nL2 Interview_DevOps-Engineer_Ascendionb\n20 Nov 2026 | 2:00 PM - 2:30 PM Asia/Calcutta (IST)\nBhawna Dhiman, Shelly Mondal\nVideo Conferencing Link: https://teams.microsoft.com/l/meetup-join/19%3ameeting_YTg1Zjg0ODMtYmU4YS00ZjNlLWI0NjgtZTM5OGYwMGE0MzZm%40thread.v2/0?context=%7b%22Tid%22%3a%22d7758e8f-1df3-489f-86b5-a2254f55f9cc%22%2c%22Oid%22%3a%2263a6adbf-977f-4db2-9a37-5e0707260de6%22%7d\nMeeting ID: 2912784223387033\nPasscode: 7Nm2UX9A\n\nJob Description:\nhttps://jobs.ascendion.com/careers/job/1970324837574296\n\n________________________________\n CONFIDENTIALITY NOTICE:- This e-mail contains Privileged and Confidential Information intended solely for the use of the addressee(s). It shall not attach any liability on the sender or Ascendion or its affiliates. Any views or opinions presented in this email are solely those of the sender and may not necessarily reflect the opinions of Ascendion or its affiliates. If you are not the intended recipient, you should not disseminate, distribute or copy this e-mail. Please notify the sender immediately and destroy all copies of this message and any attachments. WARNING: Computer viruses can be transmitted via email. While Ascendion has taken reasonable precautions to minimize this risk, Ascendion accepts no liability for any damage that may be caused to you in the event that there is any virus in this e-mail or any attachments attached hereto. It is the addresses(s) duty to check and scan this email and any attachments attached hereto for the presence of viruses prior to opening the email. Thank you.",
         "date": "2026-11-20"
+      },
+      {
+        "id": "em_1795538200302_uq9o",
+        "subject": "Fwd: F2F Technical Interview - (DevOps Engineer) - Nagaraj Kamath - Ascendion",
+        "body": "From: Vathsala Muniraju <vathsala.muniraju@ascendion.com>\nDate: Thu, 19 Nov, 2026, 4:12 pm\nSubject: F2F Technical Interview - (DevOps Engineer) - Nagaraj Kamath - Ascendion\nTo: nagarajkamath701@gmail.com <nagarajkamath701@gmail.com>\nCc: Shelly Mondal <shelly.mondal@ascendion.com>\n\n\nHi, \nI hope you are doing well.\nYou are scheduled for a face-to-face interview Friday , Nov 20th  at 3:00PM. Please arrive on time \nMeeting Person - Vathsala \nTime - 3:00PM\nAddress - \nAscendion Engineering Private Limited\nAddress:Address: 6th and 7th Floor, Ascendion Engineering,\n        Roach Olympus,\n        Sy No 90 Panathur Village Varthur Hobli,\n        Bangalore East Tq, Karnataka 560103\nGoogle Location: https://share.google/vOu1sW63OBYSAVElP\nThank you for your time and consideration.\nBest,\nVathsala M\n\n\nCONFIDENTIALITY NOTICE:- This e-mail contains Privileged and Confidential Information intended solely for the use of the addressee(s). It shall not attach any liability on the sender or Ascendion or its affiliates. Any views or opinions presented in this email are solely those of the sender and may not necessarily reflect the opinions of Ascendion or its affiliates. If you are not the intended recipient, you should not disseminate, distribute or copy this e-mail. Please notify the sender immediately and destroy all copies of this message and any attachments. WARNING: Computer viruses can be transmitted via email. While Ascendion has taken reasonable precautions to minimize this risk, Ascendion accepts no liability for any damage that may be caused to you in the event that there is any virus in this e-mail or any attachments attached hereto. It is the addresses(s) duty to check and scan this email and any attachments attached hereto for the presence of viruses prior to opening the email. Thank you.",
+        "date": "2026-11-20"
       }
     ],
     "screenshots": [],
@@ -158,10 +166,8 @@
     "next_round_id": "sched_imp_ascendion_level_2_2026-11-23",
     "question_count": 61,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_120",
-    "updated_at": "2026-11-24T16:34:28.145756",
-    "created_at": "2026-11-24T09:48:09.781511",
-    "indian_date": "20-Nov-2026",
-    "display_date": "20-Nov-2026"
+    "updated_at": "2026-11-24T16:36:57.864831",
+    "created_at": "2026-11-24T09:48:09.781511"
   },
   {
     "id": "sched_imp_wissen_face_to_face_round_2026-11-19",
