@@ -258,9 +258,103 @@
       <!-- Graph View 2: Month Activity (Monthly Calendar Matrix) -->
       <div id="monthActivityView" class="activity-view-pane" style="display:none;">
         <div class="month-matrix-container" id="monthMatrixContainer">
-          <!-- Calendar matrix rendered dynamically by JS -->
+          <div class="month-calendar-matrix">
+            <div class="month-matrix-header-cell">Mon</div>
+            <div class="month-matrix-header-cell">Tue</div>
+            <div class="month-matrix-header-cell">Wed</div>
+            <div class="month-matrix-header-cell">Thu</div>
+            <div class="month-matrix-header-cell">Fri</div>
+            <div class="month-matrix-header-cell">Sat</div>
+            <div class="month-matrix-header-cell">Sun</div>
+            {% for _ in range(monthly_data.first_weekday) %}
+            <div class="month-day-cell other-month"></div>
+            {% endfor %}
+            {% for day in monthly_data.days %}
+            <div class="month-day-cell {% if day.count > 0 %}has-interviews{% endif %}" data-date="{{ day.date }}" title="{{ day.count }} interview(s) on {{ day.date | indian_date }}">
+              <div class="month-day-cell-top">
+                <span class="month-day-num">{{ day.day_number }}</span>
+                {% if day.count > 0 %}
+                <span class="month-day-badge">{{ day.count }}</span>
+                {% endif %}
+              </div>
+              {% if day.count > 0 and day.schedules %}
+              <div class="month-day-chips">
+                {% for s in day.schedules %}
+                <span class="month-mini-chip" title="{{ s.company_name }} - {{ s.round_name }}">
+                  <span class="mini-status-dot {{ s.status|lower }}"></span>
+                  <strong>{{ s.company_name }}</strong>
+                </span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
+
+      <script>
+      function switchGraphView(view) {
+        var btnWeek = document.getElementById("btnViewWeek");
+        var btnMonth = document.getElementById("btnViewMonth");
+        var weekView = document.getElementById("weekActivityView");
+        var monthView = document.getElementById("monthActivityView");
+        var weekNav = document.getElementById("weekNavControls");
+        var monthNav = document.getElementById("monthNavControls");
+        var mainTitle = document.getElementById("activityGraphMainTitle");
+        var label = document.getElementById("activityRangeLabel");
+
+        if (view === "month") {
+          if (window.hubState) window.hubState.activeView = "month";
+          if (btnMonth) btnMonth.classList.add("active");
+          if (btnWeek) btnWeek.classList.remove("active");
+
+          if (weekView) { weekView.style.display = "none"; weekView.classList.remove("active"); }
+          if (monthView) { monthView.style.display = "block"; monthView.classList.add("active"); }
+
+          if (weekNav) weekNav.style.display = "none";
+          if (monthNav) monthNav.style.display = "flex";
+
+          if (mainTitle) mainTitle.textContent = "Monthly Interview Calendar";
+          if (label) label.textContent = "{{ monthly_data.formatted_month_label }}";
+
+          var cVal = document.getElementById("activityCompletedVal");
+          var sVal = document.getElementById("activityScheduledVal");
+          var xVal = document.getElementById("activityCancelledVal");
+          var tVal = document.getElementById("activityTotalVal");
+          if (cVal) cVal.textContent = "{{ monthly_data.completed_count }}";
+          if (sVal) sVal.textContent = "{{ monthly_data.scheduled_count }}";
+          if (xVal) xVal.textContent = "{{ monthly_data.cancelled_count }}";
+          if (tVal) tVal.textContent = "{{ monthly_data.total_count }}";
+
+          if (typeof window.renderMonthMatrix === "function" && window.hubState && window.hubState.monthlyData) {
+            window.renderMonthMatrix(window.hubState.monthlyData);
+          }
+        } else {
+          if (window.hubState) window.hubState.activeView = "week";
+          if (btnWeek) btnWeek.classList.add("active");
+          if (btnMonth) btnMonth.classList.remove("active");
+
+          if (weekView) { weekView.style.display = "block"; weekView.classList.add("active"); }
+          if (monthView) { monthView.style.display = "none"; monthView.classList.remove("active"); }
+
+          if (weekNav) weekNav.style.display = "flex";
+          if (monthNav) monthNav.style.display = "none";
+
+          if (mainTitle) mainTitle.textContent = "Weekly Interview Dynamics";
+          if (label) label.textContent = "{{ weekly_data.formatted_week_label }}";
+
+          var cVal = document.getElementById("activityCompletedVal");
+          var sVal = document.getElementById("activityScheduledVal");
+          var xVal = document.getElementById("activityCancelledVal");
+          var tVal = document.getElementById("activityTotalVal");
+          if (cVal) cVal.textContent = "{{ weekly_data.completed_count }}";
+          if (sVal) sVal.textContent = "{{ weekly_data.scheduled_count }}";
+          if (xVal) xVal.textContent = "{{ weekly_data.cancelled_count }}";
+          if (tVal) tVal.textContent = "{{ weekly_data.total_count }}";
+        }
+      }
+      </script>
 
       <!-- Activity Summary Legend & Active Filter Bar -->
       <div class="activity-footer-legend">

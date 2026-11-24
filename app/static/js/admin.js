@@ -103,8 +103,17 @@ function initInterviewActivityHub() {
   initTranscriptViewerModal();
   initQuickYoutubeModal();
 
-  // If monthly view was pre-loaded, render its initial calendar matrix
-  if (hubState.monthlyData) {
+  // Event delegation for month day cells (works for both pre-rendered and dynamic cells)
+  document.addEventListener("click", (e) => {
+    const cell = e.target.closest(".month-day-cell:not(.other-month)");
+    if (cell) {
+      const d = cell.getAttribute("data-date");
+      if (d) toggleDateFilter(d);
+    }
+  });
+
+  // If monthly view was pre-loaded and is active, render its calendar matrix
+  if (hubState.monthlyData && hubState.activeView === "month") {
     renderMonthMatrix(hubState.monthlyData);
   }
 }
