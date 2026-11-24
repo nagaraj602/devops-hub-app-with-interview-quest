@@ -1,5 +1,50 @@
 [
   {
+    "id": "sched_6299319138",
+    "company_name": "Test Cloud Corp",
+    "round_name": "Cloud Architecture Round",
+    "date": "2026-11-25",
+    "start_time": "02:00 PM",
+    "end_time": "03:00 PM",
+    "hr_email": "recruiter@testcloudcorp.io",
+    "hr_phone": "+1 555 123 4567",
+    "youtube_url": "https://www.youtube.com/watch?v=mockinterview123",
+    "status": "Scheduled",
+    "cancellation_reason": "",
+    "emails": [
+      {
+        "id": "em_15b9e36e",
+        "subject": "Invitation: Cloud Architecture Technical Interview",
+        "body": "Hi Nagaraj, your interview is confirmed...",
+        "date": "2026-11-25"
+      },
+      {
+        "id": "em_5017080a",
+        "subject": "Preparation Tips: Cloud Architecture",
+        "body": "Please review Linux internals and Kubernetes...",
+        "date": "2026-11-25"
+      }
+    ],
+    "screenshots": [
+      {
+        "id": "sc_d7c66c00",
+        "filename": "20261124_122209_ed6113_screenshot_test.png",
+        "original_name": "screenshot_test.png",
+        "url": "/api/admin/interview-schedules/attachment/20261124_122209_ed6113_screenshot_test.png"
+      }
+    ],
+    "experience": "Prepared in-depth on distributed systems, SLI/SLO definitions, and incident response.",
+    "transcript": "",
+    "has_transcript": false,
+    "round_id": "",
+    "round_order": 1,
+    "next_round_id": "",
+    "question_count": 0,
+    "qb_link": "/question-bank?search=Test+Cloud+Corp",
+    "updated_at": "2026-11-24T12:22:09.666476",
+    "created_at": "2026-11-24T12:22:09.666476"
+  },
+  {
     "id": "sched_imp_ascendion_level_2_2026-11-23",
     "company_name": "Ascendion",
     "round_name": "Level 2",
