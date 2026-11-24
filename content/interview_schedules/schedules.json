@@ -272,31 +272,37 @@
     "date": "2026-11-12",
     "start_time": "02:20 PM",
     "end_time": "03:20 PM",
-    "hr_email": "",
+    "hr_email": "support@select10x.com",
     "hr_phone": "",
+    "youtube_url": "https://youtu.be/zxmct0iX0kY",
     "status": "Completed",
     "cancellation_reason": "",
     "emails": [
       {
         "id": "em_9068df79",
-        "subject": "Interview Confirmation - S10x Inc. (Level 1)",
-        "body": "Interview invitation for Nagaraj - S10x Inc. - Level 1 on 2026-11-12 at 02:20 PM.\n\nMode: Video Conference / Technical Assessment.",
+        "subject": "Fwd: S10x Inc | Self-Guided Online Interview | Qualify Directly for Final Round",
+        "body": "From: Select10x Support <support@select10x.com>\nDate: Thu, 12 Nov, 2026, 12:15 pm\nSubject: S10x Inc | Self-Guided Online Interview | Qualify Directly for Final Round\nTo: Nagaraj Kamath <nagarajkamath701@gmail.com>\n\n\nSelect10X Logo\nMail\nDear Nagaraj Kamath,\n\nYou're invited to take the next step in your application for SRE DevOps at S10x Inc. Complete this single self guided online interview and assessment, and if successful, you'll proceed directly to the final interview.\n\nClick Here to start your assessment now.\n\nThe link expires very soon.\n\nAll the best!\n\nS10x Inc\n\nPowered by Select10X Logo",
         "date": "2026-11-12"
       }
     ],
-    "screenshots": [],
-    "experience": "Attended Level 1 for S10x Inc.. Discussed 18 core DevOps architecture and troubleshooting questions recorded in Question Bank.",
+    "screenshots": [
+      {
+        "id": "sc_e8294049",
+        "filename": "20261124_141800_8a8868_Gmail_-_Fwd__S10x_Inc___Self-Guided_Online_Interview___Qualify_Directly_for_Final_Round.png",
+        "original_name": "Gmail - Fwd_ S10x Inc _ Self-Guided Online Interview _ Qualify Directly for Final Round.png",
+        "url": "/api/admin/interview-schedules/attachment/20261124_141800_8a8868_Gmail_-_Fwd__S10x_Inc___Self-Guided_Online_Interview___Qualify_Directly_for_Final_Round.png"
+      }
+    ],
+    "experience": "It was multiple choice questions and along with explaining my video by recording it. It was actually worst performance. I couldn't speak properly. I was so nervous and didn't know the proper answers to it. So gave small answers.",
     "transcript": "",
     "has_transcript": false,
     "round_id": "rnd_s10x_inc_level_1_113",
-    "question_count": 18,
-    "qb_link": "/question-bank?search=S10x Inc.#rnd_s10x_inc_level_1_113",
-    "created_at": "2026-11-24T09:48:09.781851",
-    "updated_at": "2026-11-24T09:48:09.781853",
     "round_order": 1,
     "next_round_id": "",
-    "indian_date": "12-Nov-2026",
-    "display_date": "12-Nov-2026"
+    "question_count": 18,
+    "qb_link": "/question-bank?search=S10x Inc.#rnd_s10x_inc_level_1_113",
+    "updated_at": "2026-11-24T14:20:09.559848",
+    "created_at": "2026-11-24T09:48:09.781851"
   },
   {
     "id": "sched_imp_grid_dynamics_level_1_2026-11-12",
@@ -334,6 +340,8 @@
     "question_count": 34,
     "qb_link": "/question-bank?search=Grid Dynamics#rnd_grid_dynamics_level_1_112",
     "updated_at": "2026-11-24T14:12:49.737969",
-    "created_at": "2026-11-24T09:48:09.781891"
+    "created_at": "2026-11-24T09:48:09.781891",
+    "indian_date": "12-Nov-2026",
+    "display_date": "12-Nov-2026"
   }
 ]
