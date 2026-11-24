@@ -1,5 +1,43 @@
 [
   {
+    "id": "sched_02a42dd178",
+    "company_name": "Straive",
+    "round_name": "Level 1",
+    "date": "2026-11-24",
+    "start_time": "3:00 PM",
+    "end_time": "3:30 PM",
+    "hr_email": "aniket.kasare@straive.com",
+    "hr_phone": "",
+    "youtube_url": "",
+    "status": "Cancelled",
+    "cancellation_reason": "No reason was mentioned by Roopa.",
+    "emails": [
+      {
+        "id": "em_1795536512478_he5h",
+        "subject": "Fwd: Invitation from an unknown sender: Tech 1_Interview _Nagaraj Kamath_ Senior DevOps Engineer_ @ Tue Nov 24, 2026 3pm - 3:30pm (IST) (nagarajkamath701@gmail.com)",
+        "body": "From: Aniket Kasare <aniket.kasare@straive.com>\nDate: Mon, Nov 23, 2026 at 12:19 PM\nSubject: Invitation from an unknown sender: Tech 1_Interview _Nagaraj Kamath_ Senior DevOps Engineer_ @ Tue Nov 24, 2026 3pm - 3:30pm (IST) (nagarajkamath701@gmail.com)\nTo: <nagarajkamath701@gmail.com>, Anshu Singh <anshu.singh@straive.com>\nCc: Nilesh Vinerkar <nilesh.vinerkar@straive.com>\n\n\n \nThis event isn't in your calendar yet\nYou haven't interacted with aniket.kasare@straive.com before. Do you want to automatically add this and future invitations from them to your calendar?\nAdd to calendar\n \nJoin with Google Meet\nMeeting link\nmeet.google.com/wif-siti-soo\nJoin by phone\n(US) +1 470-735-3261\nPIN: 556819795\n\nMore phone numbers\nAttachments\n\t\nNaukri_NagarajKamath[5...\n\t\nSenior DevOps Engineer...\n\t\nNagaraj Kamath Intervi...\nHello,\n\nYour profile has been shortlisted, and it’s time for a virtualinterview. \n\nPlease accept this calendar invitation. \n\nTo better manage the call and issues such as noise and  bandwidth, we ask that you take the followingsteps when joining the call:\n\nFind a quiet space\nBe prepared to have your video on\nHave headphones handy\nEnsure proper internet connection\n All the best.\n\n Please find the job description for yourreference.We hope this helps.\n\n If you have queries or need help, please contact Aniket kasare between 10 AM to 7:00 PM Monday to Friday. \n\n\nRegards,\n\nTalent Acquisition Team\n\nLearningMate\n\nWhen\nTuesday Nov 24, 2026 ⋅ 3pm – 3:30pm (India Standard Time - Kolkata)\nLocation\nG - Meet\nView map\nGuests\nAniket Kasare - organizer\nnagarajkamath701@gmail.com\nAnshu Singh\nNilesh Vinerkar - optional\nView all guest info\nReply for nagarajkamath701@gmail.com\nYes\nNo\nMaybe\nMore options\nInvitation from Google Calendar\n\nYou are receiving this email because you are subscribed to calendar notifications. To stop receiving these emails, go to Calendar settings, select this calendar, and change \"Other notifications\".\n\nForwarding this invitation could allow any recipient to send a response to the organizer, be added to the guest list, invite others regardless of their own invitation status, or modify your RSVP. Learn more",
+        "date": "2026-11-24"
+      },
+      {
+        "id": "em_1795536554174_dkda",
+        "subject": "Fwd: JD - Senior Devops Engineer",
+        "body": "From: Aniket Kasare <aniket.kasare@straive.com>\nDate: Mon, Nov 23, 2026 at 12:15 PM\nSubject: Fwd: JD - Senior Devops Engineer\nTo: <nagarajkamath701@gmail.com>\n\n\nHello Mate,\n\nPlease find the attached JD below:\n\n--\nThanks and Regards,\n\nAniket Nikita Umesh Kasare\n\nExecutive - Talent Acquisition | Straive\n\n7350180265/8600054708\n\n\nSenior DevOps Engineer__ (1).docx:\n\nAbout Us \n\nStraive Private Limited (Erstwhile LearningMate Solutions Pvt. Ltd) is is a global leader in data analytics and AI operationalization, helping enterprises embed advanced AI and data capabilities into core business workflows to deliver measurable business outcomes and ROI. With a workforce of ~20,000 professionals serving 350+clients across 30+ markets, Straive combines technical scale with deep domain expertise. A key differentiator is its network of over 6,000 subject matter experts who specialize in managing and enriching complex, unstructured data—enabling organizations to build AI systems grounded in accuracy, context, and business relevance. The company continues to earn recognition from leading industry analysts and was recently named a Leader in AIM’s 2026 Generative AI and Data Engineering PeMa Quadrants. Backed by EQT — a purpose-driven global investment organization which was ranked among the world’s leading private equity firms by PEI in 2025 — Straive is positioned as a high-value alternative to traditional IT services providers, combining domain-led intelligence with AI execution at scale.\n\nAbout the Role\nWe are seeking a highly motivated and experienced DevOps Engineer to join our growing engineering team. The ideal candidate will have 5–8 years of professional experience, a strong background in cloud infrastructure, CI/CD pipelines, and configuration management, and a passion for automating processes and improving system reliability. This role is pivotal in ensuring the stability, scalability, and performance of our core products.\n\nKey Responsibilities\n●\tCI/CD Pipeline Management: Design, implement, and maintain robust, automated continuous integration and continuous deployment (CI/CD) pipelines using tools like Team Foundation Server, Jenkins, GitLab CI, or GitHub Actions.\n●\tInfrastructure Management (IaC): Manage and provision cloud infrastructure (AWS (must have) /Azure/GCP (optional)) using Infrastructure as Code (IaC) tools, primarily Terraform or CloudFormation/ARM Templates.\n●\tWebservers: IIS, App pools, Apache, Nginx\n●\tExperience of the build and deployment process of  Microsoft .Net based web applications using MSBuild along with deployment scripts creation using Powershell on AWS servers and services.\n●\tExperience of the build and deployment process of Angular + Node and .Net core based web applications and containers using docker along with deployment scripts creation using shell + powershell  scripting  \n●\tContainerization & Orchestration: Deploy, scale, and manage containerized applications using Beanstalk, ECS, Docker and Kubernetes.\n●\tMonitoring and Alerting: Implement and manage comprehensive monitoring, logging, and alerting systems (Prometheus, Grafana, Datadog/NewRelic, ELK stack) to ensure high availability and proactive issue detection.\n●\tAutomation & Scripting: Write and maintain scripts (e.g., Powershell, Python, Bash, or Groovy) to automate repetitive tasks, system maintenance, and deployment processes.\n●\tSecurity & Compliance: Implement security best practices within the infrastructure and pipelines (e.g., vulnerability scanning, secret management).\n●\tCollaboration: Work closely with software development and QA teams to troubleshoot environment issues, define release strategies, and implement necessary infrastructure changes.\n●\tSystem Reliability: Participate in on-call rotations and incident response, perform root cause analysis, and continuously drive improvements for system reliability and performance.\n●\tCollaboration: Work closely with software development and QA teams, and interact directly with international stakeholders and customers to troubleshoot environment issues, define release strategies, and implement necessary infrastructure changes.\n●\tHands-on experience using Jira and Confluence within agile environments, collaborating closely with cross-functional teams through daily standups, sprint ceremonies, and regular team syncs to ensure transparent communication and efficient delivery.\n●\tHands-on experience integrating automated test suites into CI/CD pipelines, enabling continuous validation of application quality. Skilled in orchestrating unit, integration, and end-to-end tests within build workflows to ensure reliable deployments, faster feedback loops, and consistent delivery across environment\n\nRequired Qualifications & Skills (5–8 Years Experience)\n●\tProven experience (5–8 years) as a Sr. DevOps Engineer, Site Reliability Engineer (SRE), or similar role.\n●\tCloud Expertise: Expert-level proficiency with at least one major public cloud provider (AWS,).\n●\tContainerization: Deep working knowledge of Docker and experience with an orchestration platform like Kubernetes (K8s) & Amazon ECS.\n●\tIaC: Strong experience with Infrastructure as Code tools such as Terraform, Cloudformation.\n●\tCI/CD Tools: Extensive experience configuring and managing CI/CD tools (e.g., Jenkins, GitLab CI, GitHub Actions).\n●\tOperating Systems: Solid understanding of Linux/Unix administration and networking concepts.\n●\tScripting: Proficiency in at least one scripting language (e.g., Powershell, Python, Bash).\n●\tProblem-Solving: Excellent analytical and problem-solving skills, with a track record of troubleshooting complex distributed systems.\n●\tCommunication: Strong written and verbal communication skills, especially for documenting processes and communicating with cross-functional teams & customers\n\nGood to Have (Certifications & Extras)\n●\tCertifications: Professional certifications in Cloud Computing (e.g., AWS Certified DevOps Engineer - Professional, \n●\tConfiguration Management: Experience with configuration management tools like Ansible (optional)\n●\tZero downtime deployment, blue-green, rolling update concepts \n●\tAI toolsets & automation workflow tools. \n●\tDatabase Management: Experience with managing and optimizing SQL/NoSQL databases in a cloud environment.\n●\tNetworking: Knowledge of advanced networking concepts (VPC/VNet peering, load balancers, firewalls).\nSecurity Tools: Experience with service mesh technologies (e.g., Istio) or specialized security tooling.",
+        "date": "2026-11-24"
+      }
+    ],
+    "screenshots": [],
+    "experience": "Interview cancelled.",
+    "transcript": "",
+    "has_transcript": false,
+    "round_id": "",
+    "round_order": 1,
+    "next_round_id": "",
+    "question_count": 0,
+    "qb_link": "/question-bank?search=Straive",
+    "updated_at": "2026-11-24T16:11:28.176994",
+    "created_at": "2026-11-24T16:11:28.176994"
+  },
+  {
     "id": "sched_imp_ascendion_level_2_2026-11-23",
     "company_name": "Ascendion",
     "round_name": "Level 2",
@@ -237,7 +275,9 @@
     "question_count": 53,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_116",
     "updated_at": "2026-11-24T16:06:41.367795",
-    "created_at": "2026-11-24T09:48:09.781726"
+    "created_at": "2026-11-24T09:48:09.781726",
+    "indian_date": "17-Nov-2026",
+    "display_date": "17-Nov-2026"
   },
   {
     "id": "sched_35398aee41",

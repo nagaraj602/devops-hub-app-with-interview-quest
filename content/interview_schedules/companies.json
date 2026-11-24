@@ -52,5 +52,14 @@
     "avatar_bg": "#ffffff",
     "avatar_color": "#a21caf",
     "created_at": "2026-11-24T09:39:15.844863"
+  },
+  {
+    "id": "straive",
+    "name": "Straive",
+    "logo_url": "/static/images/logos/straive.png",
+    "initials": "ST",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#c2410c",
+    "created_at": "2026-11-24T16:11:28.176994"
   }
 ]
