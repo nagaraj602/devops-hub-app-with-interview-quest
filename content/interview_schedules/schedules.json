@@ -108,6 +108,7 @@
     "end_time": "05:30 PM",
     "hr_email": "",
     "hr_phone": "",
+    "youtube_url": "",
     "status": "Completed",
     "cancellation_reason": "",
     "emails": [
@@ -123,14 +124,12 @@
     "transcript": "",
     "has_transcript": false,
     "round_id": "rnd_ascendion_face_to_face_round_118",
+    "round_order": 2,
+    "next_round_id": "",
     "question_count": 41,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_face_to_face_round_118",
-    "created_at": "2026-11-24T09:48:09.781633",
-    "updated_at": "2026-11-24T09:48:09.781635",
-    "round_order": 2,
-    "next_round_id": "sched_imp_ascendion_level_1_2026-11-20",
-    "indian_date": "18-Nov-2026",
-    "display_date": "18-Nov-2026"
+    "updated_at": "2026-11-24T14:36:44.937450",
+    "created_at": "2026-11-24T09:48:09.781633"
   },
   {
     "id": "sched_imp_wissen_level_1_2026-11-17",
@@ -269,7 +268,9 @@
     "question_count": 61,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_120",
     "updated_at": "2026-11-24T14:35:27.898859",
-    "created_at": "2026-11-24T14:34:31.186152"
+    "created_at": "2026-11-24T14:34:31.186152",
+    "indian_date": "13-Nov-2026",
+    "display_date": "13-Nov-2026"
   },
   {
     "id": "sched_imp_hutech_solutions_level_1_2026-11-13",
