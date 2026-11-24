@@ -61,5 +61,14 @@
     "avatar_bg": "#ffffff",
     "avatar_color": "#c2410c",
     "created_at": "2026-11-24T16:11:28.176994"
+  },
+  {
+    "id": "o9_solutions",
+    "name": "O9 Solutions",
+    "logo_url": "/static/images/logos/o9_solutions.png",
+    "initials": "OS",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#c2410c",
+    "created_at": "2026-11-24T16:17:45.108160"
   }
 ]

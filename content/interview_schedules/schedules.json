@@ -1,5 +1,37 @@
 [
   {
+    "id": "sched_f3e0cbb45b",
+    "company_name": "O9 Solutions",
+    "round_name": "Level 1",
+    "date": "2026-11-24",
+    "start_time": "6:11 PM",
+    "end_time": "6:45 PM",
+    "hr_email": "support@hackerearth.com",
+    "hr_phone": "",
+    "youtube_url": "https://youtu.be/KOj9Gg6ZZMA",
+    "status": "Completed",
+    "cancellation_reason": "",
+    "emails": [
+      {
+        "id": "em_1795536968983_wrte",
+        "subject": "Fwd: Invitation for Senior DevOps Engineer by o9 Solutions",
+        "body": "From: o9 Solutions <support@hackerearth.com>\nDate: Tue, 24 Nov, 2026, 10:48 am\nSubject: Invitation for Senior DevOps Engineer by o9 Solutions\nTo: <nagarajkamath701@gmail.com>\n\n\nHi Nagaraj Kamath,\n\nYou have been invited to take Senior DevOps Engineer by o9 Solutions.\n\nTest Duration: 45 mins\nStart date: Nov 24, 2026 10:48 AM IST (Asia/Kolkata)\nEnd date: Nov 27, 2026 11:59 PM IST (Asia/Kolkata)\nStart test\nOR\nPaste the given link into your browser's address bar\nhttps://www.hackerearth.com/challenges/test/senior-devops-engineer-copy/?login=dc8bf73b2d97ffbebbf663afc9888515\nImportant\nYou can take this test anytime between the start date/time and end date/time.\nOnce the test starts, you cannot pause it. The test will run continuously for 45 mins.\nBefore you begin\nThe practice test helps you to get familiar with the HackerEarth platform and its proctoring settings.There is an automatic system-compatibility check in place before the test to check if your system is compatible for the test.\n\nBegin practice test\nRegards,\nTeam o9 Solutions",
+        "date": "2026-11-24"
+      }
+    ],
+    "screenshots": [],
+    "experience": "It was MCQ assessment. Few questions were very difficult, but few were very easy. I just randomly guessed it and answered few questions.",
+    "transcript": "",
+    "has_transcript": false,
+    "round_id": "",
+    "round_order": 1,
+    "next_round_id": "",
+    "question_count": 0,
+    "qb_link": "/question-bank?search=O9%20Solutions",
+    "updated_at": "2026-11-24T16:17:45.108160",
+    "created_at": "2026-11-24T16:17:45.108160"
+  },
+  {
     "id": "sched_02a42dd178",
     "company_name": "Straive",
     "round_name": "Level 1",
@@ -35,7 +67,9 @@
     "question_count": 0,
     "qb_link": "/question-bank?search=Straive",
     "updated_at": "2026-11-24T16:11:28.176994",
-    "created_at": "2026-11-24T16:11:28.176994"
+    "created_at": "2026-11-24T16:11:28.176994",
+    "indian_date": "24-Nov-2026",
+    "display_date": "24-Nov-2026"
   },
   {
     "id": "sched_imp_ascendion_level_2_2026-11-23",
