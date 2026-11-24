@@ -145,7 +145,7 @@ async def admin_portal_view(request: Request):
     for c in companies_list:
         c_name = c.get("name", "")
         c_scheds = schedules_by_company.get(c_name, [])
-        if not c_scheds and c_name.lower() == "google":
+        if not c_scheds:
             continue
 
         # Sort rounds inside company sequentially (Round 1 -> Round 2 -> Round 3 ...)
