@@ -1,5 +1,43 @@
 [
   {
+    "id": "sched_35398aee41",
+    "company_name": "Ascendion",
+    "round_name": "Level 1",
+    "date": "2026-11-13",
+    "start_time": "3:00 PM",
+    "end_time": "3:45 PM",
+    "hr_email": "vathsala.muniraju@ascendion.com",
+    "hr_phone": "+917349324478",
+    "youtube_url": "",
+    "status": "Cancelled",
+    "cancellation_reason": "On 12-Nov-2026, there was Microsoft outage started for all the services like Teams, Outlook and other cloud services across many regions. So Ascendion panels couldn't access Teams. So this interview was cancelled.",
+    "emails": [
+      {
+        "id": "em_1795530747978_nvw9",
+        "subject": "Fwd: Nagaraj Kamath with Ascendion",
+        "body": "From: Vathsala Muniraju <vathsala.muniraju@ascendion.com>\nDate: Thu, 12 Nov, 2026, 3:19 pm\nSubject: Nagaraj Kamath with Ascendion\nTo: nagarajkamath701@gmail.com <nagarajkamath701@gmail.com>\n\n\n\nPlease find Interview Details for DevOps Engineer at Ascendion:\n\nAgenda:\n\nL1 Interview_DevOps_AWS_Ascendion\n13 Nov 2026 | 3:00 PM - 3:45 PM Asia/Calcutta (IST)\nKarthik Bheemaraya\nVideo Conferencing Link: https://teams.microsoft.com/l/meetup-join/19%3ameeting_OGY1OWY4MjItYTMwOS00N2FmLTk4YzMtZWM5Yzc1YzI5NjI5%40thread.v2/0?context=%7b%22Tid%22%3a%22d7758e8f-1df3-489f-86b5-a2254f55f9cc%22%2c%22Oid%22%3a%2263a6adbf-977f-4db2-9a37-5e0707260de6%22%7d\nMeeting ID: 299934449444401\nPasscode: bu7hU9J2\n\nJob Description:\nhttps://jobs.ascendion.com/careers/job/1970324837574296\n\n________________________________\n CONFIDENTIALITY NOTICE:- This e-mail contains Privileged and Confidential Information intended solely for the use of the addressee(s). It shall not attach any liability on the sender or Ascendion or its affiliates. Any views or opinions presented in this email are solely those of the sender and may not necessarily reflect the opinions of Ascendion or its affiliates. If you are not the intended recipient, you should not disseminate, distribute or copy this e-mail. Please notify the sender immediately and destroy all copies of this message and any attachments. WARNING: Computer viruses can be transmitted via email. While Ascendion has taken reasonable precautions to minimize this risk, Ascendion accepts no liability for any damage that may be caused to you in the event that there is any virus in this e-mail or any attachments attached hereto. It is the addresses(s) duty to check and scan this email and any attachments attached hereto for the presence of viruses prior to opening the email. Thank you.",
+        "date": "2026-11-13"
+      },
+      {
+        "id": "em_1795530815778_nmbo",
+        "subject": "Fwd: Nagaraj, please confirm your meeting with Ascendion",
+        "body": "From: Vathsala Muniraju <vathsala.muniraju@careers.ascendion.com>\nDate: Thu, 12 Nov, 2026, 3:19 pm\nSubject: Nagaraj, please confirm your meeting with Ascendion\nTo: <nagarajkamath701@gmail.com>\n\n\nAscendion India Pvt. Ltd. logo\n\n\nHi Nagaraj,\n\nPlease click the button below to confirm your 45 minute meeting with Karthik Bheemaraya.\n\nIf you have any questions, feel free to reply to this email.\n\nThanks,\nVathsala Muniraju\nConfirm agenda\nJob Details\nBriefcase icon\tDevOps Engineer\nBuilding icon\tAscendion India Pvt. Ltd.\ncalendar icon\tMeeting Agenda\nL1 Interview_DevOps_AWS_Ascendion\nKarthik Bheemaraya\n13 Nov 2026\n3:00 PM - 3:45 PM Asia/Calcutta (IST)\nConferencing Link : https://teams.microsoft.com/l/meetup-join/19%3ameeting_OGY1OWY4MjItYTMwOS00N2FmLTk4YzMtZWM5Yzc1YzI5NjI5%40thread.v2/0?context=%7b%22Tid%22%3a%22d7758e8f-1df3-489f-86b5-a2254f55f9cc%22%2c%22Oid%22%3a%2263a6adbf-977f-4db2-9a37-5e0707260de6%22%7d",
+        "date": "2026-11-13"
+      }
+    ],
+    "screenshots": [],
+    "experience": "Since this interview was cancelled and HR told that, she will schedule on Monday or Tuesday.",
+    "transcript": "",
+    "has_transcript": false,
+    "round_id": "rnd_ascendion_level_1_120",
+    "round_order": 1,
+    "next_round_id": "sched_imp_ascendion_level_1_2026-11-17",
+    "question_count": 61,
+    "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_120",
+    "updated_at": "2026-11-24T14:34:31.186152",
+    "created_at": "2026-11-24T14:34:31.186152"
+  },
+  {
     "id": "sched_imp_ascendion_level_2_2026-11-23",
     "company_name": "Ascendion",
     "round_name": "Level 2",
@@ -268,7 +306,9 @@
     "question_count": 44,
     "qb_link": "/question-bank?search=Hutech Solutions#rnd_hutech_solutions_level_1_114",
     "updated_at": "2026-11-24T14:28:22.768030",
-    "created_at": "2026-11-24T09:48:09.781811"
+    "created_at": "2026-11-24T09:48:09.781811",
+    "indian_date": "13-Nov-2026",
+    "display_date": "13-Nov-2026"
   },
   {
     "id": "sched_imp_s10x_inc__level_1_2026-11-12",
