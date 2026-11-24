@@ -305,7 +305,9 @@
     "question_count": 42,
     "qb_link": "/question-bank?search=Wissen#rnd_wissen_level_1_115",
     "updated_at": "2026-11-24T16:56:18.725981",
-    "created_at": "2026-11-24T09:48:09.781770"
+    "created_at": "2026-11-24T09:48:09.781770",
+    "indian_date": "17-Nov-2026",
+    "display_date": "17-Nov-2026"
   },
   {
     "id": "sched_imp_c_ahead_technologies_level_1_2026-11-17",
@@ -365,6 +367,12 @@
         "subject": "Fwd: Nagaraj Kamath with Ascendion",
         "body": "From: Vathsala Muniraju <vathsala.muniraju@ascendion.com>\nDate: Sat, Nov 14, 2026 at 8:04 PM\nSubject: Nagaraj Kamath with Ascendion\nTo: nagarajkamath701@gmail.com <nagarajkamath701@gmail.com>\n\n\n\nPlease find Interview Details at Ascendion:\n\nAgenda:\n\nL1 Interview_DevOps_AWS_Ascendion\n17 Nov 2026 | 2:00 PM - 2:45 PM Asia/Calcutta (IST)\nKarthik Bheemaraya\nVideo Conferencing Link: https://teams.microsoft.com/l/meetup-join/19%3ameeting_ODk1OTFmYTMtNTFmZC00ZjZlLTk1OTktYjcyYzBhMmY0YWJl%40thread.v2/0?context=%7b%22Tid%22%3a%22d7758e8f-1df3-489f-86b5-a2254f55f9cc%22%2c%22Oid%22%3a%2263a6adbf-977f-4db2-9a37-5e0707260de6%22%7d\nMeeting ID: 2256186550803526\nPasscode: gv3iY2vE\n\n________________________________\n CONFIDENTIALITY NOTICE:- This e-mail contains Privileged and Confidential Information intended solely for the use of the addressee(s). It shall not attach any liability on the sender or Ascendion or its affiliates. Any views or opinions presented in this email are solely those of the sender and may not necessarily reflect the opinions of Ascendion or its affiliates. If you are not the intended recipient, you should not disseminate, distribute or copy this e-mail. Please notify the sender immediately and destroy all copies of this message and any attachments. WARNING: Computer viruses can be transmitted via email. While Ascendion has taken reasonable precautions to minimize this risk, Ascendion accepts no liability for any damage that may be caused to you in the event that there is any virus in this e-mail or any attachments attached hereto. It is the addresses(s) duty to check and scan this email and any attachments attached hereto for the presence of viruses prior to opening the email. Thank you.",
         "date": "2026-11-17"
+      },
+      {
+        "id": "em_1795539404911_1qwt",
+        "subject": "Fwd: Nagaraj Kamath with Ascendion",
+        "body": "From: Vathsala Muniraju <vathsala.muniraju@ascendion.com>\nDate: Mon, Nov 16, 2026 at 10:50 AM\nSubject: Nagaraj Kamath with Ascendion\nTo: nagarajkamath701@gmail.com <nagarajkamath701@gmail.com>\n\n\n\nPlease find Interview Details at Ascendion:\n\nAgenda:\n\nL1 Interview_DevOps_AWS_Ascendion\n17 Nov 2026 | 3:00 PM - 3:45 PM Asia/Calcutta (IST)\nKarthik Bheemaraya\nVideo Conferencing Link: https://teams.microsoft.com/l/meetup-join/19%3ameeting_NjU3YjAyNDUtM2E2Mi00ZDViLWEwYzItYTgxNGU0YTM0OGI5%40thread.v2/0?context=%7b%22Tid%22%3a%22d7758e8f-1df3-489f-86b5-a2254f55f9cc%22%2c%22Oid%22%3a%2263a6adbf-977f-4db2-9a37-5e0707260de6%22%7d\nMeeting ID: 2608678111930491\nPasscode: V6V5PA26\n\n________________________________\n CONFIDENTIALITY NOTICE:- This e-mail contains Privileged and Confidential Information intended solely for the use of the addressee(s). It shall not attach any liability on the sender or Ascendion or its affiliates. Any views or opinions presented in this email are solely those of the sender and may not necessarily reflect the opinions of Ascendion or its affiliates. If you are not the intended recipient, you should not disseminate, distribute or copy this e-mail. Please notify the sender immediately and destroy all copies of this message and any attachments. WARNING: Computer viruses can be transmitted via email. While Ascendion has taken reasonable precautions to minimize this risk, Ascendion accepts no liability for any damage that may be caused to you in the event that there is any virus in this e-mail or any attachments attached hereto. It is the addresses(s) duty to check and scan this email and any attachments attached hereto for the presence of viruses prior to opening the email. Thank you.",
+        "date": "2026-11-17"
       }
     ],
     "screenshots": [],
@@ -376,10 +384,8 @@
     "next_round_id": "sched_imp_ascendion_face_to_face_round_2026-11-18",
     "question_count": 53,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_116",
-    "updated_at": "2026-11-24T16:06:41.367795",
-    "created_at": "2026-11-24T09:48:09.781726",
-    "indian_date": "17-Nov-2026",
-    "display_date": "17-Nov-2026"
+    "updated_at": "2026-11-24T16:57:05.649175",
+    "created_at": "2026-11-24T09:48:09.781726"
   },
   {
     "id": "sched_35398aee41",
