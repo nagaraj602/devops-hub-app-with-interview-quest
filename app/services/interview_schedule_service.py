@@ -4,6 +4,7 @@ import json
 import uuid
 import base64
 import mimetypes
+import html as html_lib
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
@@ -876,15 +877,16 @@ class InterviewScheduleService:
             emails_html = ""
             for em_i, em in enumerate(s.get("emails", []), 1):
                 subj = em.get("subject", "No Subject")
-                body = em.get("body", "").replace("\n", "<br>")
+                em_lines = em.get("body", "").split("\n")
+                em_paras = "".join([f'<p style="margin:0 0 3px 0; font-size:10px; line-height:1.35; color:#334155;">{html_lib.escape(l)}</p>' for l in em_lines if l.strip()])
                 emails_html += f"""
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; margin-bottom:8px;">
-                    <div style="font-weight:bold; color:#1e293b; font-size:13px; margin-bottom:4px;">Email #{em_i}: {subj}</div>
-                    <div style="color:#334155; font-size:12px; line-height:1.5;">{body}</div>
+                <div style="background:#f8fafc; border-left:3px solid #64748b; padding:8px 12px; margin-bottom:8px;">
+                    <div style="font-weight:bold; color:#1e293b; font-size:11px; margin-bottom:4px;">Email #{em_i}: {html_lib.escape(subj)}</div>
+                    {em_paras}
                 </div>
                 """
             if not emails_html:
-                emails_html = "<div style='color:#94a3b8; font-size:12px; font-style:italic;'>No email body recorded.</div>"
+                emails_html = "<div style='color:#94a3b8; font-size:11px; font-style:italic;'>No email body recorded.</div>"
 
             # Screenshots HTML
             screens_html = ""
@@ -894,72 +896,82 @@ class InterviewScheduleService:
 
                 if img_src:
                     screens_html += f"""
-                    <div style="margin-top:10px; margin-bottom:12px;">
-                        <div style="font-size:11px; color:#64748b; margin-bottom:4px;">Attached: <strong>{sc.get('original_name', fname)}</strong></div>
-                        <img src="{img_src}" style="max-width:100%; border:1px solid #cbd5e1; border-radius:6px;" alt="Email Screenshot" />
+                    <div style="margin-top:8px; margin-bottom:12px;">
+                        <div style="font-size:10px; color:#64748b; margin-bottom:4px;">Attached: <strong>{sc.get('original_name', fname)}</strong></div>
+                        <img src="{img_src}" style="max-width:100%; border:1px solid #cbd5e1; border-radius:4px;" alt="Email Screenshot" />
                     </div>
                     """
                 else:
-                    screens_html += f"<div style='font-size:12px; color:#64748b;'>Attached: {sc.get('original_name', fname)} (File: {fname})</div>"
+                    screens_html += f"<div style='font-size:11px; color:#64748b;'>Attached: {sc.get('original_name', fname)} (File: {fname})</div>"
+
+            # Candidate Experience HTML
+            exp_paras = ""
+            if exp:
+                exp_lines = exp.split("\n")
+                exp_paras = "".join([f'<p style="margin:0 0 3px 0; font-size:11px; line-height:1.4; color:#334155;">{html_lib.escape(l)}</p>' for l in exp_lines if l.strip()])
+            else:
+                exp_paras = '<span style="color:#94a3b8; font-style:italic; font-size:11px;">No experience summary recorded.</span>'
 
             # Transcript block
             transcript_html = ""
             if has_transcript and transcript:
-                formatted_transcript = transcript.replace("\n", "<br>")
-                transcript_html = f"<div style='background:#f1f5f9; padding:10px 14px; border-radius:6px; font-size:11px; line-height:1.4; color:#1e293b;'>{formatted_transcript}</div>"
+                t_lines = transcript.split("\n")
+                t_paras = "".join([f'<p style="margin:0 0 3px 0; font-size:10px; line-height:1.35; color:#1e293b;">{html_lib.escape(l)}</p>' for l in t_lines if l.strip()])
+                transcript_html = f"<div style='background:#f8fafc; border-left:3px solid #10b981; padding:8px 12px; margin-top:4px;'>{t_paras}</div>"
             else:
-                transcript_html = "<div style='color:#94a3b8; font-size:12px; font-style:italic;'>No transcript available / Not recorded</div>"
+                transcript_html = "<div style='color:#94a3b8; font-size:11px; font-style:italic;'>No transcript available / Not recorded</div>"
 
             page_break = "page-break-before:always;" if idx > 1 else ""
             items_html.append(f"""
-            <div style="border:1px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:24px; {page_break}">
-                <div style="border-bottom:2px solid #0284c7; padding-bottom:8px; margin-bottom:12px;">
+            <div style="{page_break} margin-top:20px; padding-top:10px;">
+                <div style="border-bottom:2px solid #0284c7; padding-bottom:6px; margin-bottom:10px;">
                     <table style="width:100%; border-collapse:collapse;">
                         <tr>
-                            <td style="font-size:18px; font-weight:bold; color:#0f172a;">{idx}. {comp} &mdash; {rnd}</td>
+                            <td style="font-size:16px; font-weight:bold; color:#0f172a;">{idx}. {comp} &mdash; {rnd}</td>
                             <td style="text-align:right;">
-                                <span style="background:{status_color}; color:#ffffff; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; text-transform:uppercase;">{status}</span>
+                                <span style="background:{status_color}; color:#ffffff; padding:3px 8px; border-radius:10px; font-size:10px; font-weight:bold; text-transform:uppercase;">{status}</span>
                             </td>
                         </tr>
                     </table>
                 </div>
 
-                <table style="width:100%; border-collapse:collapse; margin-bottom:12px; font-size:12px;">
+                <table style="width:100%; border-collapse:collapse; margin-bottom:10px; font-size:11px;">
                     <tr>
-                        <td style="width:50%; padding:4px 0; color:#475569;"><strong>Date & Time:</strong> {date_val} ({start_t} &ndash; {end_t})</td>
-                        <td style="width:50%; padding:4px 0; color:#475569;"><strong>HR Email:</strong> {hr_mail}</td>
+                        <td style="width:50%; padding:3px 0; color:#475569;"><strong>Date & Time:</strong> {date_val} ({start_t} &ndash; {end_t})</td>
+                        <td style="width:50%; padding:3px 0; color:#475569;"><strong>HR Email:</strong> {hr_mail}</td>
                     </tr>
                     <tr>
-                        <td style="padding:4px 0; color:#475569;"><strong>HR Phone:</strong> {hr_ph}</td>
-                        <td style="padding:4px 0; color:#475569;"><strong>Questions Count:</strong> {s.get('question_count', 0)} questions documented</td>
+                        <td style="padding:3px 0; color:#475569;"><strong>HR Phone:</strong> {hr_ph}</td>
+                        <td style="padding:3px 0; color:#475569;"><strong>Questions Count:</strong> {s.get('question_count', 0)} questions documented</td>
                     </tr>
-                    {f"<tr><td colspan='2' style='padding:4px 0; color:#dc2626;'><strong>YouTube Recording:</strong> <a href='{s.get('youtube_url')}' style='color:#dc2626;'>{s.get('youtube_url')}</a></td></tr>" if s.get('youtube_url') else ""}
-                    {f"<tr><td colspan='2' style='padding:4px 0; color:#dc2626;'><strong>Cancellation Note:</strong> {s.get('cancellation_reason')}</td></tr>" if s.get('cancellation_reason') else ""}
+                    {f"<tr><td colspan='2' style='padding:3px 0; color:#dc2626;'><strong>YouTube Recording:</strong> <a href='{s.get('youtube_url')}' style='color:#dc2626;'>{s.get('youtube_url')}</a></td></tr>" if s.get('youtube_url') else ""}
+                    {f"<tr><td colspan='2' style='padding:3px 0; color:#dc2626;'><strong>Cancellation Note:</strong> {s.get('cancellation_reason')}</td></tr>" if s.get('cancellation_reason') else ""}
                 </table>
 
-                <div style="margin-top:10px;">
-                    <h4 style="margin:0 0 6px 0; font-size:13px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Email Communications</h4>
+                <div style="margin-top:8px;">
+                    <h4 style="margin:0 0 4px 0; font-size:11px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Email Communications</h4>
                     {emails_html}
                 </div>
 
                 {f'''
-                <div style="margin-top:14px;">
-                    <h4 style="margin:0 0 6px 0; font-size:13px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Screenshot Proof & Email Capture</h4>
+                <div style="margin-top:10px;">
+                    <h4 style="margin:0 0 4px 0; font-size:11px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Screenshot Proof & Email Capture</h4>
                     {screens_html}
                 </div>
                 ''' if screens_html else ''}
 
-                <div style="margin-top:14px;">
-                    <h4 style="margin:0 0 6px 0; font-size:13px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Candidate Experience & Reflections</h4>
-                    <div style="background:#f8fafc; border-left:4px solid #0284c7; padding:10px 14px; font-size:12px; color:#334155; line-height:1.5;">
-                        {exp.replace(chr(10), '<br>') if exp else '<span style=\"color:#94a3b8; font-style:italic;\">No experience summary recorded.</span>'}
+                <div style="margin-top:10px;">
+                    <h4 style="margin:0 0 4px 0; font-size:11px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Candidate Experience & Reflections</h4>
+                    <div style="background:#f8fafc; border-left:3px solid #0284c7; padding:8px 12px; font-size:11px; color:#334155; line-height:1.4;">
+                        {exp_paras}
                     </div>
                 </div>
 
-                <div style="margin-top:14px;">
-                    <h4 style="margin:0 0 6px 0; font-size:13px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Interview Transcript</h4>
+                <div style="margin-top:10px;">
+                    <h4 style="margin:0 0 4px 0; font-size:11px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Interview Transcript</h4>
                     {transcript_html}
                 </div>
+                <div style="border-bottom:1px solid #e2e8f0; margin-top:20px; margin-bottom:10px;"></div>
             </div>
             """)
 
