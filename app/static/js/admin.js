@@ -28,18 +28,27 @@ function formatIndianDate(dateStr) {
   return str;
 }
 
+/* Global State */
+let hubState = {
+  schedules: [],
+  companies: [],
+  rounds: [],
+  weeklyData: null,
+  monthlyData: null,
+  activeEmails: [],
+  activeScreenshots: [],
+  currentWeekDate: null,
+  currentMonthStr: null,
+  activeView: "week", // 'week' or 'month'
+  activeFilterDate: null
+};
+
 function bootstrapAdminPortal() {
   initAdminTabs();
   initAdminToggles();
   initAdminAuthForm();
   initAdminLogout();
   initInterviewActivityHub();
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootstrapAdminPortal);
-} else {
-  bootstrapAdminPortal();
 }
 
 /* ==============================================================================
@@ -73,19 +82,6 @@ function initAdminTabs() {
 /* ==============================================================================
    2. Interview Activity Hub & Dashboard
    ============================================================================== */
-let hubState = {
-  schedules: [],
-  companies: [],
-  rounds: [],
-  weeklyData: null,
-  monthlyData: null,
-  activeEmails: [],
-  activeScreenshots: [],
-  currentWeekDate: null,
-  currentMonthStr: null,
-  activeView: "week", // 'week' or 'month'
-  activeFilterDate: null
-};
 
 function initInterviewActivityHub() {
   // Read embedded JSON data if present for zero-latency instant startup
@@ -166,56 +162,75 @@ function updateDatalists(companies, rounds) {
 function initGraphViewSwitcher() {
   const btnWeek = document.getElementById("btnViewWeek");
   const btnMonth = document.getElementById("btnViewMonth");
+
+  if (btnWeek) {
+    btnWeek.addEventListener("click", () => window.switchGraphView("week"));
+  }
+
+  if (btnMonth) {
+    btnMonth.addEventListener("click", () => window.switchGraphView("month"));
+  }
+}
+
+window.switchGraphView = function(view) {
+  const btnWeek = document.getElementById("btnViewWeek");
+  const btnMonth = document.getElementById("btnViewMonth");
   const weekView = document.getElementById("weekActivityView");
   const monthView = document.getElementById("monthActivityView");
   const weekNav = document.getElementById("weekNavControls");
   const monthNav = document.getElementById("monthNavControls");
   const mainTitle = document.getElementById("activityGraphMainTitle");
 
-  if (btnWeek) {
-    btnWeek.addEventListener("click", () => {
-      hubState.activeView = "week";
-      btnWeek.classList.add("active");
-      if (btnMonth) btnMonth.classList.remove("active");
+  if (view === "month") {
+    hubState.activeView = "month";
+    if (btnMonth) btnMonth.classList.add("active");
+    if (btnWeek) btnWeek.classList.remove("active");
 
-      if (weekView) weekView.style.display = "block";
-      if (monthView) monthView.style.display = "none";
+    if (weekView) {
+      weekView.style.display = "none";
+      weekView.classList.remove("active");
+    }
+    if (monthView) {
+      monthView.style.display = "block";
+      monthView.classList.add("active");
+    }
 
-      if (weekNav) weekNav.style.display = "flex";
-      if (monthNav) monthNav.style.display = "none";
+    if (weekNav) weekNav.style.display = "none";
+    if (monthNav) monthNav.style.display = "flex";
 
-      if (mainTitle) mainTitle.textContent = "Weekly Interview Dynamics";
+    if (mainTitle) mainTitle.textContent = "Monthly Interview Calendar";
 
-      const label = document.getElementById("activityRangeLabel");
-      if (label && hubState.weeklyData) {
-        label.textContent = hubState.weeklyData.formatted_week_label || `${hubState.weeklyData.week_start} - ${hubState.weeklyData.week_end}`;
-      }
-      updateFooterMetrics(hubState.weeklyData);
-    });
+    if (hubState.monthlyData) {
+      renderMonthMatrix(hubState.monthlyData);
+    } else {
+      fetchMonthlyData(hubState.currentMonthStr);
+    }
+  } else {
+    hubState.activeView = "week";
+    if (btnWeek) btnWeek.classList.add("active");
+    if (btnMonth) btnMonth.classList.remove("active");
+
+    if (weekView) {
+      weekView.style.display = "block";
+      weekView.classList.add("active");
+    }
+    if (monthView) {
+      monthView.style.display = "none";
+      monthView.classList.remove("active");
+    }
+
+    if (weekNav) weekNav.style.display = "flex";
+    if (monthNav) monthNav.style.display = "none";
+
+    if (mainTitle) mainTitle.textContent = "Weekly Interview Dynamics";
+
+    const label = document.getElementById("activityRangeLabel");
+    if (label && hubState.weeklyData) {
+      label.textContent = hubState.weeklyData.formatted_week_label || `${hubState.weeklyData.week_start} - ${hubState.weeklyData.week_end}`;
+    }
+    updateFooterMetrics(hubState.weeklyData);
   }
-
-  if (btnMonth) {
-    btnMonth.addEventListener("click", () => {
-      hubState.activeView = "month";
-      btnMonth.classList.add("active");
-      if (btnWeek) btnWeek.classList.remove("active");
-
-      if (weekView) weekView.style.display = "none";
-      if (monthView) monthView.style.display = "block";
-
-      if (weekNav) weekNav.style.display = "none";
-      if (monthNav) monthNav.style.display = "flex";
-
-      if (mainTitle) mainTitle.textContent = "Monthly Interview Calendar";
-
-      if (hubState.monthlyData) {
-        renderMonthMatrix(hubState.monthlyData);
-      } else {
-        fetchMonthlyData(hubState.currentMonthStr);
-      }
-    });
-  }
-}
+};
 
 function updateFooterMetrics(data) {
   if (!data) return;
@@ -2005,4 +2020,11 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+/* Bootstrap execution after all definitions are loaded */
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootstrapAdminPortal);
+} else {
+  bootstrapAdminPortal();
 }
