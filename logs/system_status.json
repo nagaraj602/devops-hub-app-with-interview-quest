@@ -12,7 +12,7 @@
   "last_synced": "2026-11-25 10:15:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "admin_port": 9256,
-  "last_event": "Release v1.0.47: Eliminate duplicate question text across assessment questions; streamline question context with direct tables & badges"
+  "last_event": "Release v1.0.48: Enable clicking on Question Context Box (tables, choices, code) to toggle AI answer drawer"
 }

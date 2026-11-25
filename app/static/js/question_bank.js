@@ -620,10 +620,16 @@ function initQuestionToggles() {
       return;
     }
 
-    // Question header click (toggles question answer)
+    // Question header or context click (toggles question answer)
     const qHeader = e.target.closest(".question-header");
-    if (qHeader) {
-      const qItem = qHeader.closest(".question-item");
+    const qContext = e.target.closest(".question-context-box");
+    if ((qHeader || qContext) && !e.target.closest("button") && !e.target.closest("a")) {
+      // Don't toggle if user is selecting/highlighting text
+      const selection = window.getSelection();
+      if (selection && selection.toString().trim().length > 0) {
+        return;
+      }
+      const qItem = (qHeader || qContext).closest(".question-item");
       if (qItem) {
         qItem.classList.toggle("expanded");
       }
