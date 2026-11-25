@@ -85,11 +85,17 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "synchronoss": "synchronoss.com",
     "synchronoss technologies": "synchronoss.com",
     "broadridge": "broadridge.com",
-    "braodridge": "broadridge.com"
+    "braodridge": "broadridge.com",
+    "o9": "o9solutions.com",
+    "o9 solutions": "o9solutions.com",
+    "o9solutions": "o9solutions.com"
 }
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "o9": "/static/images/logos/o9_solutions.png",
+    "o9 solutions": "/static/images/logos/o9_solutions.png",
+    "o9solutions": "/static/images/logos/o9_solutions.png",
     "synchronoss": "/static/images/logos/synchronoss.png",
     "synchronoss technologies": "/static/images/logos/synchronoss.png",
     "broadridge": "/static/images/logos/broadridge.png",
