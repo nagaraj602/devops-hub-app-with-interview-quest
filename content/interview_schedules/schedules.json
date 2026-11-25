@@ -1,7 +1,7 @@
 [
   {
     "id": "sched_c85ddda979",
-    "company_name": "O9 Solutions",
+    "company_name": "o9 Solutions",
     "round_name": "Level 1",
     "date": "2026-11-26",
     "start_time": "3:00 PM",
@@ -28,10 +28,8 @@
     "next_round_id": "",
     "question_count": 0,
     "qb_link": "/question-bank?search=O9%20Solutions",
-    "updated_at": "2026-11-25T10:53:48.822018",
-    "created_at": "2026-11-25T10:52:54.394552",
-    "indian_date": "26-Nov-2026",
-    "display_date": "26-Nov-2026"
+    "updated_at": "2026-11-25T10:54:45.795253",
+    "created_at": "2026-11-25T10:52:54.394552"
   },
   {
     "id": "sched_f3e0cbb45b",
@@ -63,7 +61,9 @@
     "question_count": 0,
     "qb_link": "/question-bank?search=O9%20Solutions",
     "updated_at": "2026-11-25T10:54:31.130050",
-    "created_at": "2026-11-24T16:17:45.108160"
+    "created_at": "2026-11-24T16:17:45.108160",
+    "indian_date": "24-Nov-2026",
+    "display_date": "24-Nov-2026"
   },
   {
     "id": "sched_02a42dd178",
