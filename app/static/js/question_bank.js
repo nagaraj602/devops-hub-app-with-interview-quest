@@ -545,8 +545,10 @@ window.copyQuestionText = function(qId, event) {
   const qCard = document.getElementById(qId);
   if (!qCard) return;
   const qText = qCard.querySelector(".question-text")?.textContent?.trim() || "";
-  if (qText) {
-    copyTextToClipboard(qText, "Question copied to clipboard!");
+  const ctxText = qCard.querySelector(".question-context-box")?.textContent?.trim() || "";
+  const fullText = ctxText ? `${qText}\n\n${ctxText}` : qText;
+  if (fullText) {
+    copyTextToClipboard(fullText, "Question copied to clipboard!");
     const btn = event ? (event.currentTarget || event.target.closest("button")) : qCard.querySelector(".copy-q-btn");
     if (btn) {
       const icon = btn.querySelector("i");

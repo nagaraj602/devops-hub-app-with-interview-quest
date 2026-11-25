@@ -246,8 +246,16 @@ class QuestionBankService:
             c_name = current_company
             r_name = current_round_name or "Technical Round"
 
-            if not ans_clean or len(ans_clean) < 15:
-                ans_clean = get_fallback_answer_for_question(q_clean, c_name, r_name)
+            # Check if there is an assessment context block (table / statements / choices) separated from the answer
+            q_context = ""
+            actual_ans = ans_clean
+            if ("### 📋" in ans_clean or "Assessment Question" in ans_clean) and ("\n---" in ans_clean):
+                parts = re.split(r'\n---+\s*\n?', ans_clean, maxsplit=1)
+                q_context = parts[0].strip()
+                actual_ans = parts[1].strip() if len(parts) > 1 else ""
+
+            if not actual_ans or len(actual_ans) < 15:
+                actual_ans = get_fallback_answer_for_question(q_clean, c_name, r_name)
 
             norm_cat = detect_category_from_text(q_clean, ans_clean, current_category)
             category_counts[norm_cat] = category_counts.get(norm_cat, 0) + 1
@@ -256,9 +264,11 @@ class QuestionBankService:
             q_entry = {
                 "id": q_id,
                 "question": q_clean,
-                "answer": ans_clean,
-                "answer_html": render_md(ans_clean),
-                "has_answer": bool(ans_clean),
+                "question_context": q_context,
+                "question_context_html": render_md(q_context) if q_context else "",
+                "answer": actual_ans,
+                "answer_html": render_md(actual_ans),
+                "has_answer": bool(actual_ans),
                 "is_sub_q": is_sub_q,
                 "category": norm_cat,
                 "source_file": fname,
@@ -446,8 +456,17 @@ class QuestionBankService:
             ans_clean = "\n".join(current_answer_lines).strip()
             ans_clean = re.sub(r'^(?:\*{0,2}Answer:\*{0,2}\s*)', '', ans_clean).strip()
             q_clean = re.sub(r'^\*+|\*+$', '', current_q_text.strip()).strip()
-            if not ans_clean or len(ans_clean) < 15:
-                ans_clean = get_fallback_answer_for_question(q_clean, comp_name, current_round)
+
+            # Check if there is an assessment context block (table / statements / choices) separated from the answer
+            q_context = ""
+            actual_ans = ans_clean
+            if ("### 📋" in ans_clean or "Assessment Question" in ans_clean) and ("\n---" in ans_clean):
+                parts = re.split(r'\n---+\s*\n?', ans_clean, maxsplit=1)
+                q_context = parts[0].strip()
+                actual_ans = parts[1].strip() if len(parts) > 1 else ""
+
+            if not actual_ans or len(actual_ans) < 15:
+                actual_ans = get_fallback_answer_for_question(q_clean, comp_name, current_round)
 
             norm_cat = detect_category_from_text(q_clean, ans_clean, current_cat)
             category_counts[norm_cat] = category_counts.get(norm_cat, 0) + 1
@@ -456,9 +475,11 @@ class QuestionBankService:
             q_entry = {
                 "id": q_id,
                 "question": q_clean,
-                "answer": ans_clean,
-                "answer_html": render_md(ans_clean),
-                "has_answer": bool(ans_clean),
+                "question_context": q_context,
+                "question_context_html": render_md(q_context) if q_context else "",
+                "answer": actual_ans,
+                "answer_html": render_md(actual_ans),
+                "has_answer": bool(actual_ans),
                 "is_sub_q": False,
                 "category": norm_cat,
                 "source_file": fname,
@@ -650,7 +671,8 @@ class QuestionBankService:
                         if s:
                             q_text = q.get("question", "").lower()
                             q_ans = q.get("answer", "").lower()
-                            if not (comp_name_matches or round_name_matches or s in q_cat or s in q_text or s in q_ans):
+                            q_ctx = q.get("question_context", "").lower()
+                            if not (comp_name_matches or round_name_matches or s in q_cat or s in q_text or s in q_ctx or s in q_ans):
                                 continue
 
                         matching_qs.append(q)

@@ -12,7 +12,7 @@
   "last_synced": "2026-11-25 10:15:00",
   "git_storage": "https://github.com/nagaraj602/devops-hub-app-with-interview-quest.git",
   "status": "Healthy",
-  "version": "1.0.45",
+  "version": "1.0.46",
   "admin_port": 9256,
-  "last_event": "Release v1.0.45: Add o9 Solutions Online Assessment Q&As (30 Qs) adhering to profile, local logo & cache sync"
+  "last_event": "Release v1.0.46: Display question context & tables directly in Question Card with dedicated styling and clean AI answer drawer"
 }
