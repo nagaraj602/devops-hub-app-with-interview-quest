@@ -247,9 +247,11 @@ class QuestionBankService:
             r_name = current_round_name or "Technical Round"
 
             # Check if there is an assessment context block (table / statements / choices) separated from the answer
+            # Restricted strictly to o9 Solutions assessment questions
             q_context = ""
             actual_ans = ans_clean
-            if ("\n---" in ans_clean) and ("|" in ans_clean or "Answer Choices" in ans_clean or "### 📋" in ans_clean):
+            is_o9_assessment = ("o9" in c_name.lower()) and ("Answer Choices" in ans_clean) and ("\n---" in ans_clean)
+            if is_o9_assessment:
                 parts = re.split(r'\n---+\s*\n?', ans_clean, maxsplit=1)
                 raw_ctx = parts[0].strip()
                 # Clean context: strip blockquotes, redundant headers, or repeated prompts if any
@@ -474,33 +476,8 @@ class QuestionBankService:
             ans_clean = re.sub(r'^(?:\*{0,2}Answer:\*{0,2}\s*)', '', ans_clean).strip()
             q_clean = re.sub(r'^\*+|\*+$', '', current_q_text.strip()).strip()
 
-            # Check if there is an assessment context block (table / statements / choices) separated from the answer
-            q_context = ""
-            actual_ans = ans_clean
-            if ("\n---" in ans_clean) and ("|" in ans_clean or "Answer Choices" in ans_clean or "### 📋" in ans_clean):
-                parts = re.split(r'\n---+\s*\n?', ans_clean, maxsplit=1)
-                raw_ctx = parts[0].strip()
-                # Clean context: strip blockquotes, redundant headers, or repeated prompts if any
-                ctx_lines = [re.sub(r"^>\s?", "", line) for line in raw_ctx.split("\n")]
-                clean_lines = []
-                found_table_or_code = False
-                for line in ctx_lines:
-                    s_line = line.strip()
-                    if re.match(r"^#{1,4}\s*📋", s_line):
-                        continue
-                    if not found_table_or_code:
-                        if s_line.startswith("```") or s_line.startswith("|"):
-                            found_table_or_code = True
-                            clean_lines.append(line)
-                        elif s_line.startswith("**Answer Choices") or s_line.startswith("Answer Choices:"):
-                            clean_lines.append(line)
-                    else:
-                        clean_lines.append(line)
-                q_context = "\n".join(clean_lines).strip() if clean_lines else raw_ctx
-                actual_ans = parts[1].strip() if len(parts) > 1 else ""
-
-            if not actual_ans or len(actual_ans) < 15:
-                actual_ans = get_fallback_answer_for_question(q_clean, comp_name, current_round)
+            if not ans_clean or len(ans_clean) < 15:
+                ans_clean = get_fallback_answer_for_question(q_clean, comp_name, current_round)
 
             norm_cat = detect_category_from_text(q_clean, ans_clean, current_cat)
             category_counts[norm_cat] = category_counts.get(norm_cat, 0) + 1
@@ -509,11 +486,9 @@ class QuestionBankService:
             q_entry = {
                 "id": q_id,
                 "question": q_clean,
-                "question_context": q_context,
-                "question_context_html": render_md(q_context) if q_context else "",
-                "answer": actual_ans,
-                "answer_html": render_md(actual_ans),
-                "has_answer": bool(actual_ans),
+                "answer": ans_clean,
+                "answer_html": render_md(ans_clean),
+                "has_answer": bool(ans_clean),
                 "is_sub_q": False,
                 "category": norm_cat,
                 "source_file": fname,
