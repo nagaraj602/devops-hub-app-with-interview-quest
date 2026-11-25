@@ -249,9 +249,26 @@ class QuestionBankService:
             # Check if there is an assessment context block (table / statements / choices) separated from the answer
             q_context = ""
             actual_ans = ans_clean
-            if ("### 📋" in ans_clean or "Assessment Question" in ans_clean) and ("\n---" in ans_clean):
+            if ("\n---" in ans_clean) and ("|" in ans_clean or "Answer Choices" in ans_clean or "### 📋" in ans_clean):
                 parts = re.split(r'\n---+\s*\n?', ans_clean, maxsplit=1)
-                q_context = parts[0].strip()
+                raw_ctx = parts[0].strip()
+                # Clean context: strip blockquotes, redundant headers, or repeated prompts if any
+                ctx_lines = [re.sub(r"^>\s?", "", line) for line in raw_ctx.split("\n")]
+                clean_lines = []
+                found_table_or_code = False
+                for line in ctx_lines:
+                    s_line = line.strip()
+                    if re.match(r"^#{1,4}\s*📋", s_line):
+                        continue
+                    if not found_table_or_code:
+                        if s_line.startswith("```") or s_line.startswith("|"):
+                            found_table_or_code = True
+                            clean_lines.append(line)
+                        elif s_line.startswith("**Answer Choices") or s_line.startswith("Answer Choices:"):
+                            clean_lines.append(line)
+                    else:
+                        clean_lines.append(line)
+                q_context = "\n".join(clean_lines).strip() if clean_lines else raw_ctx
                 actual_ans = parts[1].strip() if len(parts) > 1 else ""
 
             if not actual_ans or len(actual_ans) < 15:
@@ -460,9 +477,26 @@ class QuestionBankService:
             # Check if there is an assessment context block (table / statements / choices) separated from the answer
             q_context = ""
             actual_ans = ans_clean
-            if ("### 📋" in ans_clean or "Assessment Question" in ans_clean) and ("\n---" in ans_clean):
+            if ("\n---" in ans_clean) and ("|" in ans_clean or "Answer Choices" in ans_clean or "### 📋" in ans_clean):
                 parts = re.split(r'\n---+\s*\n?', ans_clean, maxsplit=1)
-                q_context = parts[0].strip()
+                raw_ctx = parts[0].strip()
+                # Clean context: strip blockquotes, redundant headers, or repeated prompts if any
+                ctx_lines = [re.sub(r"^>\s?", "", line) for line in raw_ctx.split("\n")]
+                clean_lines = []
+                found_table_or_code = False
+                for line in ctx_lines:
+                    s_line = line.strip()
+                    if re.match(r"^#{1,4}\s*📋", s_line):
+                        continue
+                    if not found_table_or_code:
+                        if s_line.startswith("```") or s_line.startswith("|"):
+                            found_table_or_code = True
+                            clean_lines.append(line)
+                        elif s_line.startswith("**Answer Choices") or s_line.startswith("Answer Choices:"):
+                            clean_lines.append(line)
+                    else:
+                        clean_lines.append(line)
+                q_context = "\n".join(clean_lines).strip() if clean_lines else raw_ctx
                 actual_ans = parts[1].strip() if len(parts) > 1 else ""
 
             if not actual_ans or len(actual_ans) < 15:
