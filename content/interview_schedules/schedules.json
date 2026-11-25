@@ -1,5 +1,50 @@
 [
   {
+    "id": "sched_75d5493a64",
+    "company_name": "Test Cloud Corp",
+    "round_name": "Cloud Architecture Round",
+    "date": "2026-11-25",
+    "start_time": "02:00 PM",
+    "end_time": "03:00 PM",
+    "hr_email": "recruiter@testcloudcorp.io",
+    "hr_phone": "+1 555 123 4567",
+    "youtube_url": "https://www.youtube.com/watch?v=mockinterview123",
+    "status": "Scheduled",
+    "cancellation_reason": "",
+    "emails": [
+      {
+        "id": "em_82dc980d",
+        "subject": "Invitation: Cloud Architecture Technical Interview",
+        "body": "Hi Nagaraj, your interview is confirmed...",
+        "date": "2026-11-25"
+      },
+      {
+        "id": "em_7514f9ea",
+        "subject": "Preparation Tips: Cloud Architecture",
+        "body": "Please review Linux internals and Kubernetes...",
+        "date": "2026-11-25"
+      }
+    ],
+    "screenshots": [
+      {
+        "id": "sc_3f9705be",
+        "filename": "20261125_110523_f63c58_screenshot_test.png",
+        "original_name": "screenshot_test.png",
+        "url": "/api/admin/interview-schedules/attachment/20261125_110523_f63c58_screenshot_test.png"
+      }
+    ],
+    "experience": "Prepared in-depth on distributed systems, SLI/SLO definitions, and incident response.",
+    "transcript": "",
+    "has_transcript": false,
+    "round_id": "",
+    "round_order": 1,
+    "next_round_id": "",
+    "question_count": 0,
+    "qb_link": "/question-bank?search=Test+Cloud+Corp",
+    "updated_at": "2026-11-25T11:05:23.225121",
+    "created_at": "2026-11-25T11:05:23.225121"
+  },
+  {
     "id": "sched_c85ddda979",
     "company_name": "o9 Solutions",
     "round_name": "Level 1",
@@ -28,7 +73,7 @@
     "next_round_id": "",
     "question_count": 0,
     "qb_link": "/question-bank?search=o9+Solutions",
-    "updated_at": "2026-11-25T10:56:26.563730",
+    "updated_at": "2026-11-25T11:04:52.417597",
     "created_at": "2026-11-25T10:52:54.394552",
     "indian_date": "26-Nov-2026",
     "display_date": "26-Nov-2026"

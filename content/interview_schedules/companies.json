@@ -64,11 +64,20 @@
   },
   {
     "id": "o9_solutions",
-    "name": "O9 Solutions",
+    "name": "o9 Solutions",
     "logo_url": "/static/images/logos/o9_solutions.png",
     "initials": "OS",
     "avatar_bg": "#ffffff",
     "avatar_color": "#c2410c",
     "created_at": "2026-11-24T16:17:45.108160"
+  },
+  {
+    "id": "test_cloud_corp",
+    "name": "Test Cloud Corp",
+    "logo_url": "/static/images/logos/test_cloud_corp.png",
+    "initials": "TC",
+    "avatar_bg": "#ffffff",
+    "avatar_color": "#4338ca",
+    "created_at": "2026-11-25T11:05:23.225121"
   }
 ]
