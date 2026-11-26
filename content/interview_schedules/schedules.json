@@ -1,5 +1,37 @@
 [
   {
+    "id": "sched_e0910c7f36",
+    "company_name": "o9 Solutions",
+    "round_name": "Level 1",
+    "date": "2026-11-27",
+    "start_time": "4:00 PM",
+    "end_time": "5:00 PM",
+    "hr_email": "sandeep.chenthamara@o9solutions.com",
+    "hr_phone": "",
+    "youtube_url": "",
+    "status": "Scheduled",
+    "cancellation_reason": "",
+    "emails": [
+      {
+        "id": "em_1795687728978_yh9r",
+        "subject": "Fwd: Updated invitation: R1 - Technical Interview - Nagaraj Kamath @ Fri Nov 27, 2026 4pm - 5pm (IST) (nagarajkamath701@gmail.com)",
+        "body": "Tomorrow • 4:00 PM – 5:00 PM\nR1 - Technical Interview - Nagaraj Kamath\n\nSandeep Chenthamara - Organizer\nnagarajkamath701@gmail.com & Rohit Sharma Pawan\nNo events on this date\nBased on this email\nCorrect?\n\nNagaraj Kamath <nagarajkamath701@gmail.com>\nAttachments\n3:35 PM (3 minutes ago)\nto me\n\n\n---------- Forwarded message ---------\nFrom: Sandeep Chenthamara <sandeep.chenthamara@o9solutions.com>\nDate: Thu, 26 Nov, 2026, 3:08 pm\nSubject: Updated invitation: R1 - Technical Interview - Nagaraj Kamath @ Fri Nov 27, 2026 4pm - 5pm (IST) (nagarajkamath701@gmail.com)\nTo: <nagarajkamath701@gmail.com>, Rohit Sharma Pawan <rohitsharma.pawan@o9solutions.com>\n\n\n \nThis event has been updated\nChanged: time\n \nJoin with Google Meet\nMeeting link\nmeet.google.com/kbh-mqus-uwc\nJoin by phone\n(US) +1 520-777-1213\nPIN: 476735625\n\nMore phone numbers\nAttachments\n\t\nNaukri_NagarajKamath[5...\nWhen\nCHANGED\nFriday Nov 27, 2026 ⋅ 4pm – 5pm (India Standard Time - Kolkata)\nThursday Nov 26, 2026 ⋅ 3pm – 4pm (India Standard Time - Kolkata)\nGuests\nSandeep Chenthamara - organizer\nRohit Sharma Pawan\nnagarajkamath701@gmail.com\nView all guest info\nReply for nagarajkamath701@gmail.com\nYes\nNo\nMaybe\nMore options\nInvitation from Google Calendar\n\nYou are receiving this email because you are subscribed to calendar notifications. To stop receiving these emails, go to Calendar settings, select this calendar, and change \"Other notifications\".\n\nForwarding this invitation could allow any recipient to send a response to the organizer, be added to the guest list, invite others regardless of their own invitation status, or modify your RSVP. Learn more",
+        "date": "2026-11-27"
+      }
+    ],
+    "screenshots": [],
+    "experience": "",
+    "transcript": "",
+    "has_transcript": true,
+    "round_id": "",
+    "round_order": 1,
+    "next_round_id": "",
+    "question_count": 0,
+    "qb_link": "/question-bank?search=o9%20Solutions",
+    "updated_at": "2026-11-26T10:09:34.285147",
+    "created_at": "2026-11-26T10:09:34.285147"
+  },
+  {
     "id": "sched_c85ddda979",
     "company_name": "o9 Solutions",
     "round_name": "Level 1",
@@ -29,7 +61,9 @@
     "question_count": 0,
     "qb_link": "/question-bank?search=o9+Solutions",
     "updated_at": "2026-11-26T10:07:56.469093",
-    "created_at": "2026-11-25T10:52:54.394552"
+    "created_at": "2026-11-25T10:52:54.394552",
+    "indian_date": "26-Nov-2026",
+    "display_date": "26-Nov-2026"
   },
   {
     "id": "sched_75d5493a64",
