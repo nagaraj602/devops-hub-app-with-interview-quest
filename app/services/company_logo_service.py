@@ -88,11 +88,19 @@ COMPANY_DOMAINS: Dict[str, str] = {
     "braodridge": "broadridge.com",
     "o9": "o9solutions.com",
     "o9 solutions": "o9solutions.com",
-    "o9solutions": "o9solutions.com"
+    "o9solutions": "o9solutions.com",
+    "infinite": "infinite.com",
+    "infinite computer solutions": "infinite.com",
+    "disney": "disney.com",
+    "the walt disney company": "disney.com"
 }
 
 # Dedicated local high-resolution logos for instant zero-latency loading and uncropped display
 LOCAL_LOGOS: Dict[str, str] = {
+    "infinite": "/static/images/logos/infinite.png",
+    "infinite computer solutions": "/static/images/logos/infinite.png",
+    "disney": "/static/images/logos/disney.png",
+    "the walt disney company": "/static/images/logos/disney.png",
     "o9": "/static/images/logos/o9_solutions.png",
     "o9 solutions": "/static/images/logos/o9_solutions.png",
     "o9solutions": "/static/images/logos/o9_solutions.png",
