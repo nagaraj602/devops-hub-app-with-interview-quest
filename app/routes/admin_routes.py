@@ -135,18 +135,36 @@ async def admin_portal_view(request: Request):
     cancelled_schedules = sum(1 for s in schedules_list if s.get("status") == "Cancelled")
     rescheduled_count = sum(1 for s in schedules_list if s.get("status") == "Rescheduled")
 
-    # Group schedules by company for company boxes
+    # Group schedules by company for company boxes (case-insensitive)
     schedules_by_company: Dict[str, List[Dict[str, Any]]] = {}
+    company_display_names: Dict[str, str] = {}
     for s in schedules_list:
-        c_name = s.get("company_name", "").strip()
-        schedules_by_company.setdefault(c_name, []).append(s)
+        c_raw = s.get("company_name", "").strip()
+        if not c_raw:
+            continue
+        c_norm = c_raw.lower()
+        schedules_by_company.setdefault(c_norm, []).append(s)
+        company_display_names[c_norm] = c_raw
 
     companies_with_boxes = []
+    processed_companies = set()
+
     for c in companies_list:
-        c_name = c.get("name", "")
-        c_scheds = schedules_by_company.get(c_name, [])
+        c_name = c.get("name", "").strip()
+        c_norm = c_name.lower()
+        if c_norm in processed_companies:
+            continue
+
+        c_scheds = schedules_by_company.get(c_norm, [])
         if not c_scheds:
             continue
+
+        processed_companies.add(c_norm)
+
+        # Ensure the displayed company meta uses the updated/preferred name casing
+        comp_meta = dict(c)
+        if c_norm in company_display_names:
+            comp_meta["name"] = company_display_names[c_norm]
 
         # Sort rounds inside company sequentially (Round 1 -> Round 2 -> Round 3 ...)
         sorted_rounds = sorted(c_scheds, key=lambda s: (s.get("round_order", 1), s.get("date", "")))
@@ -155,12 +173,40 @@ async def admin_portal_view(request: Request):
         latest_s = max(c_scheds, key=lambda s: (s.get("date", ""), s.get("start_time", "")), default=None) if c_scheds else None
 
         companies_with_boxes.append({
-            "meta": c,
+            "meta": comp_meta,
             "schedules": sorted_rounds,
             "total_rounds": len(c_scheds),
             "completed_rounds": sum(1 for s in c_scheds if s.get("status") == "Completed"),
             "latest_schedule": latest_s
         })
+
+    # Catch any schedules whose company wasn't present in companies_list
+    from app.services.company_logo_service import get_company_logo_meta
+    import re
+
+    for c_norm, c_scheds in schedules_by_company.items():
+        if c_norm not in processed_companies:
+            c_raw = company_display_names.get(c_norm, c_norm)
+            logo_meta = get_company_logo_meta(c_raw)
+            comp_meta = {
+                "id": re.sub(r'[^a-zA-Z0-9]', '_', c_raw).lower(),
+                "name": c_raw,
+                "logo_url": logo_meta.get("logo_url", ""),
+                "initials": logo_meta.get("initials", c_raw[:2].upper()),
+                "avatar_bg": logo_meta.get("avatar_bg", "#ffffff"),
+                "avatar_color": logo_meta.get("avatar_color", "#2563eb"),
+                "created_at": datetime.now().isoformat()
+            }
+            sorted_rounds = sorted(c_scheds, key=lambda s: (s.get("round_order", 1), s.get("date", "")))
+            latest_s = max(c_scheds, key=lambda s: (s.get("date", ""), s.get("start_time", "")), default=None) if c_scheds else None
+            companies_with_boxes.append({
+                "meta": comp_meta,
+                "schedules": sorted_rounds,
+                "total_rounds": len(c_scheds),
+                "completed_rounds": sum(1 for s in c_scheds if s.get("status") == "Completed"),
+                "latest_schedule": latest_s
+            })
+            processed_companies.add(c_norm)
 
     # Sort company rows by most recent interview activity descending (most recent first)
     def comp_sort_key(cb):

@@ -874,7 +874,39 @@ function initScheduleModal() {
     const val = sel ? sel.value : "Scheduled";
 
     if (cancellationGroup) {
-      cancellationGroup.style.display = (val === "Cancelled") ? "block" : "none";
+      if (val === "Cancelled" || val === "Rescheduled") {
+        cancellationGroup.style.display = "block";
+        const reasonTitle = document.getElementById("cancellationReasonTitle");
+        const reasonLabel = document.getElementById("cancellationReasonLabel");
+        const reasonIcon = document.getElementById("cancellationReasonIcon");
+        const reasonHelp = document.getElementById("cancellationReasonHelp");
+
+        if (val === "Rescheduled") {
+          if (reasonTitle) reasonTitle.textContent = "Reschedule Reason / Postponement Note";
+          if (reasonLabel) {
+            reasonLabel.classList.remove("text-danger");
+            reasonLabel.style.color = "#7e22ce";
+          }
+          if (reasonIcon) {
+            reasonIcon.className = "fa-solid fa-arrows-rotate";
+            reasonIcon.style.color = "#7e22ce";
+          }
+          if (reasonHelp) reasonHelp.style.display = "block";
+        } else {
+          if (reasonTitle) reasonTitle.textContent = "Cancellation Reason";
+          if (reasonLabel) {
+            reasonLabel.classList.add("text-danger");
+            reasonLabel.style.color = "";
+          }
+          if (reasonIcon) {
+            reasonIcon.className = "fa-solid fa-triangle-exclamation";
+            reasonIcon.style.color = "";
+          }
+          if (reasonHelp) reasonHelp.style.display = "none";
+        }
+      } else {
+        cancellationGroup.style.display = "none";
+      }
     }
 
     if (transcriptBox) {
@@ -998,7 +1030,23 @@ function initScheduleModal() {
     if (rescheduleBtn) {
       const compName = rescheduleBtn.getAttribute("data-company");
       const roundName = rescheduleBtn.getAttribute("data-round");
-      openScheduleModal({ company_name: compName, round_name: roundName, status: "Scheduled" });
+      const prevId = rescheduleBtn.getAttribute("data-id");
+      const prevSched = (hubState.schedules || []).find(s => s.id === prevId);
+
+      // Default date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+      openScheduleModal({
+        company_name: compName,
+        round_name: roundName,
+        status: "Scheduled",
+        date: tomorrowStr,
+        hr_email: prevSched ? (prevSched.hr_email || "") : "",
+        hr_phone: prevSched ? (prevSched.hr_phone || "") : "",
+        round_order: prevSched ? (prevSched.round_order || 1) : 1
+      });
       return;
     }
   });
@@ -1080,10 +1128,42 @@ function openScheduleModal(initialData = {}) {
   renderEmailBlocks();
   renderScreenshotThumbnails();
 
-  // Cancellation visibility
+  // Cancellation & Rescheduled note visibility
   const cancellationGroup = document.getElementById("cancellationReasonGroup");
   if (cancellationGroup) {
-    cancellationGroup.style.display = (statusVal === "Cancelled") ? "block" : "none";
+    if (statusVal === "Cancelled" || statusVal === "Rescheduled") {
+      cancellationGroup.style.display = "block";
+      const reasonTitle = document.getElementById("cancellationReasonTitle");
+      const reasonLabel = document.getElementById("cancellationReasonLabel");
+      const reasonIcon = document.getElementById("cancellationReasonIcon");
+      const reasonHelp = document.getElementById("cancellationReasonHelp");
+
+      if (statusVal === "Rescheduled") {
+        if (reasonTitle) reasonTitle.textContent = "Reschedule Reason / Postponement Note";
+        if (reasonLabel) {
+          reasonLabel.classList.remove("text-danger");
+          reasonLabel.style.color = "#7e22ce";
+        }
+        if (reasonIcon) {
+          reasonIcon.className = "fa-solid fa-arrows-rotate";
+          reasonIcon.style.color = "#7e22ce";
+        }
+        if (reasonHelp) reasonHelp.style.display = "block";
+      } else {
+        if (reasonTitle) reasonTitle.textContent = "Cancellation Reason";
+        if (reasonLabel) {
+          reasonLabel.classList.add("text-danger");
+          reasonLabel.style.color = "";
+        }
+        if (reasonIcon) {
+          reasonIcon.className = "fa-solid fa-triangle-exclamation";
+          reasonIcon.style.color = "";
+        }
+        if (reasonHelp) reasonHelp.style.display = "none";
+      }
+    } else {
+      cancellationGroup.style.display = "none";
+    }
   }
 
   // Delete button
@@ -1779,7 +1859,30 @@ function initQuickStatusModal() {
 
   function updateQuickFields() {
     const val = statusSelect ? statusSelect.value : "";
-    if (cancellationGroup) cancellationGroup.style.display = (val === "Cancelled") ? "block" : "none";
+    if (cancellationGroup) {
+      if (val === "Cancelled" || val === "Rescheduled") {
+        cancellationGroup.style.display = "block";
+        const lbl = cancellationGroup.querySelector("label");
+        const input = document.getElementById("quickCancellationReason");
+        if (val === "Rescheduled") {
+          if (lbl) {
+            lbl.className = "form-label";
+            lbl.style.color = "#7e22ce";
+            lbl.textContent = "Reschedule / Postponement Note";
+          }
+          if (input) input.placeholder = "e.g. Interviewer on client call; postponing to tomorrow...";
+        } else {
+          if (lbl) {
+            lbl.className = "form-label text-danger";
+            lbl.style.color = "";
+            lbl.textContent = "Cancellation Reason";
+          }
+          if (input) input.placeholder = "Reason for cancellation...";
+        }
+      } else {
+        cancellationGroup.style.display = "none";
+      }
+    }
     if (transcriptGroup) transcriptGroup.style.display = (val === "Completed") ? "block" : "none";
     if (youtubeGroup) youtubeGroup.style.display = (val === "Completed") ? "block" : "none";
   }

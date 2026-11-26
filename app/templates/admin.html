@@ -589,11 +589,16 @@
                 </div>
                 {% endif %}
 
-                <!-- Cancellation Note -->
+                <!-- Cancellation Note or Rescheduled Postponement Note -->
                 {% if s.status == 'Cancelled' and s.cancellation_reason %}
                 <div class="cancellation-alert-banner">
                   <i class="fa-solid fa-triangle-exclamation"></i>
                   <span>Cancellation Reason: {{ s.cancellation_reason }}</span>
+                </div>
+                {% elif s.status == 'Rescheduled' and s.cancellation_reason %}
+                <div class="rescheduled-alert-banner">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                  <span>Rescheduled / Postponement Note: {{ s.cancellation_reason }}</span>
                 </div>
                 {% endif %}
 
@@ -606,15 +611,18 @@
                     </button>
                     {% endif %}
 
-                    {% if s.status != 'Cancelled' %}
+                    {% if s.status != 'Cancelled' and s.status != 'Rescheduled' %}
+                    <button type="button" class="btn btn-xs btn-outline btn-quick-status" data-id="{{ s.id }}" data-status="Rescheduled" title="Mark as Rescheduled / Postponed">
+                      <i class="fa-solid fa-arrows-rotate" style="color:#7e22ce;"></i> Reschedule
+                    </button>
                     <button type="button" class="btn btn-xs btn-outline btn-quick-status" data-id="{{ s.id }}" data-status="Cancelled" title="Mark as Cancelled">
                       <i class="fa-solid fa-xmark" style="color:#dc2626;"></i> Cancel
                     </button>
                     {% endif %}
 
-                    {% if s.status == 'Cancelled' %}
-                    <button type="button" class="btn btn-xs btn-outline btn-reschedule-action" data-company="{{ s.company_name }}" data-round="{{ s.round_name }}" data-id="{{ s.id }}" title="Schedule New Date for this Cancelled Interview">
-                      <i class="fa-solid fa-plus"></i> Reschedule New
+                    {% if s.status == 'Cancelled' or s.status == 'Rescheduled' %}
+                    <button type="button" class="btn btn-xs btn-outline btn-reschedule-action" data-company="{{ s.company_name }}" data-round="{{ s.round_name }}" data-id="{{ s.id }}" title="Schedule New Date/Time for this Interview">
+                      <i class="fa-solid fa-calendar-plus" style="color:#7e22ce;"></i> Schedule New Slot
                     </button>
                     {% endif %}
                   </div>
@@ -879,12 +887,16 @@
           </div>
         </div>
 
-        <!-- Conditional: Cancellation Reason (Shows when Cancelled) -->
+        <!-- Conditional: Cancellation Reason / Postponement Note (Shows when Cancelled or Rescheduled) -->
         <div class="form-group" id="cancellationReasonGroup" style="display:none;">
-          <label for="formCancellationReason" class="form-label text-danger">
-            <i class="fa-solid fa-triangle-exclamation"></i> Cancellation Reason / Postponement Note
+          <label for="formCancellationReason" class="form-label text-danger" id="cancellationReasonLabel">
+            <i class="fa-solid fa-triangle-exclamation" id="cancellationReasonIcon"></i>
+            <span id="cancellationReasonTitle">Cancellation Reason / Postponement Note</span>
           </label>
-          <textarea id="formCancellationReason" name="cancellation_reason" class="form-control" rows="2" placeholder="e.g. Interviewer rescheduled due to production release; waiting for revised slot..."></textarea>
+          <textarea id="formCancellationReason" name="cancellation_reason" class="form-control" rows="2" placeholder="e.g. Interviewer rescheduled due to panel client call; waiting for revised slot tomorrow..."></textarea>
+          <span class="form-help" id="cancellationReasonHelp" style="display:none; font-size:0.75rem; color:#7e22ce; margin-top:0.35rem;">
+            <i class="fa-solid fa-circle-info"></i> <strong>How Rescheduling Works:</strong> Keeping this entry preserves your interview journey history & why it moved. Once the HR emails the new slot tomorrow, click <strong>"Schedule New Slot"</strong> (or <strong>"+ Add Schedule"</strong>) to record the new date, time, and invite link! Or alternatively, you can directly update the Date & Time of this entry.
+          </span>
         </div>
 
         <!-- Multi-Email Section -->

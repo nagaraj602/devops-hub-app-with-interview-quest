@@ -342,7 +342,47 @@ class InterviewScheduleService:
     def get_companies(self) -> List[Dict[str, Any]]:
         if self._companies_cache is None:
             self._initialize_data()
-        return self._companies_cache or []
+
+        # Sync company names/casing with actual schedules
+        schedules = self._schedules_cache or []
+        sched_companies_map = {}
+        for s in schedules:
+            c_name = s.get("company_name", "").strip()
+            if c_name:
+                sched_companies_map[c_name.lower()] = c_name
+
+        updated = False
+        comps = self._companies_cache or []
+        existing_lowers = set()
+
+        for c in comps:
+            c_lower = c.get("name", "").strip().lower()
+            existing_lowers.add(c_lower)
+            if c_lower in sched_companies_map:
+                preferred_name = sched_companies_map[c_lower]
+                if c.get("name") != preferred_name:
+                    c["name"] = preferred_name
+                    updated = True
+
+        for c_lower, preferred_name in sched_companies_map.items():
+            if c_lower not in existing_lowers:
+                logo_meta = get_company_logo_meta(preferred_name)
+                comps.append({
+                    "id": re.sub(r'[^a-zA-Z0-9]', '_', preferred_name).lower(),
+                    "name": preferred_name,
+                    "logo_url": logo_meta.get("logo_url", ""),
+                    "initials": logo_meta.get("initials", preferred_name[:2].upper()),
+                    "avatar_bg": logo_meta.get("avatar_bg", "#ffffff"),
+                    "avatar_color": logo_meta.get("avatar_color", "#2563eb"),
+                    "created_at": datetime.now().isoformat()
+                })
+                existing_lowers.add(c_lower)
+                updated = True
+
+        if updated:
+            self._save_companies(comps, trigger_git=False)
+
+        return comps
 
     def get_rounds(self) -> List[str]:
         if self._rounds_cache is None:
@@ -384,11 +424,16 @@ class InterviewScheduleService:
         company_name = data.get("company_name", "").strip()
         round_name = data.get("round_name", "").strip()
 
-        # Update companies cache if company is new
+        # Update companies cache if company is new or casing was updated
         if company_name:
             comps = self.get_companies()
-            existing_comp_names = [c["name"].lower() for c in comps]
-            if company_name.lower() not in existing_comp_names:
+            matched_comp = None
+            for c in comps:
+                if c.get("name", "").strip().lower() == company_name.lower():
+                    matched_comp = c
+                    break
+
+            if matched_comp is None:
                 logo_meta = get_company_logo_meta(company_name)
                 comp_obj = {
                     "id": re.sub(r'[^a-zA-Z0-9]', '_', company_name).lower(),
@@ -401,6 +446,19 @@ class InterviewScheduleService:
                 }
                 comps.append(comp_obj)
                 self._save_companies(comps)
+            else:
+                if matched_comp.get("name") != company_name:
+                    matched_comp["name"] = company_name
+                    logo_meta = get_company_logo_meta(company_name)
+                    if logo_meta.get("logo_url") and not matched_comp.get("logo_url"):
+                        matched_comp["logo_url"] = logo_meta["logo_url"]
+                    self._save_companies(comps)
+
+                # Ensure all other schedules for this company match updated casing
+                for s in schedules:
+                    if s.get("company_name", "").strip().lower() == company_name.lower():
+                        if s.get("company_name") != company_name:
+                            s["company_name"] = company_name
 
         # Update rounds cache if round is new
         if round_name:

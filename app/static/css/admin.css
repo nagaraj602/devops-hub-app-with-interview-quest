@@ -1498,6 +1498,18 @@
   gap: 0.35rem;
 }
 
+.rescheduled-alert-banner {
+  background: #f3e8ff;
+  border: 1px solid #e9d5ff;
+  color: #6b21a8;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .stage-footer-actions {
   display: flex;
   align-items: center;
