@@ -28,10 +28,8 @@
     "next_round_id": "",
     "question_count": 0,
     "qb_link": "/question-bank?search=o9+Solutions",
-    "updated_at": "2026-11-25T11:04:52.417597",
-    "created_at": "2026-11-25T10:52:54.394552",
-    "indian_date": "26-Nov-2026",
-    "display_date": "26-Nov-2026"
+    "updated_at": "2026-11-26T10:07:56.469093",
+    "created_at": "2026-11-25T10:52:54.394552"
   },
   {
     "id": "sched_75d5493a64",
@@ -519,7 +517,9 @@
     "question_count": 61,
     "qb_link": "/question-bank?search=Ascendion#rnd_ascendion_level_1_122",
     "updated_at": "2026-11-26T10:05:39.721706",
-    "created_at": "2026-11-24T14:34:31.186152"
+    "created_at": "2026-11-24T14:34:31.186152",
+    "indian_date": "13-Nov-2026",
+    "display_date": "13-Nov-2026"
   },
   {
     "id": "sched_imp_hutech_solutions_level_1_2026-11-13",
