@@ -165,8 +165,8 @@ INSTRUCTORS_CONFIG = [
     {
         "id": "sai",
         "name": "Sai",
-        "filename": "6. Sai QA 81 & 83 class.md",
-        "classes": "Class 81 & 83 (Mock)",
+        "filename": "6. Sai QA 81, 83, 95 class.md",
+        "classes": "Class 81, 83, 95 (Mock)",
         "avatar_text": "SA",
         "avatar_bg": "#f5f3ff",
         "avatar_color": "#7c3aed",
@@ -175,8 +175,8 @@ INSTRUCTORS_CONFIG = [
     {
         "id": "aditya",
         "name": "Aditya",
-        "filename": "5. Aditya QA 69, 77, 89, 91-94 class.md",
-        "classes": "Class 69, 77, 89, 91-94",
+        "filename": "5. Aditya QA 69, 77, 89, 91-94,96 class.md",
+        "classes": "Class 69, 77, 89, 91-94, 96",
         "avatar_text": "AD",
         "avatar_bg": "#ecfdf5",
         "avatar_color": "#059669",

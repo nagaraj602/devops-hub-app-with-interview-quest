@@ -45,13 +45,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
 # Copy installed Python virtual environment from builder stage
 COPY --from=builder /install/venv /install/venv
 
-# Copy application source code, content, logs, and project documentation
-COPY app/ /app/app/
-COPY content/ /app/content/
-COPY logs/ /app/logs/
-COPY Project /app/Project
-COPY README.md /app/README.md
-COPY run.py /app/run.py
+# Copy all application source code, content, repos, logs, and project files
+COPY . /app/
 
 # Environment Configuration
 ENV PORT=8926
